@@ -150,6 +150,17 @@
         ctx.lineWidth = 2;
         this.circle(e.x, e.y, e.radius + 3); ctx.stroke();
       }
+      if (e.isFrozen(time)) {
+        ctx.fillStyle = 'rgba(139, 227, 255, 0.55)';
+        this.circle(e.x, e.y, e.radius + 2); ctx.fill();
+      }
+      const aura = e.activeAura(time);
+      if (aura) {
+        ctx.fillStyle = TD.ELEMENTS[aura].color;
+        ctx.strokeStyle = '#111';
+        ctx.lineWidth = 1.5;
+        this.circle(e.x + e.radius, e.y + e.radius, 4); ctx.fill(); ctx.stroke();
+      }
       const w = e.radius * 2 + 6;
       const ratio = e.hpRatio;
       ctx.fillStyle = '#111';

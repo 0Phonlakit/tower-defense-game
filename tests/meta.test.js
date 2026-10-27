@@ -16,7 +16,9 @@ test('coinsForWaves: more waves give more coins, growing faster than linear', ()
 test('new save: no coins, only the machine gun unlocked', () => {
   const meta = new MetaProgress(new MemoryStorage());
   assert.equal(meta.coins, 0);
-  assert.deepEqual(meta.unlocked, { gun: true, cannon: false, frost: false, sniper: false });
+  assert.deepEqual(meta.unlocked, {
+    gun: true, cannon: false, frost: false, sniper: false, flame: false, tesla: false, tide: false, poison: false,
+  });
   assert.ok(Object.values(meta.upgrades).every(l => l === 0));
 });
 

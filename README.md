@@ -14,7 +14,7 @@ Progress (Coins, upgrades, unlocked towers) is saved in the browser's `localStor
 
 | Input | Action |
 |---|---|
-| `1` – `4` | Select a tower to build (press again to cancel) |
+| `1` – `8` | Select a tower to build (press again to cancel) |
 | Left click | Place a tower / select a built tower |
 | Right click, `Esc` | Cancel placement / selection |
 | `Space` | Start wave 1 / skip the countdown to the next wave |
@@ -45,12 +45,31 @@ Enemy HP grows every wave; see `Enemy.hpMultiplier()`.
 
 ### Towers
 
-| Tower | Cost | Unlock | Strength |
-|---|---|---|---|
-| Machine gun | 50 | Available from the start | Fast fire, single target |
-| Cannon | 90 | 60 coins | Area splash damage |
-| Frost | 70 | 50 coins | Slows enemies |
-| Sniper | 120 | 100 coins | Long range, high damage |
+| Tower | Element | Cost | Unlock | Strength |
+|---|---|---|---|---|
+| Machine gun | – | 50 | Available from the start | Fast fire, single target |
+| Cannon | – | 90 | 60 coins | Area splash damage |
+| Frost | Ice | 70 | 50 coins | Slows enemies |
+| Sniper | – | 120 | 100 coins | Long range, high damage |
+| Flame | Fire | 80 | 80 coins | Sets enemies on fire (damage over 3s) |
+| Tesla | Lightning | 100 | 120 coins | Instant zap that chains to 2 more enemies (70% per jump) |
+| Tide | Water | 60 | 70 coins | Cheap splash that sets up reactions |
+| Poison | – | 90 | 90 coins | Poison stacks up to 5 times (4s), strong vs tanks and bosses |
+
+Burn and poison damage scale with tower level and damage bonuses, like normal hits.
+
+### Elemental reactions
+
+An elemental hit marks the enemy with that element for 3 seconds (the small colored dot on the enemy). Hitting it with a **different** element triggers a reaction and clears the mark. The same element just refreshes it. Physical towers never trigger reactions.
+
+| Elements | Reaction | Effect |
+|---|---|---|
+| Fire + Ice | Melt | That hit does x2 damage |
+| Fire + Water | Vaporize | That hit does x1.5 damage |
+| Fire + Lightning | Overload | Explosion (radius 60) hits every nearby enemy for 1.5x the hit |
+| Ice + Water | Freeze | Enemy stops for 1.5s (bosses 0.5s) |
+| Ice + Lightning | Superconduct | Enemy takes +25% damage for 4s |
+| Water + Lightning | Electro-charged | Shocks up to 3 nearby enemies for 50% of the hit |
 
 ### Permanent upgrades (bought with Coins)
 
@@ -65,10 +84,10 @@ tower-defense/
 ├── package.json          Only a test script (no dependencies)
 ├── src/
 │   ├── core/             Game logic, no DOM access — testable in Node
-│   │   ├── config.js     Constants: map, towers, enemies, permanent upgrades
+│   │   ├── config.js     Constants: map, towers, enemies, permanent upgrades, elements/reactions
 │   │   ├── utils.js      createRng (seeded random), pickRandom
 │   │   ├── path.js       class Path        Enemy walking path
-│   │   ├── enemy.js      class Enemy       Movement, HP, slow effects
+│   │   ├── enemy.js      class Enemy       Movement, HP, slow/freeze, aura, burn/poison
 │   │   ├── tower.js      class Tower       Stats, targeting, upgrade/sell
 │   │   ├── projectile.js class Projectile  Homing projectiles
 │   │   ├── wave.js       class WaveGenerator  Composition of each wave
@@ -103,13 +122,14 @@ Requires Node.js 20 or later. No `npm install` needed.
 npm test
 ```
 
-Tests cover `src/core/` only (path, enemies, towers, projectiles, waves, perks, saving, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
+Tests cover `src/core/` only (path, enemies, towers, projectiles, waves, perks, saving, elemental reactions, burn/poison, Tesla chains, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
 
 ## Balancing
 
 | To change | Edit |
 |---|---|
 | Tower/enemy stats, costs | `src/core/config.js` |
+| Reactions, aura/burn/poison durations | `REACTIONS` and the constants above it in `src/core/config.js` |
 | How fast enemy HP grows | `Enemy.hpMultiplier()` in `src/core/enemy.js` |
 | Enemies per wave, end-of-wave bonus | `src/core/wave.js` |
 | Countdown length | `WAVE_COUNTDOWN` in `src/core/config.js` |
