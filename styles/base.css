@@ -1,0 +1,25 @@
+/* Colors (dark theme), page and text basics.
+   Part 1 of 6; the files are loaded in this order (see index.html). */
+:root {
+  --bg: #15171c;
+  --panel: #1f232b;
+  --panel-2: #282d37;
+  --border: #363c48;
+  --text: #e6e8ec;
+  --muted: #9aa1ad;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --danger: #e5484d;
+  --gold: #f5c542;
+  --hp: #ff6b6b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Sarabun", "Noto Sans Thai", system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+}

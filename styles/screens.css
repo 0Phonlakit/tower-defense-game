@@ -1,0 +1,85 @@
+/* Overlay screens: menu, save slots, upgrades, settings, shop cards, perk choice, game-over summary.
+   Part 4 of 6; the files are loaded in this order (see index.html). */
+/* Overlays */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 9, 12, 0.78);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 10;
+}
+.overlay[hidden] { display: none; }
+.modal {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 560px;
+  width: 100%;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+.modal.wide { max-width: 760px; }
+.modal h1 { font-size: 28px; }
+
+.coin-box { font-size: 22px; font-weight: bold; color: var(--gold); }
+
+/* Main menu / pause / exit */
+.modal.menu { max-width: 420px; text-align: center; }
+.menu-stats { color: var(--muted); margin: 8px 0 20px; }
+.menu-stats b { color: var(--text); }
+.menu-buttons { display: flex; flex-direction: column; gap: 10px; }
+.menu-slot { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 8px; color: var(--muted); }
+.menu-slot b { color: var(--text); }
+
+/* Save slots */
+.slot-list { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; text-align: left; }
+.slot-card { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.slot-card.current { border-color: var(--primary); }
+.slot-card.empty { border-style: dashed; }
+.slot-card .row { flex-wrap: nowrap; }
+.menu-buttons .btn { width: 100%; }
+
+/* Upgrade screen */
+.modal-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.modal-head h2 { margin: 0; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 12px; flex-wrap: wrap; }
+.tab { background: none; border: none; border-bottom: 3px solid transparent; color: var(--muted); padding: 8px 14px; font: inherit; font-weight: bold; cursor: pointer; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--text); border-bottom-color: var(--primary); }
+
+/* Settings */
+.settings { display: flex; flex-direction: column; gap: 14px; margin: 12px 0; }
+.settings label { display: flex; flex-direction: column; gap: 6px; font-weight: bold; }
+.settings select, .settings input[type=range] { width: 100%; }
+.settings select { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px; font: inherit; }
+.map-name { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
+
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-bottom: 16px; }
+.shop-item { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 4px; }
+.shop-item .s-name { font-weight: bold; }
+.shop-item .s-desc { color: var(--muted); font-size: 12px; }
+.shop-item .s-level { font-size: 12px; }
+.shop-item .btn { margin-top: 4px; }
+.shop-item.owned { opacity: 0.7; }
+
+.perk-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+.perk-card {
+  background: var(--panel-2);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  cursor: pointer;
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+}
+.perk-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+.perk-card .p-name { font-weight: bold; font-size: 15px; margin-bottom: 6px; color: var(--gold); }
+.perk-card .p-desc { color: var(--muted); font-size: 13px; }
+
+.summary { background: var(--panel-2); border-radius: 8px; padding: 12px 16px; line-height: 1.8; margin-top: 12px; }
+.summary .coins { color: var(--gold); font-size: 20px; font-weight: bold; }

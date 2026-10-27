@@ -1,9 +1,9 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const S = require('../src/ui/sprites.js');
+const S = require('../src/render/sprites.js');
 const { ENEMY_DEFS, TOWER_DEFS } = require('../src/core/config.js');
-const { MAP_DEFS } = require('../src/core/maps.js');
+const { MAP_DEFS } = require('../src/data/maps.js');
 
 // Every grid is rectangular plain ASCII and every letter in it has a color.
 function checkSprite(key, extraLetters = '') {
