@@ -270,7 +270,9 @@
       choices.forEach((p, i) => {
         const b = this.doc.createElement('button');
         b.className = 'perk-card';
-        b.innerHTML = `<div class="p-name">${p.name}</div><div class="p-desc">${p.desc(this.game)}</div>`;
+        const have = this.game.perkStacks[p.id] || 0;
+        b.innerHTML = `<div class="p-name">${p.name}</div><div class="p-desc">${p.desc(this.game)}</div>`
+          + (have ? `<div class="p-stack">มีแล้ว x${have}/${TD.MAX_PERK_STACKS}</div>` : '');
         b.onclick = () => this.choosePerk(i);
         box.appendChild(b);
       });
@@ -345,10 +347,16 @@
       return lines;
     }
 
+    // One line per perk taken, with how many times (a perk stops being offered at the limit).
     renderPerkList() {
-      const taken = this.game ? this.game.perksTaken : [];
-      this.$('perk-list').innerHTML = taken.length
-        ? taken.map(p => `<li>${p}</li>`).join('')
+      const g = this.game;
+      const stacks = g ? Object.entries(g.perkStacks) : [];
+      this.$('perk-list').innerHTML = stacks.length
+        ? stacks.map(([id, n]) => {
+          const p = TD.PERKS.find(x => x.id === id);
+          const full = n >= TD.MAX_PERK_STACKS ? ' <b class="perk-full">(เต็ม)</b>' : '';
+          return `<li>${p.name} x${n}${full} — ${p.desc(g)}</li>`;
+        }).join('')
         : '<li class="muted">ยังไม่มี</li>';
     }
 

@@ -2,7 +2,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { WaveGenerator } = require('../src/core/wave.js');
-const { PERKS, PerkPicker } = require('../src/core/perks.js');
+const { PERKS, PerkPicker, MAX_PERK_STACKS } = require('../src/core/perks.js');
 const { createRng } = require('../src/core/utils.js');
 const { MAX_HP } = require('../src/core/config.js');
 const { makeGame, makeMeta } = require('./helpers.js');
@@ -80,4 +80,54 @@ test('Perks: effects are additive and heal is capped at max HP', () => {
   game.wave = 4;
   perk('cash').apply(game);
   assert.equal(game.gold, gold + 100);
+});
+
+// Takes perk `id` n times through the normal wave-clear -> choose flow.
+function takePerk(game, id, n) {
+  for (let i = 0; i < n; i++) {
+    game.phase = 'perk';
+    game.perkChoices = [PERKS.find(p => p.id === id)];
+    assert.ok(game.choosePerk(0));
+  }
+}
+
+test('Perks: the same perk stacks, counted per perk', () => {
+  const game = makeGame();
+  takePerk(game, 'dmg', 3);
+  takePerk(game, 'gold', 1);
+  assert.deepEqual(game.perkStacks, { dmg: 3, gold: 1 });
+  assert.ok(Math.abs(game.mods.dmg - 1.45) < 1e-9, '3 x +15%');
+});
+
+test('Perks: a perk taken 10 times is no longer offered; others still are', () => {
+  assert.equal(MAX_PERK_STACKS, 10);
+  const game = makeGame();
+  const picker = new PerkPicker(createRng(3));
+  takePerk(game, 'dmg', 9);
+  assert.ok(picker.available(game).some(p => p.id === 'dmg'), 'still offered at 9');
+  takePerk(game, 'dmg', 1);
+  assert.equal(game.perkStacks.dmg, 10);
+  assert.ok(!picker.available(game).some(p => p.id === 'dmg'), 'hidden at 10');
+  for (let i = 0; i < 50; i++) assert.ok(!picker.choices(game).some(p => p.id === 'dmg'));
+  assert.ok(picker.available(game).some(p => p.id === 'rate'));
+});
+
+test('Perks: one-time perks count too, and older limits still hide a perk before 10', () => {
+  const game = makeGame();
+  const picker = new PerkPicker(createRng(3));
+  takePerk(game, 'cash', 10);
+  assert.ok(!picker.available(game).some(p => p.id === 'cash'));
+  takePerk(game, 'range', 5); // range stops at +50%
+  assert.equal(game.perkStacks.range, 5);
+  assert.ok(!picker.available(game).some(p => p.id === 'range'));
+});
+
+test('Perks: when every perk is used up, clearing a wave offers nothing and play goes on', () => {
+  const game = makeGame();
+  for (const p of PERKS) game.perkStacks[p.id] = MAX_PERK_STACKS;
+  game.startWave();
+  game.spawnQueue = [];
+  game.update(0.02);
+  assert.equal(game.perkChoices.length, 0);
+  assert.equal(game.phase, 'wave');
 });

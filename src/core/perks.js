@@ -10,6 +10,9 @@
 
   const cashAmount = game => 60 + game.wave * 10;
 
+  // A perk can be taken this many times per run; after that it is no longer offered.
+  const MAX_PERK_STACKS = 10;
+
   const PERKS = [
     { id: 'dmg',      name: 'กระสุนเจาะเกราะ', desc: () => 'ดาเมจทุกป้อม +15%',                   apply: g => { g.mods.dmg += 0.15; } },
     { id: 'rate',     name: 'ไกปืนลื่น',       desc: () => 'ความเร็วยิงทุกป้อม +12%',              apply: g => { g.mods.rate += 0.12; } },
@@ -31,7 +34,8 @@
     }
 
     available(game) {
-      return this.perks.filter(p => !p.cond || p.cond(game));
+      const stacks = game.perkStacks || {};
+      return this.perks.filter(p => (stacks[p.id] || 0) < MAX_PERK_STACKS && (!p.cond || p.cond(game)));
     }
 
     choices(game, count = 3) {
@@ -39,5 +43,5 @@
     }
   }
 
-  return { PERKS, PerkPicker, cashAmount };
+  return { PERKS, PerkPicker, cashAmount, MAX_PERK_STACKS };
 });

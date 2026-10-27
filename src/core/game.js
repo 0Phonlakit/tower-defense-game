@@ -41,6 +41,7 @@
       this.wavesCleared = 0;
       this.perkChoices = [];
       this.perksTaken = [];
+      this.perkStacks = {}; // perk id -> times taken this run, in the order first taken
       this.result = null;
       this.nextPlan = this._planWave(1);
     }
@@ -167,6 +168,7 @@
       const label = `${perk.name} — ${perk.desc(this)}`;
       perk.apply(this);
       this.perksTaken.push(label);
+      this.perkStacks[perk.id] = (this.perkStacks[perk.id] || 0) + 1;
       this.perkChoices = [];
       this.phase = 'wave';
       this.emit('perkchosen', { perk, label });
