@@ -32,6 +32,12 @@
 @media (max-width: 759px) {
   #sidebar { width: 100%; max-width: 800px; max-height: none; overflow: visible; }
 }
+/* Wider screens fit on one screen, so the page itself never scrolls. Without this, a scrollbar that
+   shows for a moment (e.g. while a window is resized) takes 15px on Windows, the sidebar wraps under
+   the board and the page stays too tall. Sidebar and overlays still scroll on their own. */
+@media (min-width: 760px) {
+  html { overflow: hidden; }
+}
 /* Short screens: tighter sidebar, tower descriptions only as a tooltip (and in the Guide). */
 @media (max-height: 820px) and (min-width: 760px) {
   #app { padding: 12px; gap: 12px; }
