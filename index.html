@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rogue Tower Defense</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <main id="board">
+      <canvas id="game" width="800" height="520"></canvas>
+    </main>
+
+    <aside id="sidebar">
+      <section class="stats">
+        <div class="stat"><span class="label">พลังชีวิตฐาน</span><span id="hud-hp" class="value hp">20</span></div>
+        <div class="stat"><span class="label">Gold</span><span id="hud-gold" class="value gold">0</span></div>
+        <div class="stat"><span class="label">Wave</span><span id="hud-wave" class="value">0</span></div>
+        <div class="stat"><span class="label">ศัตรูที่เหลือ</span><span id="hud-left" class="value">0</span></div>
+      </section>
+
+      <section>
+        <h3>สร้างป้อม <small>(กด 1-4)</small></h3>
+        <div id="tower-buttons" class="tower-buttons"></div>
+      </section>
+
+      <section id="sel-panel" hidden>
+        <h3 id="sel-name"></h3>
+        <div id="sel-stats" class="sel-stats"></div>
+        <div class="row">
+          <button id="btn-upgrade" class="btn"></button>
+          <button id="btn-sell" class="btn danger"></button>
+        </div>
+      </section>
+
+      <section class="controls">
+        <button id="btn-wave" class="btn primary big">เริ่ม Wave (Space)</button>
+        <div class="row">
+          <button id="btn-speed" class="btn">ความเร็ว x1</button>
+          <label class="check"><input type="checkbox" id="chk-auto"> เริ่ม wave อัตโนมัติ</label>
+        </div>
+      </section>
+
+      <section>
+        <h3>Perk ที่ได้รอบนี้</h3>
+        <ul id="perk-list" class="perk-list"><li class="muted">ยังไม่มี</li></ul>
+      </section>
+
+      <section class="legend">
+        <h3>ศัตรู</h3>
+        <div id="enemy-legend"></div>
+      </section>
+    </aside>
+  </div>
+
+  <!-- Hub / shop -->
+  <div id="ov-hub" class="overlay">
+    <div class="modal wide">
+      <h1>Rogue Tower Defense</h1>
+      <p class="muted">ป้องกันฐาน (HP 20) จากศัตรูที่เดินตามเส้นทาง · จบแต่ละรอบได้ Coin ตามจำนวน wave ที่ผ่าน เอาไปอัพเกรดถาวร</p>
+      <div class="hub-top">
+        <div class="coin-box">🪙 <span id="hub-coins">0</span> Coin</div>
+        <div class="muted">Wave สูงสุด: <b id="hub-best">0</b> · เล่นไปแล้ว: <b id="hub-runs">0</b> รอบ</div>
+      </div>
+      <h3>อัพเกรดถาวร</h3>
+      <div id="shop-upgrades" class="shop-grid"></div>
+      <h3>ปลดล็อกป้อม</h3>
+      <div id="shop-unlocks" class="shop-grid"></div>
+      <p class="muted small">Coin ที่ได้ = wave ที่ผ่าน × 5 + (wave ที่ผ่าน)² ÷ 2 — ยิ่งไปได้ไกล ยิ่งได้เยอะ</p>
+      <div class="row center">
+        <button id="btn-start" class="btn primary big">เริ่มเกม</button>
+        <button id="btn-reset" class="btn danger small-btn">ล้างเซฟ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Perk choice -->
+  <div id="ov-perk" class="overlay" hidden>
+    <div class="modal">
+      <h2 id="perk-title">ผ่าน Wave!</h2>
+      <p id="perk-sub" class="muted"></p>
+      <div id="perk-cards" class="perk-cards"></div>
+    </div>
+  </div>
+
+  <!-- Game over -->
+  <div id="ov-over" class="overlay" hidden>
+    <div class="modal">
+      <h1 class="danger-text">GAME OVER</h1>
+      <div id="over-summary" class="summary"></div>
+      <div class="row center">
+        <button id="btn-to-hub" class="btn primary big">อัพเกรด แล้วเริ่มใหม่</button>
+        <button id="btn-retry" class="btn big">เริ่มใหม่ทันที</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="src/core/config.js"></script>
+  <script src="src/core/utils.js"></script>
+  <script src="src/core/path.js"></script>
+  <script src="src/core/enemy.js"></script>
+  <script src="src/core/tower.js"></script>
+  <script src="src/core/projectile.js"></script>
+  <script src="src/core/wave.js"></script>
+  <script src="src/core/perks.js"></script>
+  <script src="src/core/meta.js"></script>
+  <script src="src/core/game.js"></script>
+  <script src="src/ui/renderer.js"></script>
+  <script src="src/ui/app.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>
