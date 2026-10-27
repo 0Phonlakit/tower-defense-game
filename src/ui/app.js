@@ -19,7 +19,6 @@
       this.selected = null;
       this.hover = null;
       this.speed = 1;
-      this.autoWave = false;
       this.hudCache = {};
       this.lastFrame = 0;
     }
@@ -63,8 +62,11 @@
       this.show('ov-hub', true);
     }
 
-    startWave() {
-      if (this.game) this.game.startWave();
+    // Starts wave 1, or skips the countdown to the next wave for bonus gold.
+    nextWave() {
+      if (!this.game) return;
+      if (this.game.phase === 'build') this.game.startWave();
+      else this.game.skipCountdown();
     }
 
     choosePerk(index) {
@@ -72,7 +74,6 @@
       this.show('ov-perk', false);
       this.renderPerkList();
       this.renderSelection();
-      if (this.autoWave) this.startWave();
     }
 
     // ---------- Main loop ----------
@@ -102,16 +103,12 @@
       this.canvas.addEventListener('contextmenu', ev => { ev.preventDefault(); this.clearSelection(); });
       this.doc.addEventListener('keydown', ev => this.onKey(ev));
 
-      this.$('btn-wave').onclick = () => this.startWave();
+      this.$('btn-wave').onclick = () => this.nextWave();
       this.$('btn-upgrade').onclick = () => this.upgradeSelected();
       this.$('btn-sell').onclick = () => this.sellSelected();
       this.$('btn-speed').onclick = () => {
         this.speed = this.speed === 3 ? 1 : this.speed + 1;
         this.$('btn-speed').textContent = `ความเร็ว x${this.speed}`;
-      };
-      this.$('chk-auto').onchange = ev => {
-        this.autoWave = ev.target.checked;
-        if (this.autoWave && this.game && this.game.phase === 'build') this.startWave();
       };
       this.$('btn-start').onclick = () => this.startRun();
       this.$('btn-retry').onclick = () => this.startRun();
@@ -135,7 +132,7 @@
 
     onKey(ev) {
       if (!this.game || !this.game.canBuild) return;
-      if (ev.code === 'Space') { ev.preventDefault(); this.startWave(); return; }
+      if (ev.code === 'Space') { ev.preventDefault(); this.nextWave(); return; }
       if (ev.key === 'Escape') { this.clearSelection(); return; }
       if (ev.key === 'u') { this.upgradeSelected(); return; }
       const type = Object.keys(TD.TOWER_DEFS).find(k => TD.TOWER_DEFS[k].key === ev.key);
@@ -188,7 +185,7 @@
       this.$('over-summary').innerHTML = `
         <div>ผ่านไปได้ <b>${wavesCleared}</b> wave ${newBest ? '<b style="color:#4cd964">(สถิติใหม่!)</b>' : ''}</div>
         <div>กำจัดศัตรู <b>${kills}</b> ตัว</div>
-        <div class="muted small">Coin = ${wavesCleared} × 5 + ${wavesCleared}² ÷ 2</div>
+        <div class="muted small">Coin = ${wavesCleared} × 5 + ${wavesCleared}² ÷ 3</div>
         <div class="coins">+${coins} Coin 🪙 (รวม ${totalCoins})</div>`;
       this.show('ov-over', true);
     }
@@ -261,8 +258,11 @@
       }
 
       const waveBtn = this.$('btn-wave');
-      waveBtn.disabled = g.phase !== 'build';
-      waveBtn.textContent = g.phase === 'wave' ? `Wave ${g.wave} กำลังดำเนิน...` : `เริ่ม Wave ${g.wave + 1} (Space)`;
+      const canSkip = g.phase === 'wave' && g.countdown !== null;
+      waveBtn.disabled = g.phase !== 'build' && !canSkip;
+      if (g.phase === 'build') waveBtn.textContent = `เริ่ม Wave ${g.wave + 1} (Space)`;
+      else if (canSkip) waveBtn.textContent = `ข้ามไป Wave ${g.wave + 1} (+${g.skipBonus} gold) · ${Math.ceil(g.countdown)}s`;
+      else waveBtn.textContent = `Wave ${g.wave} กำลังดำเนิน...`;
 
       if (this.selected) {
         const up = this.$('btn-upgrade');

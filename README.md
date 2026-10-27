@@ -17,19 +17,20 @@ Progress (Coins, upgrades, unlocked towers) is saved in the browser's `localStor
 | `1` – `4` | Select a tower to build (press again to cancel) |
 | Left click | Place a tower / select a built tower |
 | Right click, `Esc` | Cancel placement / selection |
-| `Space` | Start the next wave |
+| `Space` | Start wave 1 / skip the countdown to the next wave |
 | `U` | Upgrade the selected tower |
 
-The right-hand panel has x1/x2/x3 speed buttons and an "auto-start waves" option.
+The right-hand panel has x1/x2/x3 speed buttons.
 
 ## Rules
 
 - **Base**: has 20 HP. Each enemy that reaches it removes HP depending on its type. 0 HP = Game Over.
 - **Gold** (per run): earned by killing enemies and from end-of-wave bonuses. Spend it to build and upgrade towers (max Lv.4). Selling a tower refunds 70%.
-- **Perks**: after each wave, pick 1 of 3 random perks. They last for the current run only.
+- **Wave countdown**: once the last enemy of a wave has spawned, a 30-second countdown starts. Press Skip (or `Space`) to start the next wave early and get bonus gold: the full clear bonus with 30s left, scaling down to 0 as the timer runs out. When it reaches 0 the next wave starts automatically with no bonus. Waves can overlap; each wave still pays its clear bonus when all of its own enemies are gone.
+- **Perks**: after each wave is cleared, pick 1 of 3 random perks. They last for the current run only.
 - **Coins** (permanent): awarded at Game Over based on waves cleared:
 
-  `coin = wave × 5 + wave² ÷ 2` → 5 waves gives 37, 10 waves gives 100, 20 waves gives 300
+  `coin = wave × 5 + wave² ÷ 3` → 5 waves gives 33, 10 waves gives 83, 20 waves gives 233
 
 ### Enemies
 
@@ -83,8 +84,8 @@ tower-defense/
 
 ### Architecture
 
-- **`Game`** is one run. It moves through phases: `build` → `wave` → `perk` → `build` … → `over`
-  - Player commands: `buildTower`, `upgradeTower`, `sellTower`, `startWave`, `choosePerk`
+- **`Game`** is one run. It moves through phases: `build` (before wave 1) → `wave` → `perk` → `wave` … → `over`
+  - Player commands: `buildTower`, `upgradeTower`, `sellTower`, `startWave`, `skipCountdown`, `choosePerk`
   - Advancing time: `update(dt)`
   - Events via `on(name, fn)`: `wavestart`, `wavecleared`, `perkchosen`, `gameover`
 - **`MetaProgress`** keeps progress across runs. It takes a `storage` object with `getItem`/`setItem` (`localStorage` in the browser, a fake in tests).
@@ -111,6 +112,8 @@ Tests cover `src/core/` only (path, enemies, towers, projectiles, waves, perks, 
 | Tower/enemy stats, costs | `src/core/config.js` |
 | How fast enemy HP grows | `Enemy.hpMultiplier()` in `src/core/enemy.js` |
 | Enemies per wave, end-of-wave bonus | `src/core/wave.js` |
+| Countdown length | `WAVE_COUNTDOWN` in `src/core/config.js` |
+| Skip bonus | `Game.skipBonus` in `src/core/game.js` |
 | Coin formula | `MetaProgress.coinsForWaves()` in `src/core/meta.js` |
 | Perks | `PERKS` in `src/core/perks.js` |
 
