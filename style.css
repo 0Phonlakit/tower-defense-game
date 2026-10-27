@@ -144,12 +144,28 @@ h3 small { color: var(--muted); font-weight: normal; }
 .modal.wide { max-width: 760px; }
 .modal h1 { font-size: 28px; }
 
-.hub-top { display: flex; justify-content: space-between; align-items: center; margin: 12px 0 16px; flex-wrap: wrap; gap: 8px; }
 .coin-box { font-size: 22px; font-weight: bold; color: var(--gold); }
-.hub-map { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
-.hub-map canvas { width: 100%; max-width: 400px; height: auto; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); }
-.hub-map > div { flex: 1; min-width: 180px; }
-.hub-units { margin: 6px 0; }
+
+/* Main menu / pause / exit */
+.modal.menu { max-width: 420px; text-align: center; }
+.menu-stats { color: var(--muted); margin: 8px 0 20px; }
+.menu-stats b { color: var(--text); }
+.menu-buttons { display: flex; flex-direction: column; gap: 10px; }
+.menu-buttons .btn { width: 100%; }
+
+/* Upgrade screen */
+.modal-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.modal-head h2 { margin: 0; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 12px; flex-wrap: wrap; }
+.tab { background: none; border: none; border-bottom: 3px solid transparent; color: var(--muted); padding: 8px 14px; font: inherit; font-weight: bold; cursor: pointer; }
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--text); border-bottom-color: var(--primary); }
+
+/* Settings */
+.settings { display: flex; flex-direction: column; gap: 14px; margin: 12px 0; }
+.settings label { display: flex; flex-direction: column; gap: 6px; font-weight: bold; }
+.settings select, .settings input[type=range] { width: 100%; }
+.settings select { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px; font: inherit; }
 .map-name { grid-column: 1 / -1; font-size: 12px; color: var(--muted); }
 
 .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-bottom: 16px; }
