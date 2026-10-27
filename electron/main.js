@@ -1,20 +1,22 @@
 // Desktop app (Windows .exe): opens index.html in its own window. The game code is the same as the
 // browser version; this file only makes the window, F11 full screen and the Exit button work.
 //
-// `--smoke[=dir]` loads the game, checks it started with its font, fits the window without scrolling and has
-// no console errors, writes the result
-// (result.json + screenshot.png) to dir if given, and quits with exit code 1 if anything is wrong. Used by CI.
+// `--smoke[=dir]` loads the game and checks that it started with its font, fits the window without scrolling
+// and has no console errors. It writes result.json + screenshot.png to dir if given, and quits with exit code 1
+// if anything is wrong. Used by CI.
 'use strict';
-const { app, BrowserWindow, Menu, shell } = require('electron');
+const { app, BrowserWindow, Menu, screen, shell } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
 const smokeArg = process.argv.find((a) => a.startsWith('--smoke'));
 
 function createWindow() {
+  // 1280x800, or smaller on small screens so the window opens fully on screen.
+  const area = screen.getPrimaryDisplay().workAreaSize;
   const win = new BrowserWindow({
-    width: 1280,
-    height: 800,
+    width: Math.min(1280, area.width),
+    height: Math.min(800, area.height),
     minWidth: 800,
     minHeight: 600,
     backgroundColor: '#15171c', // --bg in styles/base.css, so no white flash on start
