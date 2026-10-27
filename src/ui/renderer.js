@@ -23,6 +23,7 @@
 
     setMap(map) {
       this.map = map;
+      this.totalCorner = Renderer.quietCorner(map);
       this.deco = Renderer.scatterDeco(map);
     }
 
@@ -51,7 +52,7 @@
       this.drawSpawns(open);
       this.drawBase(game);
       if (!game) return;
-      this.drawTracking(game.upcoming);
+      this.drawTracking(game.upcoming, open);
 
       if (view.placing) this.drawGrid();
       if (view.selected) this.drawRange(view.selected.x, view.selected.y, game.towerStats(view.selected).range, true);
@@ -131,13 +132,14 @@
       });
     }
 
-    // Arrows run along the routes the next wave will use; the badge shows how many enemies take each one.
-    drawTracking(plan) {
+    // Arrows run along the open routes the next wave will use (routes that open later stay unmarked),
+    // and a corner label shows how many enemies the next wave has in total.
+    drawTracking(plan, open) {
       if (!plan) return;
       const { ctx, map } = this;
       const shift = (performance.now() / 1000 * 70) % 46;
       plan.counts.forEach((count, i) => {
-        if (!count) return;
+        if (!count || i >= open) return;
         const route = map.routes[i];
         ctx.fillStyle = 'rgba(229, 72, 77, 0.9)';
         ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
@@ -151,12 +153,32 @@
           ctx.lineTo(p.x + Math.cos(a - 2.4) * 6, p.y + Math.sin(a - 2.4) * 6);
           ctx.closePath(); ctx.fill(); ctx.stroke();
         }
-        const x = route.spawnTile[0] * map.tile + map.tile / 2;
-        const y = route.spawnTile[1] * map.tile + map.tile / 2;
-        ctx.fillStyle = '#e5484d';
-        this.circle(x + 12, y - 12, 10); ctx.fill();
-        this.label(String(count), x + 12, y - 8, '#fff', 12);
       });
+      this.drawWaveTotal(plan);
+    }
+
+    drawWaveTotal(plan) {
+      const { ctx } = this;
+      const text = `Wave ${plan.wave} ถัดไป: ${plan.queue.length} ตัว`;
+      ctx.font = 'bold 13px system-ui';
+      const w = ctx.measureText(text).width + 20, h = 26;
+      const x = this.totalCorner.right ? this.width - w - 8 : 8;
+      const y = this.totalCorner.bottom ? this.height - h - 8 : 8;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.beginPath(); ctx.roundRect(x, y, w, h, 6); ctx.fill();
+      this.label(text, x + w / 2, y + 18, '#fff', 13);
+    }
+
+    // The board corner farthest from every spawner and the base, so the label never covers them.
+    static quietCorner(map) {
+      const W = map.cols * map.tile, H = map.rows * map.tile;
+      const spots = map.routes.map(r => r.spawnTile).concat([map.baseTile])
+        .map(([c, r]) => ({ x: (c + 0.5) * map.tile, y: (r + 0.5) * map.tile }));
+      const corners = [[false, false], [true, false], [false, true], [true, true]].map(([right, bottom]) => {
+        const cx = right ? W : 0, cy = bottom ? H : 0;
+        return { right, bottom, d: Math.min(...spots.map(p => Math.hypot(p.x - cx, p.y - cy))) };
+      });
+      return corners.sort((a, b) => b.d - a.d)[0];
     }
 
     // Bold centered text with a dark outline, readable on light and dark maps.

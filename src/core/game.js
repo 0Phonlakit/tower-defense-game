@@ -81,6 +81,11 @@
       return Math.floor(this.waves.clearBonus(this.wave) * this.countdown / TD.WAVE_COUNTDOWN);
     }
 
+    // Flyers only spawn while the player has a tower that can shoot them.
+    get hasAntiAir() {
+      return this.towers.some(t => t.def.air);
+    }
+
     towerCost(type) {
       return Math.round(TD.TOWER_DEFS[type].cost * this.mods.cost);
     }
@@ -176,7 +181,10 @@
       if (this.phase === 'wave' && this.spawnQueue.length) {
         this.spawnTimer -= dt;
         if (this.spawnTimer <= 0) {
-          const { type, route } = this.spawnQueue.shift();
+          const { route } = this.spawnQueue[0];
+          let { type } = this.spawnQueue.shift();
+          // Without anti-air, a flyer walks in as its ground twin (same HP and resistance) instead.
+          if (TD.ENEMY_DEFS[type].flying && !this.hasAntiAir) type = TD.ENEMY_DEFS[type].groundTwin;
           const enemy = new TD.Enemy(type, this.wave, this.map.routes[route]);
           enemy.wave = this.wave;
           enemy.route = route;
