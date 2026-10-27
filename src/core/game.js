@@ -2,7 +2,7 @@
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
     module.exports = factory(Object.assign({},
-      require('./config.js'), require('./path.js'), require('./enemy.js'), require('./tower.js'),
+      require('./config.js'), require('./maps.js'), require('./enemy.js'), require('./tower.js'),
       require('./projectile.js'), require('./wave.js'), require('./perks.js')));
   } else {
     root.TD = Object.assign(root.TD || {}, factory(root.TD));
@@ -13,10 +13,10 @@
   // Phases: build (before wave 1) -> wave -> perk (choose reward) -> wave ... -> over
   // After a wave's last spawn a countdown runs; at 0 (or on skip) the next wave starts, so waves can overlap.
   class Game {
-    constructor({ meta, path = new TD.Path(), rng = Math.random } = {}) {
+    constructor({ meta, map = new TD.GameMap(), rng = Math.random } = {}) {
       if (!meta) throw new Error('Game requires a MetaProgress');
       this.meta = meta;
-      this.path = path;
+      this.map = map;
       this.rng = rng;
       this.waves = new TD.WaveGenerator(rng);
       this.perkPicker = new TD.PerkPicker(rng);
@@ -42,6 +42,7 @@
       this.perkChoices = [];
       this.perksTaken = [];
       this.result = null;
+      this.nextPlan = this._planWave(1);
     }
 
     // ---------- Events ----------
@@ -65,6 +66,13 @@
 
     get enemiesRemaining() {
       return this.enemies.length + this.spawnQueue.length;
+    }
+
+    // Plan of the next wave ({ wave, queue, counts per route }) while it is shown on the map:
+    // before wave 1 and during the countdown. null while a wave is still spawning.
+    get upcoming() {
+      if (this.phase === 'over') return null;
+      return this.phase === 'build' || this.countdown !== null ? this.nextPlan : null;
     }
 
     // Gold paid for skipping the countdown now: the full clear bonus at 30s left, 0 at 0s.
@@ -94,7 +102,7 @@
     }
 
     canPlace(c, r) {
-      return this.path.inBounds(c, r) && !this.path.isPathTile(c, r) && !this.towerAt(c, r);
+      return this.map.inBounds(c, r) && !this.map.isPathTile(c, r) && !this.towerAt(c, r);
     }
 
     // ---------- Player actions ----------
@@ -103,7 +111,7 @@
       const cost = this.towerCost(type);
       if (this.gold < cost) return null;
       this.gold -= cost;
-      const tower = new TD.Tower(type, c, r, cost, this.path.tile);
+      const tower = new TD.Tower(type, c, r, cost, this.map.tile);
       this.towers.push(tower);
       return tower;
     }
@@ -134,7 +142,7 @@
       if (this.phase !== 'wave' || this.countdown === null) return null;
       const bonus = this.skipBonus;
       this.gold += bonus;
-      if (bonus) this._text(this.path.cols * this.path.tile / 2, this.path.rows * this.path.tile / 2 + 30, `ข้าม! +${bonus} gold`, '#f5c542', 1.2);
+      if (bonus) this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2 + 30, `ข้าม! +${bonus} gold`, '#f5c542', 1.2);
       this._launchWave();
       return bonus;
     }
@@ -160,8 +168,10 @@
       if (this.phase === 'wave' && this.spawnQueue.length) {
         this.spawnTimer -= dt;
         if (this.spawnTimer <= 0) {
-          const enemy = new TD.Enemy(this.spawnQueue.shift(), this.wave, this.path);
+          const { type, route } = this.spawnQueue.shift();
+          const enemy = new TD.Enemy(type, this.wave, this.map.routes[route]);
           enemy.wave = this.wave;
+          enemy.route = route;
           this.enemies.push(enemy);
           this.spawnTimer = this.spawnInterval;
         }
@@ -177,7 +187,7 @@
       for (const e of this.enemies) {
         if (!e.update(dt, this.time)) continue;
         this.hp = Math.max(0, this.hp - e.damage);
-        const base = this.path.basePosition;
+        const base = this.map.basePosition;
         this._text(base.x, base.y - 24, `-${e.damage} HP`, '#ff6b6b', 1);
         this._effect({ kind: 'ring', x: base.x, y: base.y, r0: 10, r1: 34, color: '#ff6b6b', life: 0.4 });
         if (this.hp <= 0) { this._gameOver(); return; }
@@ -320,9 +330,22 @@
       this._effect({ kind: 'ring', x: enemy.x, y: enemy.y, r0: enemy.radius, r1: enemy.radius * 2.2, color: enemy.color, life: 0.35 });
     }
 
+    // Picks the enemies of a wave and a random open route for each, so the route preview is known in advance.
+    _planWave(wave) {
+      const open = this.map.routesOpen(wave);
+      const queue = this.waves.build(wave).map(type => ({ type, route: Math.floor(this.rng() * open) }));
+      const counts = new Array(open).fill(0);
+      for (const e of queue) counts[e.route]++;
+      return { wave, queue, counts };
+    }
+
     _launchWave() {
       this.wave++;
-      this.spawnQueue = this.waves.build(this.wave);
+      this.spawnQueue = [...this.nextPlan.queue];
+      this.nextPlan = this._planWave(this.wave + 1);
+      if (this.map.routesOpen(this.wave) > this.map.routesOpen(this.wave - 1)) {
+        this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2 - 30, 'เส้นทางใหม่เปิดแล้ว!', '#ff6b6b', 2);
+      }
       this.spawnInterval = this.waves.spawnInterval(this.wave);
       this.spawnTimer = 0;
       this.spawning = true;
@@ -336,7 +359,7 @@
       const interest = Math.floor(Math.min(this.gold * this.mods.interest, 50 + wave * 10));
       this.gold += bonus + interest;
       this.wavesCleared = wave;
-      this._text(this.path.cols * this.path.tile / 2, this.path.rows * this.path.tile / 2,
+      this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2,
         `ผ่าน Wave ${wave}! +${bonus + interest} gold`, '#f5c542', 1.6);
       this.perkChoices = this.perkPicker.choices(this);
       if (this.perkChoices.length) this.phase = 'perk';

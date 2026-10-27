@@ -11,7 +11,7 @@ const { makeGame, makeMeta } = require('./helpers.js');
 const near = (a, b, eps = 1e-6) => Math.abs(a - b) < eps;
 
 function enemyAt(game, x, y, type = 'boss') {
-  const e = new Enemy(type, 1, game.path);
+  const e = new Enemy(type, 1, game.map.routes[0]);
   e.x = x;
   e.y = y;
   game.enemies.push(e);
@@ -66,7 +66,7 @@ test('Towers: burn and poison scale with level like damage', () => {
 
 test('Enemy: aura expires, freeze stops movement, superconduct raises damage taken', () => {
   const game = makeGame();
-  const e = new Enemy('normal', 1, game.path);
+  const e = new Enemy('normal', 1, game.map.routes[0]);
   e.setAura('fire', 0);
   assert.equal(e.activeAura(AURA_DURATION - 0.01), 'fire');
   assert.equal(e.activeAura(AURA_DURATION), null);
@@ -83,13 +83,13 @@ test('Enemy: aura expires, freeze stops movement, superconduct raises damage tak
 });
 
 test('Enemy: burn keeps the strongest; poison stacks up to the cap and resets after expiring', () => {
-  const e = new Enemy('normal', 1, makeGame().path);
+  const e = new Enemy('normal', 1, makeGame().map.routes[0]);
   e.applyBurn(8, 0);
   e.applyBurn(5, 1);
   assert.ok(near(e.dotDamage(1, 2), 8));
   assert.equal(e.dotDamage(1, 1 + BURN_DURATION), 0);
 
-  const p = new Enemy('normal', 1, makeGame().path);
+  const p = new Enemy('normal', 1, makeGame().map.routes[0]);
   for (let i = 0; i < 7; i++) p.applyPoison(6, 0);
   assert.equal(p.poisonStacks, POISON_MAX_STACKS);
   assert.ok(near(p.dotDamage(1, 1), 6 * POISON_MAX_STACKS));
@@ -184,7 +184,7 @@ test('Game: Tesla chains to 2 more enemies with 70% falloff per jump', () => {
 test('Game: burn and poison damage enemies every frame and kills pay gold', () => {
   const game = makeGame();
   game.phase = 'wave';
-  game.spawnQueue = ['normal'];
+  game.spawnQueue = [{ type: 'normal', route: 0 }];
   game.spawnTimer = 999;
   const e = enemyAt(game, 100, 100, 'normal');
   e.distance = 100;

@@ -18,6 +18,7 @@
         <div class="stat"><span class="label">Gold</span><span id="hud-gold" class="value gold">0</span></div>
         <div class="stat"><span class="label">Wave</span><span id="hud-wave" class="value">0</span></div>
         <div class="stat"><span class="label">ศัตรูที่เหลือ</span><span id="hud-left" class="value">0</span></div>
+        <div id="hud-map" class="map-name"></div>
       </section>
 
       <section>
@@ -67,11 +68,19 @@
         <div class="coin-box">🪙 <span id="hub-coins">0</span> Coin</div>
         <div class="muted">Wave สูงสุด: <b id="hub-best">0</b> · เล่นไปแล้ว: <b id="hub-runs">0</b> รอบ</div>
       </div>
+      <div class="hub-map">
+        <canvas id="hub-map" width="400" height="260"></canvas>
+        <div>
+          <div>แผนที่รอบนี้: <b id="hub-map-name"></b></div>
+          <p class="muted small">สุ่มใหม่ทุกรอบ · เริ่มด้วย 2 เส้นทาง และเปิดเพิ่ม 1 เส้นทางทุก 10 wave (สูงสุด 5) · เส้นทางจาง ๆ คือเส้นทางที่จะเปิดในอนาคต</p>
+          <p class="muted small">ก่อนเริ่มแต่ละ wave ลูกศรจะวิ่งบนเส้นทางที่ศัตรู wave ถัดไปจะใช้ พร้อมจำนวนศัตรูที่จุดเกิด</p>
+        </div>
+      </div>
       <h3>อัพเกรดถาวร</h3>
       <div id="shop-upgrades" class="shop-grid"></div>
       <h3>ปลดล็อกป้อม</h3>
       <div id="shop-unlocks" class="shop-grid"></div>
-      <p class="muted small">Coin ที่ได้ = wave ที่ผ่าน × 5 + (wave ที่ผ่าน)² ÷ 2 — ยิ่งไปได้ไกล ยิ่งได้เยอะ</p>
+      <p class="muted small">Coin ที่ได้ = wave ที่ผ่าน × 5 + (wave ที่ผ่าน)² ÷ 3 — ยิ่งไปได้ไกล ยิ่งได้เยอะ</p>
       <div class="row center">
         <button id="btn-start" class="btn primary big">เริ่มเกม</button>
         <button id="btn-reset" class="btn danger small-btn">ล้างเซฟ</button>
@@ -103,6 +112,7 @@
   <script src="src/core/config.js"></script>
   <script src="src/core/utils.js"></script>
   <script src="src/core/path.js"></script>
+  <script src="src/core/maps.js"></script>
   <script src="src/core/enemy.js"></script>
   <script src="src/core/tower.js"></script>
   <script src="src/core/projectile.js"></script>
