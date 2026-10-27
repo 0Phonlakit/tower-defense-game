@@ -1,117 +1,117 @@
 # Rogue Tower Defense
 
-เกม Tower Defense แนว Roguelike เล่นบนเบราว์เซอร์ เขียนด้วย JavaScript ล้วน (HTML5 Canvas) ไม่ต้องติดตั้งอะไร ไม่มี build step
+A roguelike tower defense game that runs in the browser. It is written in plain JavaScript (HTML5 Canvas), with nothing to install and no build step.
 
-ศัตรูเดินตามเส้นทางไปยังฐาน ผู้เล่นสร้างป้อมปืนเพื่อป้องกัน ฐานมีพลังชีวิต 20 เมื่อเหลือ 0 จะ Game Over แล้วได้ Coin ตามจำนวน wave ที่ผ่าน เอาไปอัพเกรดถาวรก่อนเริ่มรอบใหม่
+Enemies walk along a path toward your base, and you build towers to stop them. The base has 20 HP. When it reaches 0 the run ends (Game Over), and you earn Coins based on how many waves you cleared. Spend them on permanent upgrades before starting the next run.
 
-## วิธีเล่น
+## How to play
 
-เปิดไฟล์ `index.html` ด้วยเบราว์เซอร์ได้เลย (ดับเบิลคลิก หรือลากไปวางในเบราว์เซอร์)
+Open `index.html` in a browser (double-click it, or drag it into a browser window).
 
-ความคืบหน้า (Coin, อัพเกรด, ป้อมที่ปลดล็อก) บันทึกใน `localStorage` ของเบราว์เซอร์ ถ้าล้างข้อมูลเว็บหรือใช้โหมดไม่ระบุตัวตน เซฟจะหาย
+Progress (Coins, upgrades, unlocked towers) is saved in the browser's `localStorage`. Clearing site data or playing in a private window loses your save.
 
-### การควบคุม
+### Controls
 
-| ปุ่ม | การทำงาน |
+| Input | Action |
 |---|---|
-| `1` – `4` | เลือกป้อมที่จะสร้าง (กดซ้ำเพื่อยกเลิก) |
-| คลิกซ้าย | วางป้อม / เลือกป้อมที่สร้างแล้ว |
-| คลิกขวา, `Esc` | ยกเลิกการวาง / การเลือก |
-| `Space` | เริ่ม wave ถัดไป |
-| `U` | อัพเกรดป้อมที่เลือก |
+| `1` – `4` | Select a tower to build (press again to cancel) |
+| Left click | Place a tower / select a built tower |
+| Right click, `Esc` | Cancel placement / selection |
+| `Space` | Start the next wave |
+| `U` | Upgrade the selected tower |
 
-แถบด้านขวามีปุ่มเร่งความเร็ว x1/x2/x3 และตัวเลือก "เริ่ม wave อัตโนมัติ"
+The right-hand panel has x1/x2/x3 speed buttons and an "auto-start waves" option.
 
-## กติกา
+## Rules
 
-- **ฐาน** มีพลังชีวิต 20 ศัตรูที่เข้าถึงฐานจะลดพลังชีวิตตามชนิด เหลือ 0 = Game Over
-- **Gold** (ใช้ในรอบ) ได้จากการฆ่าศัตรูและโบนัสจบ wave ใช้สร้าง/อัพเกรดป้อม (สูงสุด Lv.4) ขายป้อมได้คืน 70%
-- **Perk** หลังจบแต่ละ wave เลือกพลังพิเศษ 1 จาก 3 แบบสุ่ม มีผลเฉพาะรอบนั้น
-- **Coin** (ถาวร) ได้ตอน Game Over ตามจำนวน wave ที่ผ่าน:
+- **Base**: has 20 HP. Each enemy that reaches it removes HP depending on its type. 0 HP = Game Over.
+- **Gold** (per run): earned by killing enemies and from end-of-wave bonuses. Spend it to build and upgrade towers (max Lv.4). Selling a tower refunds 70%.
+- **Perks**: after each wave, pick 1 of 3 random perks. They last for the current run only.
+- **Coins** (permanent): awarded at Game Over based on waves cleared:
 
-  `coin = wave × 5 + wave² ÷ 2` → ผ่าน 5 wave ได้ 37, 10 wave ได้ 100, 20 wave ได้ 300
+  `coin = wave × 5 + wave² ÷ 2` → 5 waves gives 37, 10 waves gives 100, 20 waves gives 300
 
-### ศัตรู
+### Enemies
 
-| ชนิด | ลดพลังชีวิตฐาน | ลักษณะ |
+| Type | Base damage | Notes |
 |---|---|---|
-| ธรรมดา | -1 | มาตรฐาน |
-| วิ่งเร็ว | -1 | เลือดน้อย เร็ว (ตั้งแต่ wave 3) |
-| หุ้มเกราะ | -2 | เลือดเยอะ ช้า (ตั้งแต่ wave 5) |
-| บอส | -5 | มาทุก 10 wave |
+| Normal | -1 | Standard |
+| Fast | -1 | Low HP, fast (from wave 3) |
+| Armored | -2 | High HP, slow (from wave 5) |
+| Boss | -5 | Every 10 waves |
 
-เลือดศัตรูเพิ่มขึ้นทุก wave ดู `Enemy.hpMultiplier()`
+Enemy HP grows every wave; see `Enemy.hpMultiplier()`.
 
-### ป้อม
+### Towers
 
-| ป้อม | ราคา | ปลดล็อก | จุดเด่น |
+| Tower | Cost | Unlock | Strength |
 |---|---|---|---|
-| ปืนกล | 50 | มีตั้งแต่เริ่ม | ยิงเร็ว เป้าเดี่ยว |
-| ปืนใหญ่ | 90 | 60 coin | ระเบิดวงกว้าง |
-| น้ำแข็ง | 70 | 50 coin | ทำให้ศัตรูช้าลง |
-| สไนเปอร์ | 120 | 100 coin | ระยะไกล ดาเมจสูง |
+| Machine gun | 50 | Available from the start | Fast fire, single target |
+| Cannon | 90 | 60 coins | Area splash damage |
+| Frost | 70 | 50 coins | Slows enemies |
+| Sniper | 120 | 100 coins | Long range, high damage |
 
-### อัพเกรดถาวร (ซื้อด้วย Coin)
+### Permanent upgrades (bought with Coins)
 
-ดาเมจ, ความเร็วยิง, ระยะยิง, ทุนเริ่มต้น, Gold จากศัตรู, โอกาสคริติคอล
+Damage, fire rate, range, starting gold, gold per enemy, critical hit chance
 
-## โครงสร้างโปรเจกต์
+## Project structure
 
 ```
 tower-defense/
-├── index.html            หน้าเกม โหลดสคริปต์ตามลำดับ
+├── index.html            Game page; loads scripts in order
 ├── style.css
-├── package.json          มีแค่ script สำหรับรันเทสต์ (ไม่มี dependency)
+├── package.json          Only a test script (no dependencies)
 ├── src/
-│   ├── core/             ตรรกะเกม ไม่แตะ DOM — เทสต์ด้วย Node ได้
-│   │   ├── config.js     ค่าคงที่: แผนที่ ป้อม ศัตรู อัพเกรดถาวร
-│   │   ├── utils.js      createRng (สุ่มแบบกำหนด seed), pickRandom
-│   │   ├── path.js       class Path        เส้นทางเดินของศัตรู
-│   │   ├── enemy.js      class Enemy       การเดิน เลือด การโดนชะลอ
-│   │   ├── tower.js      class Tower       ค่าสถานะ การเล็ง อัพเกรด/ขาย
-│   │   ├── projectile.js class Projectile  กระสุนติดตามเป้า
-│   │   ├── wave.js       class WaveGenerator  องค์ประกอบของแต่ละ wave
+│   ├── core/             Game logic, no DOM access — testable in Node
+│   │   ├── config.js     Constants: map, towers, enemies, permanent upgrades
+│   │   ├── utils.js      createRng (seeded random), pickRandom
+│   │   ├── path.js       class Path        Enemy walking path
+│   │   ├── enemy.js      class Enemy       Movement, HP, slow effects
+│   │   ├── tower.js      class Tower       Stats, targeting, upgrade/sell
+│   │   ├── projectile.js class Projectile  Homing projectiles
+│   │   ├── wave.js       class WaveGenerator  Composition of each wave
 │   │   ├── perks.js      PERKS, class PerkPicker
-│   │   ├── meta.js       class MetaProgress   Coin/อัพเกรดถาวร + เซฟ
-│   │   └── game.js       class Game        หนึ่งรอบการเล่น (state machine)
+│   │   ├── meta.js       class MetaProgress   Coins/permanent upgrades + saving
+│   │   └── game.js       class Game        One run (state machine)
 │   ├── ui/
-│   │   ├── renderer.js   class Renderer    วาดลง canvas (อ่านอย่างเดียว)
-│   │   └── app.js        class App         DOM, input, overlay, game loop
-│   └── main.js           จุดเริ่มต้น
-└── tests/                unit test (node:test)
+│   │   ├── renderer.js   class Renderer    Draws to the canvas (read-only)
+│   │   └── app.js        class App         DOM, input, overlays, game loop
+│   └── main.js           Entry point
+└── tests/                Unit tests (node:test)
 ```
 
-### สถาปัตยกรรม
+### Architecture
 
-- **`Game`** คือหนึ่งรอบการเล่น เดินตาม phase: `build` → `wave` → `perk` → `build` … → `over`
-  - คำสั่งของผู้เล่น: `buildTower`, `upgradeTower`, `sellTower`, `startWave`, `choosePerk`
-  - เดินเวลา: `update(dt)`
-  - แจ้งเหตุการณ์ผ่าน `on(name, fn)`: `wavestart`, `wavecleared`, `perkchosen`, `gameover`
-- **`MetaProgress`** เก็บความคืบหน้าข้ามรอบ รับ `storage` ที่มี `getItem`/`setItem` (ในเบราว์เซอร์คือ `localStorage`, ในเทสต์ใช้ของจำลอง)
-- **`App`** สร้าง `Game` ใหม่ทุกครั้งที่เริ่มรอบ ฟัง event เพื่อแสดง overlay และส่งคำสั่งจาก UI ไปที่ `Game`
-- **`Renderer`** วาดสถานะของ `Game` ไม่เปลี่ยนแปลง state
-- `Game` รับ `rng` เข้ามาได้ เทสต์จึงใช้ `createRng(seed)` ให้ผลลัพธ์เหมือนเดิมทุกครั้ง
+- **`Game`** is one run. It moves through phases: `build` → `wave` → `perk` → `build` … → `over`
+  - Player commands: `buildTower`, `upgradeTower`, `sellTower`, `startWave`, `choosePerk`
+  - Advancing time: `update(dt)`
+  - Events via `on(name, fn)`: `wavestart`, `wavecleared`, `perkchosen`, `gameover`
+- **`MetaProgress`** keeps progress across runs. It takes a `storage` object with `getItem`/`setItem` (`localStorage` in the browser, a fake in tests).
+- **`App`** creates a new `Game` for every run, listens to its events to show overlays, and forwards UI commands to the `Game`.
+- **`Renderer`** draws the `Game` state without changing it.
+- `Game` accepts an injected `rng`, so tests use `createRng(seed)` for repeatable results.
 
-ไฟล์ใน `src/core/` ใช้รูปแบบ UMD: ในเบราว์เซอร์จะแนบ class ไว้ที่ `window.TD` ส่วนใน Node ใช้ `require()` ได้ จึงเปิด `index.html` ตรงจาก `file://` ได้โดยไม่ต้องมีเซิร์ฟเวอร์ (ES modules ใช้กับ `file://` ไม่ได้)
+Files in `src/core/` use the UMD pattern: in the browser they attach their classes to `window.TD`, and in Node they work with `require()`. That lets you open `index.html` straight from `file://` without a server (ES modules don't work over `file://`).
 
-## รันเทสต์
+## Running tests
 
-ต้องมี Node.js 20 ขึ้นไป ไม่ต้อง `npm install`
+Requires Node.js 20 or later. No `npm install` needed.
 
 ```bash
 npm test
 ```
 
-เทสต์ครอบคลุมเฉพาะ `src/core/` (เส้นทาง, ศัตรู, ป้อม, กระสุน, wave, perk, การเซฟ, และ flow ของ `Game` เช่น ศัตรูธรรมดาเข้าฐาน -1, HP 0 แล้ว Game Over พร้อมจ่าย Coin) ส่วน `src/ui/` ไม่มี unit test
+Tests cover `src/core/` only (path, enemies, towers, projectiles, waves, perks, saving, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
 
-## ปรับสมดุลเกม
+## Balancing
 
-| ต้องการปรับ | แก้ที่ |
+| To change | Edit |
 |---|---|
-| ค่าสถานะป้อม/ศัตรู ราคา | `src/core/config.js` |
-| ความเร็วที่เลือดศัตรูเพิ่มขึ้น | `Enemy.hpMultiplier()` ใน `src/core/enemy.js` |
-| จำนวน/ชนิดศัตรูต่อ wave, โบนัสจบ wave | `src/core/wave.js` |
-| สูตร Coin | `MetaProgress.coinsForWaves()` ใน `src/core/meta.js` |
-| Perk | `PERKS` ใน `src/core/perks.js` |
+| Tower/enemy stats, costs | `src/core/config.js` |
+| How fast enemy HP grows | `Enemy.hpMultiplier()` in `src/core/enemy.js` |
+| Enemies per wave, end-of-wave bonus | `src/core/wave.js` |
+| Coin formula | `MetaProgress.coinsForWaves()` in `src/core/meta.js` |
+| Perks | `PERKS` in `src/core/perks.js` |
 
-ถ้าเปลี่ยนสูตรใดๆ ให้รัน `npm test` และแก้ค่าที่คาดหวังในเทสต์ให้ตรงกัน
+After changing any formula, run `npm test` and update the expected values in the tests to match.
