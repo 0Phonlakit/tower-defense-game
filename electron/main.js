@@ -1,7 +1,8 @@
 // Desktop app (Windows .exe): opens index.html in its own window. The game code is the same as the
 // browser version; this file only makes the window, F11 full screen and the Exit button work.
 //
-// `--smoke[=dir]` loads the game, checks it started with its font and no console errors, writes the result
+// `--smoke[=dir]` loads the game, checks it started with its font, fits the window without scrolling and has
+// no console errors, writes the result
 // (result.json + screenshot.png) to dir if given, and quits with exit code 1 if anything is wrong. Used by CI.
 'use strict';
 const { app, BrowserWindow, Menu, shell } = require('electron');
@@ -48,9 +49,19 @@ function smokeTest(win) {
   win.webContents.once('did-finish-load', () => setTimeout(async () => {
     const page = await win.webContents.executeJavaScript(`(async () => {
       const faces = await document.fonts.load('16px Mitr', 'Aกข');
-      return { started: !!window.app, fontLoaded: faces.length > 0 };
+      const de = document.documentElement;
+      return {
+        started: !!window.app,
+        fontLoaded: faces.length > 0,
+        window: [innerWidth, innerHeight],
+        page: [de.scrollWidth, de.scrollHeight],
+        screen: [screen.availWidth, screen.availHeight],
+        pixelRatio: devicePixelRatio,
+      };
     })()`);
-    const result = { ...page, errors };
+    // Narrow windows (under 760px) stack the sidebar under the board and scroll on purpose.
+    const fits = page.window[0] < 760 || (page.page[0] <= page.window[0] && page.page[1] <= page.window[1]);
+    const result = { ...page, fits, bounds: win.getContentBounds(), errors };
     const dir = smokeArg.split('=')[1];
     if (dir) {
       fs.mkdirSync(dir, { recursive: true });
@@ -58,7 +69,7 @@ function smokeTest(win) {
       fs.writeFileSync(path.join(dir, 'screenshot.png'), (await win.webContents.capturePage()).toPNG());
     }
     console.log(JSON.stringify(result));
-    app.exit(result.started && result.fontLoaded && !errors.length ? 0 : 1);
+    app.exit(result.started && result.fontLoaded && fits && !errors.length ? 0 : 1);
   }, 3000));
 }
 
