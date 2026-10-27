@@ -11,9 +11,10 @@
     constructor(doc = document) {
       this.doc = doc;
       this.meta = new TD.MetaProgress(safeStorage());
-      this.path = new TD.Path();
+      this.map = null;
       this.canvas = this.$('game');
-      this.renderer = new TD.Renderer(this.canvas, this.path);
+      this.renderer = new TD.Renderer(this.canvas);
+      this.hubRenderer = new TD.Renderer(this.$('hub-map'), 0.5);
       this.game = null;
       this.placing = null;
       this.selected = null;
@@ -42,7 +43,7 @@
 
     // ---------- Flow ----------
     startRun() {
-      this.game = new TD.Game({ meta: this.meta, path: this.path });
+      this.game = new TD.Game({ meta: this.meta, map: this.map });
       this.game.on('wavecleared', e => this.showPerkChoice(e));
       this.game.on('gameover', r => this.showGameOver(r));
       this.placing = null;
@@ -55,7 +56,18 @@
       this.renderPerkList();
     }
 
+    // Every run gets a random map, picked before the run starts.
+    rollMap() {
+      this.map = TD.GameMap.random();
+      this.renderer.setMap(this.map);
+      this.hubRenderer.setMap(this.map);
+      this.hubRenderer.draw(null);
+      this.$('hub-map-name').textContent = this.map.name;
+    }
+
     openHub() {
+      this.game = null;
+      this.rollMap();
       this.show('ov-over', false);
       this.show('ov-perk', false);
       this.renderHub();
@@ -93,7 +105,7 @@
       const rect = this.canvas.getBoundingClientRect();
       const x = (ev.clientX - rect.left) * (this.canvas.width / rect.width);
       const y = (ev.clientY - rect.top) * (this.canvas.height / rect.height);
-      return { c: Math.floor(x / this.path.tile), r: Math.floor(y / this.path.tile) };
+      return { c: Math.floor(x / this.map.tile), r: Math.floor(y / this.map.tile) };
     }
 
     bindInput() {
@@ -111,7 +123,7 @@
         this.$('btn-speed').textContent = `ความเร็ว x${this.speed}`;
       };
       this.$('btn-start').onclick = () => this.startRun();
-      this.$('btn-retry').onclick = () => this.startRun();
+      this.$('btn-retry').onclick = () => { this.rollMap(); this.startRun(); };
       this.$('btn-to-hub').onclick = () => this.openHub();
       this.$('btn-reset').onclick = () => {
         if (!confirm('ล้างเซฟทั้งหมด (Coin, อัพเกรด, ป้อมที่ปลดล็อก)?')) return;
@@ -257,6 +269,7 @@
       this.setText('hud-gold', String(Math.floor(g.gold)));
       this.setText('hud-wave', String(g.wave));
       this.setText('hud-left', String(g.enemiesRemaining));
+      this.setText('hud-map', `แผนที่: ${g.map.name} · เส้นทาง ${g.map.routesOpen(Math.max(1, g.wave))}/${g.map.routes.length}`);
 
       for (const b of this.$('tower-buttons').children) {
         const type = b.dataset.type;

@@ -2,7 +2,7 @@
 
 A roguelike tower defense game that runs in the browser. It is written in plain JavaScript (HTML5 Canvas), with nothing to install and no build step.
 
-Enemies walk along a path toward your base, and you build towers to stop them. The base has 20 HP. When it reaches 0 the run ends (Game Over), and you earn Coins based on how many waves you cleared. Spend them on permanent upgrades before starting the next run.
+Each run is played on a random map. Enemies walk along several routes toward your base, and you build towers to stop them. The base has 20 HP. When it reaches 0 the run ends (Game Over), and you earn Coins based on how many waves you cleared. Spend them on permanent upgrades before starting the next run.
 
 ## How to play
 
@@ -24,6 +24,8 @@ The right-hand panel has x1/x2/x3 speed buttons.
 
 ## Rules
 
+- **Maps**: each run picks 1 of 10 maps at random (shown in the hub before you start; "start over now" also rolls a new one). Every map has its own background and 5 routes from separate spawners to one base. 2 routes are open at the start, and 1 more opens at waves 10, 20 and 30. Routes that are not open yet are drawn faded with the wave they open on (W10/W20/W30), and you can't build on them.
+- **Route tracking**: before wave 1 and during each countdown, red arrows run along the routes the next wave will use, and the badge at each spawner shows how many enemies will come out of it. Each enemy's route is picked at random from the open routes.
 - **Base**: has 20 HP. Each enemy that reaches it removes HP depending on its type. 0 HP = Game Over.
 - **Gold** (per run): earned by killing enemies and from end-of-wave bonuses. Spend it to build and upgrade towers (max Lv.4). Selling a tower refunds 70%.
 - **Wave countdown**: once the last enemy of a wave has spawned, a 30-second countdown starts. Press Skip (or `Space`) to start the next wave early and get bonus gold: the full clear bonus with 30s left, scaling down to 0 as the timer runs out. When it reaches 0 the next wave starts automatically with no bonus. Waves can overlap; each wave still pays its clear bonus when all of its own enemies are gone.
@@ -84,9 +86,10 @@ tower-defense/
 ├── package.json          Only a test script (no dependencies)
 ├── src/
 │   ├── core/             Game logic, no DOM access — testable in Node
-│   │   ├── config.js     Constants: map, towers, enemies, permanent upgrades, elements/reactions
+│   │   ├── config.js     Constants: grid, towers, enemies, permanent upgrades, elements/reactions
 │   │   ├── utils.js      createRng (seeded random), pickRandom
-│   │   ├── path.js       class Path        Enemy walking path
+│   │   ├── path.js       class Path        One enemy route
+│   │   ├── maps.js       MAP_DEFS, class GameMap  The 10 maps (themes + 5 routes each), route opening
 │   │   ├── enemy.js      class Enemy       Movement, HP, slow/freeze, aura, burn/poison
 │   │   ├── tower.js      class Tower       Stats, targeting, upgrade/sell
 │   │   ├── projectile.js class Projectile  Homing projectiles
@@ -104,6 +107,7 @@ tower-defense/
 ### Architecture
 
 - **`Game`** is one run. It moves through phases: `build` (before wave 1) → `wave` → `perk` → `wave` … → `over`
+  - Created with a `GameMap`. Each wave is planned one wave ahead (`nextPlan`: enemy types + route per enemy); `upcoming` exposes that plan for the route preview.
   - Player commands: `buildTower`, `upgradeTower`, `sellTower`, `startWave`, `skipCountdown`, `choosePerk`
   - Advancing time: `update(dt)`
   - Events via `on(name, fn)`: `wavestart`, `wavecleared`, `perkchosen`, `gameover`
@@ -122,7 +126,7 @@ Requires Node.js 20 or later. No `npm install` needed.
 npm test
 ```
 
-Tests cover `src/core/` only (path, enemies, towers, projectiles, waves, perks, saving, elemental reactions, burn/poison, Tesla chains, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
+Tests cover `src/core/` only (path, maps and route opening, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, elemental reactions, burn/poison, Tesla chains, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
 
 ## Balancing
 
@@ -132,6 +136,7 @@ Tests cover `src/core/` only (path, enemies, towers, projectiles, waves, perks, 
 | Reactions, aura/burn/poison durations | `REACTIONS` and the constants above it in `src/core/config.js` |
 | How fast enemy HP grows | `Enemy.hpMultiplier()` in `src/core/enemy.js` |
 | Enemies per wave, end-of-wave bonus | `src/core/wave.js` |
+| Map layouts, themes, when routes open | `LAYOUTS`, `MAP_DEFS`, `START_ROUTES`, `ROUTE_STEP` in `src/core/maps.js` |
 | Countdown length | `WAVE_COUNTDOWN` in `src/core/config.js` |
 | Skip bonus | `Game.skipBonus` in `src/core/game.js` |
 | Coin formula | `MetaProgress.coinsForWaves()` in `src/core/meta.js` |

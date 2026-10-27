@@ -78,7 +78,7 @@ test('Game: tanks cost 2 HP and bosses 5 HP', () => {
   for (const [type, expected] of [['tank', 2], ['boss', 5]]) {
     const game = makeGame();
     game.startWave();
-    game.spawnQueue = [type];
+    game.spawnQueue = [{ type, route: 0 }];
     game.update(0.02);
     game.countdown = Infinity; // keep the next wave out of the way of slow enemies
     runUntil(game, g => g.phase !== 'wave');
@@ -189,11 +189,11 @@ test('Game: frost slows and splash hits several enemies', () => {
   const game = makeGame({ meta });
   const tower = game.buildTower('frost', 3, 3);
   game.phase = 'wave';
-  const a = new Enemy('tank', 1, game.path);
-  const b = new Enemy('tank', 1, game.path);
+  const a = new Enemy('tank', 1, game.map.routes[0]);
+  const b = new Enemy('tank', 1, game.map.routes[0]);
   a.distance = b.distance = 100;
   game.enemies.push(a, b);
-  game.spawnQueue = ['normal'];
+  game.spawnQueue = [{ type: 'normal', route: 0 }];
   game.spawnTimer = 999;
   runUntil(game, () => a.hp < a.maxHp, { maxSteps: 500 });
   assert.ok(tower);

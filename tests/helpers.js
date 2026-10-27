@@ -1,7 +1,7 @@
 'use strict';
 const { MetaProgress } = require('../src/core/meta.js');
 const { Game } = require('../src/core/game.js');
-const { Path } = require('../src/core/path.js');
+const { GameMap } = require('../src/core/maps.js');
 const { createRng } = require('../src/core/utils.js');
 
 // In-memory stand-in for localStorage.
@@ -19,8 +19,8 @@ function makeMeta(overrides = {}) {
   return meta;
 }
 
-function makeGame({ seed = 1, meta = makeMeta(), path = new Path() } = {}) {
-  return new Game({ meta, path, rng: createRng(seed) });
+function makeGame({ seed = 1, meta = makeMeta(), map = new GameMap() } = {}) {
+  return new Game({ meta, map, rng: createRng(seed) });
 }
 
 // Runs the simulation until predicate is true or the step budget is spent.
