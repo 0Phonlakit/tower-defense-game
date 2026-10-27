@@ -2,7 +2,7 @@
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
     module.exports = factory(Object.assign({},
-      require('./config.js'), require('./maps.js'), require('./enemy.js'), require('./tower.js'),
+      require('./config.js'), require('./i18n.js'), require('./maps.js'), require('./enemy.js'), require('./tower.js'),
       require('./projectile.js'), require('./wave.js'), require('./perks.js')));
   } else {
     root.TD = Object.assign(root.TD || {}, factory(root.TD));
@@ -149,7 +149,7 @@
       const bonus = this.skipBonus;
       this.gold += bonus;
       this.emit('skip', { bonus });
-      if (bonus) this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2 + 30, `ข้าม! +${bonus} gold`, '#f5c542', 1.2);
+      if (bonus) this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2 + 30, TD.t('fx.skip', { bonus }), '#f5c542', 1.2);
       this._launchWave();
       return bonus;
     }
@@ -378,7 +378,7 @@
       this.spawnQueue = [...this.nextPlan.queue];
       this.nextPlan = this._planWave(this.wave + 1);
       if (this.map.routesOpen(this.wave) > this.map.routesOpen(this.wave - 1)) {
-        this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2 - 30, 'เส้นทางใหม่เปิดแล้ว!', '#ff6b6b', 2);
+        this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2 - 30, TD.t('fx.routeOpen'), '#ff6b6b', 2);
         this.emit('routeopen', { wave: this.wave, open: this.map.routesOpen(this.wave) });
       }
       this.spawnInterval = this.waves.spawnInterval(this.wave);
@@ -395,7 +395,7 @@
       this.gold += bonus + interest;
       this.wavesCleared = wave;
       this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2,
-        `ผ่าน Wave ${wave}! +${bonus + interest} gold`, '#f5c542', 1.6);
+        TD.t('fx.waveCleared', { wave, gold: bonus + interest }), '#f5c542', 1.6);
       this.perkChoices = this.perkPicker.choices(this);
       if (this.perkChoices.length) this.phase = 'perk';
       this.emit('wavecleared', { wave, bonus, interest, choices: this.perkChoices });

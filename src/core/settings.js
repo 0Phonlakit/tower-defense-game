@@ -1,6 +1,6 @@
-// Player settings: board resolution and the three volume channels. Saved separately from game progress.
+// Player settings: language, board resolution and the three volume channels. Saved separately from game progress.
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory(require('./config.js'));
+  if (typeof module === 'object' && module.exports) module.exports = factory(Object.assign({}, require('./config.js'), require('./i18n.js')));
   else root.TD = Object.assign(root.TD || {}, factory(root.TD));
 })(typeof self !== 'undefined' ? self : this, function (TD) {
   'use strict';
@@ -10,7 +10,7 @@
   const BOARD_H = TD.ROWS * TD.TILE;
 
   // 'auto' fits the window; the others are fixed board sizes in CSS pixels (1x, 1.25x, 1.5x the board).
-  const RESOLUTIONS = { auto: { label: 'อัตโนมัติ (พอดีหน้าจอ)' } };
+  const RESOLUTIONS = { auto: { labelKey: 'set.resAuto' } };
   for (const width of [BOARD_W, Math.round(BOARD_W * 1.25), Math.round(BOARD_W * 1.5)]) {
     const height = Math.round(width * BOARD_H / BOARD_W);
     RESOLUTIONS[`${width}x${height}`] = { label: `${width} × ${height}`, width };
@@ -20,7 +20,7 @@
 
   class Settings {
     static defaults() {
-      return { resolution: 'auto', sfx: 0.7, music: 0.4, ui: 0.7 };
+      return { resolution: 'auto', sfx: 0.7, music: 0.4, ui: 0.7, language: 'th' };
     }
 
     // storage: any object with getItem/setItem (localStorage, or a fake in tests). null = no saving.
@@ -37,19 +37,28 @@
         const saved = JSON.parse(this.storage.getItem(this.key) || 'null');
         if (!saved) return;
         if (saved.resolution in RESOLUTIONS) this.resolution = saved.resolution;
+        if (saved.language in TD.LANGUAGES) this.language = saved.language;
         for (const k of VOLUME_KEYS) if (typeof saved[k] === 'number') this.setVolume(k, saved[k], false);
       } catch (e) { /* corrupt or blocked storage: keep defaults */ }
     }
 
     save() {
       if (!this.storage) return;
-      const { resolution, sfx, music, ui } = this;
-      try { this.storage.setItem(this.key, JSON.stringify({ resolution, sfx, music, ui })); } catch (e) { /* ignore */ }
+      const { resolution, sfx, music, ui, language } = this;
+      try { this.storage.setItem(this.key, JSON.stringify({ resolution, sfx, music, ui, language })); } catch (e) { /* ignore */ }
     }
 
     setResolution(id) {
       if (!(id in RESOLUTIONS)) return false;
       this.resolution = id;
+      this.save();
+      return true;
+    }
+
+    // 'th' or 'en' (see TD.LANGUAGES).
+    setLanguage(lang) {
+      if (!(lang in TD.LANGUAGES)) return false;
+      this.language = lang;
       this.save();
       return true;
     }

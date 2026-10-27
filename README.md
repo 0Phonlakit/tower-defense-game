@@ -16,7 +16,7 @@ After picking a slot you get the main menu, which shows the current slot and a "
 
 - **เริ่มเกม (Start)**: starts a run right away on a random map.
 - **อัพเกรด (Upgrade)**: spend Coins on permanent upgrades, split into tabs: Attack (damage, fire rate, range, crit), Economy (starting gold, gold per kill) and Tower unlocks. The reset-save button here clears only the current slot.
-- **ตั้งค่า (Settings)**: resolution (Auto fits the window, or a fixed 960×640 / 1200×800 / 1440×960 board, drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
+- **ตั้งค่า (Settings)**: language (ไทย / English — every screen, name and in-game message switches right away, and the choice is saved), resolution (Auto fits the window, or a fixed 960×640 / 1200×800 / 1440×960 board, drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
 - **คู่มือ (Guide)**: three tabs: towers (each tower's level-1 stats, cost and unlock price), enemies (common enemies plus every map's special units, with flying and resistances) and elemental reactions.
 - **ออกจากเกม (Exit)**: tries to close the tab. Browsers only let a page close a tab that a script opened, so if that is blocked you get a goodbye screen; close the tab yourself.
 
@@ -126,6 +126,7 @@ tower-defense/
 ├── src/
 │   ├── core/             Game logic, no DOM access — testable in Node
 │   │   ├── config.js     Constants: grid, towers, enemies, permanent upgrades, elements/reactions
+│   │   ├── i18n.js       Thai/English UI text (t) and English names for game data (loc)
 │   │   ├── utils.js      createRng (seeded random), pickRandom
 │   │   ├── path.js       class Path        One enemy route
 │   │   ├── maps.js       MAP_DEFS, class GameMap  The 10 maps (themes + 5 routes each), route opening
@@ -170,7 +171,7 @@ Requires Node.js 20 or later. No `npm install` needed.
 npm test
 ```
 
-Tests cover `src/core/` and the sprite data, including the 4 looks per tower (road spacing, save slots, perk stacking, path, maps and route opening, map units, ground twins, resistances, anti-air, routes never crossing, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
+Tests cover `src/core/` (including both languages having the same text keys and English names for all game data) and the sprite data, including the 4 looks per tower (road spacing, save slots, perk stacking, path, maps and route opening, map units, ground twins, resistances, anti-air, routes never crossing, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
 
 ## Balancing
 
@@ -198,3 +199,7 @@ Everything is pixel art drawn in code (`src/ui/sprites.js`), with no image files
 - **Bases** (16×16, a different one per map: stone castle, sandstone fort, ice palace, obsidian keep, witch hut, lighthouse, moon tower, tree house, crystal citadel, ancient temple) and **scenery** (8×8) are built from rectangles, triangles and lines, with the outline added automatically.
 - **Shots** look different per tower and point the way they fly: arrows, tumbling boulders, ice shards with a sparkle trail, fireballs with embers, water orbs, spinning poison flasks; the ballista leaves a bolt streak and the storm crystal a jagged lightning bolt. Each hit has its own effect too: sparks, dust and debris, frost shards, a fire burst, a water splash, a poison cloud.
 - Ground and roads get a pixel texture in each map's colors. Ground, scenery, roads and the base are drawn once into a cached layer and only redrawn when the map, the open routes or the resolution change.
+
+## Languages
+
+The game is in Thai and English, chosen in Settings (default Thai). UI text lives in `src/core/i18n.js` under one key per string (`STRINGS.th` / `STRINGS.en`, with `{name}` placeholders filled by `TD.t`). Game data keeps its Thai names in its own file (towers and enemies in `config.js`, maps in `maps.js`, perks in `perks.js`) and gets English names from `DATA_EN` via `TD.loc`. Fixed page text is tagged with `data-i18n` in `index.html`. To add a string, add the key to both languages; a test fails if the two languages' keys or placeholders differ, or if any tower, enemy, map, upgrade, perk, element, reaction, damage type or tab has no English name.
