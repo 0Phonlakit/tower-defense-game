@@ -1,14 +1,25 @@
 # Rogue Tower Defense
 
-A roguelike tower defense game that runs in the browser. It is written in plain JavaScript (HTML5 Canvas), with nothing to install and no build step.
+A roguelike tower defense game for the browser or Windows. It is written in plain JavaScript (HTML5 Canvas). The browser version has nothing to install and no build step. The Windows version is the same game in its own window, installed from a `.exe`.
 
 A fantasy tower defense drawn in pixel art: archer towers, catapults and mages against goblins, orcs and dragons. Each run is played on a random map. Enemies walk along several routes toward your base, and you build towers to stop them. The base has 20 HP. When it reaches 0 the run ends (Game Over), and you earn Coins based on how many waves you cleared. Spend them on permanent upgrades before starting the next run.
 
+## Install on Windows
+
+1. Download `Rogue-Tower-Defense-Setup-<version>.exe` from the repository's **Releases** page. Builds of each pull request are also under **Actions** → *Windows installer* → *Artifacts*.
+2. Run it and follow the installer. It installs for your user only, so no admin rights are needed. You can pick the folder, and it adds desktop and Start menu shortcuts.
+3. The installer is not code-signed, so Windows SmartScreen may show "Windows protected your PC". Click **More info** → **Run anyway**.
+
+The desktop version runs the same game files as the browser version, and plays offline (fonts included).
+- `F11` switches full screen, and the menu's Exit button closes the game.
+- Progress and settings are saved in `%APPDATA%\Rogue Tower Defense`.
+- Uninstalling (Settings → Apps) keeps that folder, so your saves are still there if you reinstall.
+
 ## How to play
 
-Open `index.html` in a browser (double-click it, or drag it into a browser window).
+Open `index.html` in a browser (double-click it, or drag it into a browser window), or start the installed Windows game.
 
-Every launch starts with a short "Made By 0Phonlakit" splash that fades into the save-slot screen (click or press any key to skip it). Behind the menu screens a silent demo game plays itself on a random map, using its own throwaway progress, so it never touches your save. Menus use a parchment-and-wood look with wooden buttons, and each screen fades in. Titles use the Mitr font from Google Fonts when online and fall back to a system Thai font offline.
+Every launch starts with a short "Made By 0Phonlakit" splash that fades into the save-slot screen (click or press any key to skip it). Behind the menu screens a silent demo game plays itself on a random map, using its own throwaway progress, so it never touches your save. Menus use a parchment-and-wood look with wooden buttons, and each screen fades in. Titles use the Mitr font, bundled in `assets/fonts/` so it works offline. Korean and Japanese text uses a system font.
 
 The game opens on the save slot screen. There are 3 slots; each keeps its own Coins, permanent upgrades, unlocked towers, best wave and run count. Each card shows that summary (or "empty"), with Play/New and Delete. The last slot played is highlighted. Progress saved before slots existed is moved into slot 1 the first time (the old data is kept as a backup). Settings are shared by all slots.
 
@@ -18,7 +29,7 @@ After picking a slot you get the main menu, which shows the current slot and a "
 - **อัพเกรด (Upgrade)**: spend Coins on permanent upgrades, split into tabs: Attack (damage, fire rate, range, crit), Economy (starting gold, gold per kill) and Tower unlocks. The reset-save button here clears only the current slot.
 - **ตั้งค่า (Settings)**: language (ไทย / English / 한국어 / 日本語 / Français — every screen, name and in-game message switches right away, and the choice is saved), resolution (Auto fits the window, or a fixed 960×640 / 1200×800 / 1440×960 board that shrinks if the window is smaller; drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
 - **คู่มือ (Guide)**: three tabs: towers (each tower's level-1 stats, cost and unlock price), enemies (common enemies plus every map's special units, with flying and resistances) and elemental reactions.
-- **ออกจากเกม (Exit)**: tries to close the tab. Browsers only let a page close a tab that a script opened, so if that is blocked you get a goodbye screen; close the tab yourself.
+- **ออกจากเกม (Exit)**: closes the game. In the Windows version this quits the app. In a browser it tries to close the tab, but browsers only let a page close a tab that a script opened; if that is blocked you get a goodbye screen and close the tab yourself.
 
 All sounds and the music are generated with the Web Audio API (no sound files). They start after your first click or key press, because browsers block audio before that.
 
@@ -26,7 +37,7 @@ The whole game fits on one screen without scrolling on desktop and laptop window
 
 During a run the sidebar shows only three blocks: status (HP, gold, wave, enemies left, map), tower building, and the wave controls. Clicking a built tower opens a small popup next to it with its level and the Upgrade (cost) and Sell (refund) buttons. `Esc` or the ⏸ button pauses the game; the pause screen lists the perks taken this run (4 lines, scroll for more) and has resume, settings, guide (showing this map's special units) and quit to menu. Quitting ends the run like a Game Over, so you still get Coins for the waves you cleared.
 
-Progress (Coins, upgrades, unlocked towers) and settings are saved in the browser's `localStorage`. Clearing site data or playing in a private window loses them.
+Progress (Coins, upgrades, unlocked towers) and settings are saved in `localStorage`. In a browser, clearing site data or playing in a private window loses them. The Windows version keeps them in its own app data folder.
 
 ### Controls
 
@@ -125,8 +136,13 @@ The code is split by part: **data** (what things are: numbers, art, maps, text),
 ```
 tower-defense/
 ├── index.html                Game page; loads every script and stylesheet in order
-├── package.json              Only a test script (no dependencies)
+├── package.json              Scripts; Electron + electron-builder for the Windows build only
+├── electron/main.js          Windows desktop app: opens index.html in a window (F11, Exit, smoke test)
+├── build/icon.png            App icon (the castle sprite)
+├── assets/fonts/             Mitr font files (OFL) so text looks the same offline
+├── .github/workflows/        Builds, installs and smoke-tests the Windows installer
 ├── styles/                   CSS, loaded in this order
+│   ├── fonts.css             The bundled Mitr font
 │   ├── base.css              Colors (dark theme), page and text basics
 │   ├── layout.css            Board beside the sidebar, fitted to one screen
 │   ├── hud.css               In-game widgets: status, tower buttons, info bar, tower popup
@@ -190,6 +206,19 @@ tower-defense/
 - `Game` accepts an injected `rng`, so tests use `createRng(seed)` for repeatable results.
 
 Files use the UMD pattern: in the browser they attach to `window.TD`, and in Node they work with `require()`. That lets you open `index.html` straight from `file://` without a server or build step (ES modules don't work over `file://`). Because of that, `index.html` loads files in dependency order: data before the core module that reads it, the class file before the files that add methods to it. In Node, a core module that reads data `require`s it (for example `core/config.js` re-exports all of `src/data/`, `core/perks.js` re-exports `data/perks.js`), so tests can keep requiring one module.
+
+## Building the Windows installer
+
+Requires Node.js 20 or later. The browser game and the tests don't need this step.
+
+```bash
+npm install          # Electron and electron-builder (dev only)
+npm start            # run the desktop version
+npm run smoke        # start it once and check the game loaded with its font and no console errors
+npm run dist:win     # build dist/Rogue-Tower-Defense-Setup-<version>.exe (works from Windows, macOS or Linux)
+```
+
+GitHub Actions (`.github/workflows/windows.yml`) builds the installer on Windows for every pull request. It then installs it silently, starts the installed game in smoke-test mode and uploads the installer as an artifact. Pushing a `v*` tag also attaches the installer to a GitHub Release.
 
 ## Running tests
 

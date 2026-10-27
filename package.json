@@ -1,12 +1,60 @@
 {
   "name": "rogue-tower-defense",
-  "version": "1.16.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Roguelike tower defense game that runs in the browser",
+  "description": "Roguelike tower defense game: play in the browser or install on Windows",
+  "author": "0Phonlakit",
+  "main": "electron/main.js",
   "scripts": {
-    "test": "node --test \"tests/*.test.js\""
+    "test": "node --test \"tests/*.test.js\"",
+    "start": "electron .",
+    "smoke": "electron . --smoke",
+    "dist:win": "electron-builder --win nsis --x64"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "electron": "^38.8.6",
+    "electron-builder": "^26.18.0"
+  },
+  "allowScripts": {
+    "electron@38.8.6": true
+  },
+  "build": {
+    "appId": "io.github.0phonlakit.roguetowerdefense",
+    "productName": "Rogue Tower Defense",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "src/**",
+      "styles/**",
+      "assets/**",
+      "electron/**",
+      "build/icon.png"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Rogue Tower Defense",
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "Rogue-Tower-Defense-Setup-${version}.${ext}"
+    }
   }
 }
