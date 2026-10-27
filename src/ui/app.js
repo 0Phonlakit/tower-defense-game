@@ -217,6 +217,10 @@
       if (s.splash) lines.push(`รัศมีระเบิด: ${Math.round(s.splash)}`);
       if (s.slow) lines.push(`ชะลอ: ${Math.round(s.slow * 100)}% / ${s.slowDur}s`);
       if (s.crit) lines.push(`คริติคอล: ${Math.round(s.crit * 100)}%`);
+      if (s.element) lines.push(`ธาตุ: ${TD.ELEMENTS[s.element].name}`);
+      if (s.burn) lines.push(`ติดไฟ: ${s.burn.toFixed(1)}/วิ นาน ${TD.BURN_DURATION} วิ`);
+      if (s.poison) lines.push(`พิษ: ${s.poison.toFixed(1)}/วิ ต่อชั้น (สูงสุด ${TD.POISON_MAX_STACKS} ชั้น)`);
+      if (s.chain) lines.push(`กระโดด: ${s.chain} ตัว`);
       this.$('sel-stats').innerHTML = lines.join('<br>');
       this.$('btn-sell').textContent = `ขาย (+${t.sellValue})`;
     }
@@ -232,6 +236,12 @@
       this.$('enemy-legend').innerHTML = Object.values(TD.ENEMY_DEFS).map(e =>
         `<div class="legend-item"><b><span class="dot" style="background:${e.color}"></span>${e.name}</b><span>ฐาน -${e.dmg} HP</span></div>`
       ).join('');
+      const el = k => `<span class="dot" style="background:${TD.ELEMENTS[k].color}"></span>${TD.ELEMENTS[k].name}`;
+      this.$('reaction-legend').innerHTML = Object.entries(TD.REACTIONS).map(([pair, r]) => {
+        const [a, b] = pair.split('+');
+        return `<div class="legend-item"><b>${el(a)} + ${el(b)}</b><span>${r.name}</span></div>`
+          + `<div class="legend-note">${r.desc}</div>`;
+      }).join('');
     }
 
     setText(id, value) {

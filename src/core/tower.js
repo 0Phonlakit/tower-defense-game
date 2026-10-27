@@ -28,14 +28,19 @@
     stats(mods = TD.defaultModifiers(), metaUpgrades = NO_META) {
       const d = this.def;
       const lv = this.level - 1;
+      const dmgScale = (1 + 0.6 * lv) * (1 + 0.1 * metaUpgrades.dmg) * mods.dmg; // also scales burn/poison
       return {
-        dmg: d.dmg * (1 + 0.6 * lv) * (1 + 0.1 * metaUpgrades.dmg) * mods.dmg,
+        dmg: d.dmg * dmgScale,
         rate: d.rate * (1 + 0.15 * lv) * (1 + 0.06 * metaUpgrades.rate) * mods.rate,
         range: d.range * (1 + 0.1 * lv) * (1 + 0.05 * metaUpgrades.range) * mods.range,
         splash: d.splash ? d.splash * mods.splash * (1 + 0.1 * lv) : 0,
         slow: d.slow ? Math.min(0.8, d.slow + mods.slow) : 0,
         slowDur: d.slowDur || 0,
         crit: Math.min(0.9, 0.03 * metaUpgrades.crit + mods.crit),
+        element: d.element || null,
+        burn: d.burn ? d.burn * dmgScale : 0,
+        poison: d.poison ? d.poison * dmgScale : 0,
+        chain: d.chain || 0,
       };
     }
 

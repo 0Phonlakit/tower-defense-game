@@ -183,6 +183,11 @@
         if (this.hp <= 0) { this._gameOver(); return; }
       }
 
+      for (const e of this.enemies) {
+        const dot = e.dotDamage(dt, this.time);
+        if (dot > 0) this._damage(e, dot);
+      }
+
       for (const t of this.towers) {
         const stats = this.towerStats(t);
         const target = t.tick(dt, this.enemies, stats);
@@ -216,35 +221,98 @@
       const crit = this.rng() < stats.crit;
       const damage = stats.dmg * (crit ? 2 : 1);
       if (def.instant) {
-        this._damage(target, damage);
         this._effect({ kind: 'tracer', x: tower.x, y: tower.y, x2: target.x, y2: target.y, color: def.color, life: 0.15 });
+        this._hit(target, damage, stats);
         if (crit) this._text(target.x, target.y - 18, 'CRIT!', '#ff6b6b', 0.6);
+        if (stats.chain) this._chain(target, damage, stats, def.color);
         return;
       }
       this.projectiles.push(new TD.Projectile({
         x: tower.x + Math.cos(tower.angle) * 14,
         y: tower.y + Math.sin(tower.angle) * 14,
         target, speed: def.proj, damage, crit,
-        splash: stats.splash, slow: stats.slow, slowDur: stats.slowDur, color: def.color,
+        splash: stats.splash, slow: stats.slow, slowDur: stats.slowDur,
+        element: stats.element, burn: stats.burn, poison: stats.poison, color: def.color,
       }));
+    }
+
+    // Lightning jumps to the nearest enemy not hit yet, losing damage on each jump.
+    _chain(from, damage, stats, color) {
+      const hit = new Set([from]);
+      let last = from;
+      for (let i = 0; i < stats.chain; i++) {
+        const next = this._enemiesNear(last, TD.CHAIN_RANGE, hit)[0];
+        if (!next) break;
+        damage *= TD.CHAIN_FALLOFF;
+        this._effect({ kind: 'tracer', x: last.x, y: last.y, x2: next.x, y2: next.y, color, life: 0.15 });
+        this._hit(next, damage, stats);
+        hit.add(next);
+        last = next;
+      }
+    }
+
+    // Living enemies within range of `from`, nearest first.
+    _enemiesNear(from, range, exclude = new Set()) {
+      return this.enemies
+        .filter(e => !e.dead && !exclude.has(e) && Math.hypot(e.x - from.x, e.y - from.y) <= range + e.radius)
+        .sort((a, b) => Math.hypot(a.x - from.x, a.y - from.y) - Math.hypot(b.x - from.x, b.y - from.y));
     }
 
     _impact(p) {
       if (p.splash) {
         for (const e of this.enemies) {
           if (e.dead || Math.hypot(e.x - p.tx, e.y - p.ty) > p.splash + e.radius) continue;
-          if (p.slow) e.applySlow(p.slow, p.slowDur, this.time);
-          this._damage(e, p.damage);
+          this._hit(e, p.damage, p);
         }
         this._effect({ kind: 'ring', x: p.tx, y: p.ty, r0: 4, r1: p.splash, color: p.color, life: 0.3 });
       } else if (p.target && !p.target.dead) {
-        this._damage(p.target, p.damage);
+        this._hit(p.target, p.damage, p);
       }
       if (p.crit) this._text(p.tx, p.ty - 18, 'CRIT!', '#ff6b6b', 0.6);
     }
 
+    // One tower hit: status effects, element/reaction, then damage. `fx` is tower stats or a projectile.
+    _hit(enemy, damage, fx) {
+      if (enemy.dead) return;
+      if (fx.slow) enemy.applySlow(fx.slow, fx.slowDur, this.time);
+      if (fx.burn) enemy.applyBurn(fx.burn, this.time);
+      if (fx.poison) enemy.applyPoison(fx.poison, this.time);
+      const reaction = fx.element ? this._react(enemy, fx.element) : null;
+      this._damage(enemy, damage * (reaction && reaction.mult || 1));
+      if (reaction) this._reactionEffect(reaction, enemy, damage);
+    }
+
+    // Applies an element: triggers a reaction with a different aura (clearing it), or sets/refreshes the aura.
+    _react(enemy, element) {
+      const reaction = TD.reactionFor(enemy.activeAura(this.time), element);
+      if (!reaction) {
+        enemy.setAura(element, this.time);
+        return null;
+      }
+      enemy.clearAura();
+      this._text(enemy.x, enemy.y - 26, `${reaction.name}!`, reaction.color, 0.9);
+      this.emit('reaction', { id: reaction.id, enemy });
+      return reaction;
+    }
+
+    _reactionEffect(r, enemy, damage) {
+      if (r.id === 'overload') {
+        for (const e of this._enemiesNear(enemy, r.radius)) this._damage(e, damage * r.blast);
+        this._effect({ kind: 'ring', x: enemy.x, y: enemy.y, r0: 6, r1: r.radius, color: r.color, life: 0.35 });
+      } else if (r.id === 'freeze') {
+        enemy.freeze(enemy.type === 'boss' ? r.bossDuration : r.duration, this.time);
+      } else if (r.id === 'superconduct') {
+        enemy.makeVulnerable(r.vuln, r.duration, this.time);
+      } else if (r.id === 'electrocharged') {
+        for (const e of this._enemiesNear(enemy, r.radius, new Set([enemy])).slice(0, r.targets)) {
+          this._effect({ kind: 'tracer', x: enemy.x, y: enemy.y, x2: e.x, y2: e.y, color: r.color, life: 0.2 });
+          this._damage(e, damage * r.ratio);
+        }
+      }
+    }
+
     _damage(enemy, amount) {
-      if (!enemy.takeDamage(amount)) return;
+      if (!enemy.takeDamage(amount * enemy.damageTakenMultiplier(this.time))) return;
       this.kills++;
       const gold = Math.max(1, Math.floor(enemy.reward * this.mods.gold * (1 + 0.08 * this.meta.upgrades.gold)));
       this.gold += gold;
