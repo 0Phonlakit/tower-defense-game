@@ -8,10 +8,12 @@ Each run is played on a random map. Enemies walk along several routes toward you
 
 Open `index.html` in a browser (double-click it, or drag it into a browser window).
 
-The game opens on the main menu:
+The game opens on the save slot screen. There are 3 slots; each keeps its own Coins, permanent upgrades, unlocked towers, best wave and run count. Each card shows that summary (or "empty"), with Play/New and Delete. The last slot played is highlighted. Progress saved before slots existed is moved into slot 1 the first time (the old data is kept as a backup). Settings are shared by all slots.
+
+After picking a slot you get the main menu, which shows the current slot and a "change slot" button:
 
 - **เริ่มเกม (Start)**: starts a run right away on a random map.
-- **อัพเกรด (Upgrade)**: spend Coins on permanent upgrades, split into tabs: Attack (damage, fire rate, range, crit), Economy (starting gold, gold per kill) and Tower unlocks. The reset-save button is here too.
+- **อัพเกรด (Upgrade)**: spend Coins on permanent upgrades, split into tabs: Attack (damage, fire rate, range, crit), Economy (starting gold, gold per kill) and Tower unlocks. The reset-save button here clears only the current slot.
 - **ตั้งค่า (Settings)**: resolution (Auto fits the window, or a fixed 800×520 / 1200×780 / 1600×1040 board, drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
 - **คู่มือ (Guide)**: three tabs: towers (each tower's level-1 stats, cost and unlock price), enemies (common enemies plus every map's special units, with flying and resistances) and elemental reactions.
 - **ออกจากเกม (Exit)**: tries to close the tab. Browsers only let a page close a tab that a script opened, so if that is blocked you get a goodbye screen; close the tab yourself.
@@ -131,6 +133,7 @@ tower-defense/
 │   │   ├── wave.js       class WaveGenerator  Composition of each wave
 │   │   ├── perks.js      PERKS, class PerkPicker
 │   │   ├── meta.js       class MetaProgress   Coins/permanent upgrades + saving
+│   │   ├── saves.js      class SaveSlots   The 3 save slots (one MetaProgress each)
 │   │   ├── settings.js   class Settings    Resolution + volumes, saved separately
 │   │   └── game.js       class Game        One run (state machine)
 │   ├── ui/
@@ -163,7 +166,7 @@ Requires Node.js 20 or later. No `npm install` needed.
 npm test
 ```
 
-Tests cover `src/core/` only (perk stacking, path, maps and route opening, map units, ground twins, resistances, anti-air, routes never crossing, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
+Tests cover `src/core/` only (save slots, perk stacking, path, maps and route opening, map units, ground twins, resistances, anti-air, routes never crossing, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
 
 ## Balancing
 

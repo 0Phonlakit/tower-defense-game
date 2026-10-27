@@ -11,6 +11,7 @@ class MemoryStorage {
   }
   getItem(k) { return k in this.data ? this.data[k] : null; }
   setItem(k, v) { this.data[k] = String(v); }
+  removeItem(k) { delete this.data[k]; }
 }
 
 function makeMeta(overrides = {}) {
