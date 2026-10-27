@@ -10,6 +10,14 @@
   <div id="app">
     <main id="board">
       <canvas id="game" width="800" height="520"></canvas>
+      <!-- Shown next to the tower the player clicks -->
+      <div id="tower-pop" class="tower-pop" hidden>
+        <div id="pop-name" class="pop-name"></div>
+        <div class="row">
+          <button id="btn-upgrade" class="btn small-btn"></button>
+          <button id="btn-sell" class="btn danger small-btn"></button>
+        </div>
+      </div>
     </main>
 
     <aside id="sidebar">
@@ -24,14 +32,6 @@
       <section>
         <h3>สร้างป้อม <small>(กด 1-8)</small></h3>
         <div id="tower-buttons" class="tower-buttons"></div>
-        <div id="sel-panel" class="sel-panel" hidden>
-          <h3 id="sel-name"></h3>
-          <div id="sel-stats" class="sel-stats"></div>
-          <div class="row">
-            <button id="btn-upgrade" class="btn"></button>
-            <button id="btn-sell" class="btn danger"></button>
-          </div>
-        </div>
       </section>
 
       <section class="controls">

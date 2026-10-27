@@ -13,12 +13,12 @@ The game opens on the main menu:
 - **เริ่มเกม (Start)**: starts a run right away on a random map.
 - **อัพเกรด (Upgrade)**: spend Coins on permanent upgrades, split into tabs: Attack (damage, fire rate, range, crit), Economy (starting gold, gold per kill) and Tower unlocks. The reset-save button is here too.
 - **ตั้งค่า (Settings)**: resolution (Auto fits the window, or a fixed 800×520 / 1200×780 / 1600×1040 board, drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
-- **คู่มือ (Guide)**: two tabs: enemies (common enemies plus every map's special units, with flying and resistances) and elemental reactions.
+- **คู่มือ (Guide)**: three tabs: towers (each tower's level-1 stats, cost and unlock price), enemies (common enemies plus every map's special units, with flying and resistances) and elemental reactions.
 - **ออกจากเกม (Exit)**: tries to close the tab. Browsers only let a page close a tab that a script opened, so if that is blocked you get a goodbye screen; close the tab yourself.
 
 All sounds and the music are generated with the Web Audio API (no sound files). They start after your first click or key press, because browsers block audio before that.
 
-During a run the sidebar shows only three blocks: status (HP, gold, wave, enemies left, map), tower building (with the selected tower's upgrade/sell panel), and the wave controls. `Esc` or the ⏸ button pauses the game; the pause screen lists the perks taken this run and has resume, settings, guide (showing this map's special units) and quit to menu. Quitting ends the run like a Game Over, so you still get Coins for the waves you cleared.
+During a run the sidebar shows only three blocks: status (HP, gold, wave, enemies left, map), tower building, and the wave controls. Clicking a built tower opens a small popup next to it with its level and the Upgrade (cost) and Sell (refund) buttons. `Esc` or the ⏸ button pauses the game; the pause screen lists the perks taken this run (4 lines, scroll for more) and has resume, settings, guide (showing this map's special units) and quit to menu. Quitting ends the run like a Game Over, so you still get Coins for the waves you cleared.
 
 Progress (Coins, upgrades, unlocked towers) and settings are saved in the browser's `localStorage`. Clearing site data or playing in a private window loses them.
 

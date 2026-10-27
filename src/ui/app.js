@@ -21,7 +21,7 @@
       this.quitting = false;
       this.upgradeTab = 'attack';
       this.settingsReturn = 'ov-menu';
-      this.guideTab = 'enemies';
+      this.guideTab = 'towers';
       this.guideReturn = 'ov-menu';
       this.placing = null;
       this.selected = null;
@@ -305,12 +305,33 @@
       }
     }
 
+    // Upgrade/sell popup for the tower the player clicked; positioned every frame in placeTowerPop().
     renderSelection() {
       const t = this.selected;
-      if (!t || !this.game) { this.show('sel-panel', false); return; }
-      this.show('sel-panel', true);
-      const s = this.game.towerStats(t);
-      this.$('sel-name').textContent = `${t.def.name} (Lv.${t.level})`;
+      if (!t || !this.game) { this.show('tower-pop', false); return; }
+      this.$('pop-name').textContent = `${t.def.name} Lv.${t.level}`;
+      this.$('btn-sell').textContent = `ขาย (+${t.sellValue})`;
+      this.show('tower-pop', true);
+    }
+
+    // Above the tower if there is room, otherwise below it; kept inside the board.
+    placeTowerPop() {
+      const pop = this.$('tower-pop');
+      const t = this.selected;
+      if (!t || !this.game || this.paused || this.game.isOver) { pop.hidden = true; return; }
+      pop.hidden = false;
+      const c = this.canvas;
+      const k = c.clientWidth / TD.BOARD_W;
+      const half = pop.offsetWidth / 2;
+      const x = Math.min(c.offsetLeft + c.clientWidth - half, Math.max(c.offsetLeft + half, c.offsetLeft + t.x * k));
+      const above = t.y * k - 24 * k > pop.offsetHeight;
+      pop.style.left = `${x}px`;
+      pop.style.top = `${c.offsetTop + (above ? t.y - 24 : t.y + 24) * k}px`;
+      pop.classList.toggle('below', !above);
+    }
+
+    // Stat lines for one tower's stats object (Guide tab).
+    towerStatLines(s) {
       const lines = [`ดาเมจ: ${s.dmg.toFixed(1)}`, `ยิง/วินาที: ${s.rate.toFixed(2)}`, `ระยะ: ${Math.round(s.range)}`];
       if (s.splash) lines.push(`รัศมีระเบิด: ${Math.round(s.splash)}`);
       if (s.slow) lines.push(`ชะลอ: ${Math.round(s.slow * 100)}% / ${s.slowDur}s`);
@@ -321,8 +342,7 @@
       if (s.chain) lines.push(`กระโดด: ${s.chain} ตัว`);
       lines.push(`ชนิดดาเมจ: ${TD.DAMAGE_TYPES[s.dmgType]}`);
       lines.push(s.air ? `ยิงอากาศได้ (อากาศ x${TD.AIR_BONUS} · พื้น x${TD.AA_GROUND_MULT})` : 'ยิงได้เฉพาะพื้นดิน');
-      this.$('sel-stats').innerHTML = lines.join('<br>');
-      this.$('btn-sell').textContent = `ขาย (+${t.sellValue})`;
+      return lines;
     }
 
     renderPerkList() {
@@ -347,7 +367,7 @@
     renderGuide() {
       const tabs = this.$('guide-tabs');
       tabs.innerHTML = '';
-      for (const [id, label] of [['enemies', 'ศัตรู'], ['reactions', 'ปฏิกิริยาธาตุ']]) {
+      for (const [id, label] of [['towers', 'ป้อม'], ['enemies', 'ศัตรู'], ['reactions', 'ปฏิกิริยาธาตุ']]) {
         const b = this.doc.createElement('button');
         b.className = 'tab' + (id === this.guideTab ? ' active' : '');
         b.setAttribute('role', 'tab');
@@ -356,7 +376,20 @@
         b.onclick = () => { this.guideTab = id; this.renderGuide(); };
         tabs.appendChild(b);
       }
-      this.$('guide-body').innerHTML = this.guideTab === 'enemies' ? this.guideEnemies() : this.guideReactions();
+      const body = { towers: () => this.guideTowers(), enemies: () => this.guideEnemies(), reactions: () => this.guideReactions() };
+      this.$('guide-body').innerHTML = body[this.guideTab]();
+    }
+
+    // Level-1 base stats of every tower, before permanent upgrades and perks.
+    guideTowers() {
+      return '<p class="muted small">ค่าพื้นฐานที่ Lv.1 ก่อนอัพเกรดถาวรและ Perk · กดที่ป้อมบนแผนที่เพื่ออัพเกรดหรือขาย</p><div class="shop-grid">'
+        + Object.entries(TD.TOWER_DEFS).map(([type, d]) => {
+          const lines = this.towerStatLines(new TD.Tower(type, 0, 0).stats());
+          const unlock = d.unlock ? `ปลดล็อก 🪙 ${d.unlock}` : 'มีตั้งแต่เริ่ม';
+          return `<div class="shop-item"><div class="s-name"><span class="dot" style="background:${d.color}"></span> ${d.key}. ${d.name}</div>`
+            + `<div class="s-desc">${d.desc}</div><div class="s-level">สร้าง ${d.cost} gold · ${unlock}</div>`
+            + `<div class="sel-stats">${lines.join('<br>')}</div></div>`;
+        }).join('') + '</div>';
     }
 
     // Common enemies, then map units: this map's during a run, every map's from the main menu.
@@ -412,6 +445,7 @@
       else if (canSkip) waveBtn.textContent = `ข้ามไป Wave ${g.wave + 1} (+${g.skipBonus} gold) · ${Math.ceil(g.countdown)}s`;
       else waveBtn.textContent = `Wave ${g.wave} กำลังดำเนิน...`;
 
+      this.placeTowerPop();
       if (this.selected) {
         const up = this.$('btn-upgrade');
         if (this.selected.isMaxLevel) {

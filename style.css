@@ -111,7 +111,12 @@ h3 small { color: var(--muted); font-weight: normal; }
 .perk-list { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
 .pause-perks { text-align: left; background: var(--panel-2); border-radius: 8px; padding: 10px 12px; margin: 8px 0 16px; }
 .pause-perks h3 { margin: 0 0 6px; }
-.sel-panel { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+#board { position: relative; }
+.tower-pop { position: absolute; z-index: 5; transform: translate(-50%, -100%); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.45); white-space: nowrap; }
+.tower-pop.below { transform: translate(-50%, 0); }
+.tower-pop .pop-name { font-weight: bold; font-size: 13px; margin-bottom: 4px; text-align: center; }
+.pause-perks .perk-list { max-height: calc(4 * 1.6em); overflow-y: auto; }
+.pause-perks .perk-list li { line-height: 1.6em; margin: 0; }
 .guide-body h3 { margin: 16px 0 8px; }
 .guide-map { margin-bottom: 10px; }
 .guide-map-name { font-weight: bold; margin-bottom: 2px; }
