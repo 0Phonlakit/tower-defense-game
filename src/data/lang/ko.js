@@ -1,4 +1,4 @@
-// Korean language pack: UI text and game-data names (see i18n.js for how packs are used).
+// Korean language pack: UI text and game-data names (see src/core/i18n.js for how packs are used).
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
   else root.TD = Object.assign(root.TD || {}, factory());

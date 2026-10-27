@@ -6,7 +6,12 @@
   <title>Rogue Tower Defense</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;600&display=swap">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/layout.css">
+  <link rel="stylesheet" href="styles/hud.css">
+  <link rel="stylesheet" href="styles/screens.css">
+  <link rel="stylesheet" href="styles/theme-parchment.css">
+  <link rel="stylesheet" href="styles/splash.css">
 </head>
 <body>
   <!-- Menu background: a demo game that plays itself behind the menu screens -->
@@ -191,27 +196,55 @@
   </div>
 
   <script src="src/core/config.js"></script>
-  <script src="src/core/lang-ko.js"></script>
-  <script src="src/core/lang-ja.js"></script>
-  <script src="src/core/lang-fr.js"></script>
+  <script src="src/data/towers.js"></script>
+  <script src="src/data/elements.js"></script>
+  <script src="src/data/enemies.js"></script>
+  <script src="src/data/upgrades.js"></script>
+  <script src="src/data/lang/th.js"></script>
+  <script src="src/data/lang/en.js"></script>
+  <script src="src/data/lang/ko.js"></script>
+  <script src="src/data/lang/ja.js"></script>
+  <script src="src/data/lang/fr.js"></script>
   <script src="src/core/i18n.js"></script>
   <script src="src/core/utils.js"></script>
   <script src="src/core/path.js"></script>
-  <script src="src/core/maps.js"></script>
+  <script src="src/data/maps.js"></script>
+  <script src="src/core/map.js"></script>
   <script src="src/core/enemy.js"></script>
   <script src="src/core/tower.js"></script>
   <script src="src/core/projectile.js"></script>
   <script src="src/core/wave.js"></script>
+  <script src="src/data/perks.js"></script>
   <script src="src/core/perks.js"></script>
   <script src="src/core/meta.js"></script>
   <script src="src/core/saves.js"></script>
   <script src="src/core/settings.js"></script>
   <script src="src/core/game.js"></script>
-  <script src="src/ui/sprites.js"></script>
-  <script src="src/ui/renderer.js"></script>
+  <script src="src/data/art/pixel-grid.js"></script>
+  <script src="src/data/art/enemies.js"></script>
+  <script src="src/data/art/towers.js"></script>
+  <script src="src/data/art/bases.js"></script>
+  <script src="src/data/art/scenery.js"></script>
+  <script src="src/render/sprites.js"></script>
+  <script src="src/render/renderer.js"></script>
+  <script src="src/render/map-layer.js"></script>
+  <script src="src/render/units.js"></script>
+  <script src="src/render/effects.js"></script>
   <script src="src/ui/demo.js"></script>
   <script src="src/ui/audio.js"></script>
+  <script src="src/ui/text.js"></script>
   <script src="src/ui/app.js"></script>
+  <script src="src/ui/input.js"></script>
+  <script src="src/ui/hud.js"></script>
+  <script src="src/ui/screens/splash.js"></script>
+  <script src="src/ui/screens/slots.js"></script>
+  <script src="src/ui/screens/menu.js"></script>
+  <script src="src/ui/screens/upgrades.js"></script>
+  <script src="src/ui/screens/settings.js"></script>
+  <script src="src/ui/screens/guide.js"></script>
+  <script src="src/ui/screens/pause.js"></script>
+  <script src="src/ui/screens/perk.js"></script>
+  <script src="src/ui/screens/game-over.js"></script>
   <script src="src/main.js"></script>
 </body>
 </html>

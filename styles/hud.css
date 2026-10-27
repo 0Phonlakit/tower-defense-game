@@ -1,0 +1,81 @@
+/* In-game widgets: headings, status block, tower buttons, buttons, perk list, info bar, tower popup, legend.
+   Part 3 of 6; the files are loaded in this order (see index.html). */
+h1, h2, h3 { margin: 0 0 8px; }
+h3 { font-size: 15px; }
+h3 small { color: var(--muted); font-weight: normal; }
+
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.stat { background: var(--panel-2); border-radius: 6px; padding: 6px 8px; display: flex; flex-direction: column; }
+.stat .label { color: var(--muted); font-size: 12px; }
+.stat .value { font-size: 20px; font-weight: bold; }
+.value.hp { color: var(--hp); }
+.value.gold { color: var(--gold); }
+
+.tower-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tower-btn {
+  background: var(--panel-2);
+  border: 2px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 8px;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.tower-btn:hover:not(:disabled) { border-color: var(--muted); }
+.tower-btn.active { border-color: var(--gold); }
+.tower-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.tower-btn .t-name { font-weight: bold; display: flex; align-items: center; gap: 6px; }
+.tower-btn .t-cost { color: var(--gold); font-size: 12px; }
+.tower-btn .t-desc { color: var(--muted); font-size: 11px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+.sel-stats { color: var(--muted); font-size: 13px; line-height: 1.6; margin-bottom: 8px; }
+
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row.center { justify-content: center; margin-top: 16px; }
+
+.btn {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font: inherit;
+}
+.btn:hover:not(:disabled) { filter: brightness(1.2); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn.primary:hover:not(:disabled) { background: var(--primary-hover); filter: none; }
+.btn.danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+.btn.big { padding: 10px 18px; font-size: 15px; font-weight: bold; }
+.controls .btn.big { width: 100%; margin-bottom: 8px; }
+.small-btn { font-size: 12px; padding: 6px 10px; }
+
+
+.perk-list { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
+.pause-perks { text-align: left; background: var(--panel-2); border-radius: 8px; padding: 10px 12px; margin: 8px 0 16px; }
+.pause-perks h3 { margin: 0 0 6px; }
+#board { position: relative; }
+.info-bar { box-sizing: border-box; max-width: 100%; height: 36px; line-height: 22px; margin-top: 8px; padding: 6px 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; text-align: center; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.info-bar:empty { visibility: hidden; }
+.tower-pop { position: absolute; z-index: 5; transform: translate(-50%, -100%); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.45); white-space: nowrap; }
+.tower-pop.below { transform: translate(-50%, 0); }
+.tower-pop .pop-name { font-weight: bold; font-size: 13px; margin-bottom: 4px; text-align: center; }
+.pause-perks .perk-list { max-height: calc(4 * 1.6em); overflow-y: auto; }
+.pause-perks .perk-list li { line-height: 1.6em; margin: 0; }
+.perk-full { color: var(--gold); font-weight: normal; }
+.p-stack { color: var(--gold); font-size: 12px; margin-top: 4px; }
+.guide-body h3 { margin: 16px 0 8px; }
+.guide-map { margin-bottom: 10px; }
+.guide-map-name { font-weight: bold; margin-bottom: 2px; }
+.perk-list li { margin-bottom: 2px; }
+
+.legend-item { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); padding: 2px 0; }
+.legend-note { font-size: 12px; color: var(--muted); opacity: 0.8; padding: 0 0 4px 14px; }
+.legend-item b { color: var(--text); font-weight: normal; display: flex; align-items: center; gap: 6px; }
+
+.muted { color: var(--muted); }
+.small { font-size: 12px; }
+.danger-text { color: var(--danger); text-align: center; }
