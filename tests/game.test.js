@@ -91,6 +91,7 @@ test('Game: towers kill enemies and earn gold', () => {
   game.gold = 1000;
   for (const [c, r] of [[3, 3], [5, 4], [5, 7], [3, 5]]) game.buildTower('gun', c, r);
   const goldAfterBuild = game.gold;
+  game.nextPlan.queue.forEach(e => { e.route = 0; }); // the guns cover the first route only
   game.startWave();
   runUntil(game, g => g.phase !== 'wave');
   assert.equal(game.hp, MAX_HP);

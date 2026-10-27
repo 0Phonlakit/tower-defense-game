@@ -325,7 +325,8 @@
       const d = TD.ENEMY_DEFS[type];
       const resist = Object.entries(d.resist || {}).map(([k, v]) =>
         v === 0 ? `ไม่รับ${TD.DAMAGE_TYPES[k]}` : `${TD.DAMAGE_TYPES[k]}เข้าแค่ ${Math.round(v * 100)}%`);
-      const note = [d.flying ? '✈ บินได้ (ป้อมยิงอากาศเท่านั้น)' : '', ...resist].filter(Boolean).join(' · ');
+      const twin = d.groundTwin ? `ถ้ายังไม่มีป้อมยิงอากาศ จะมาเป็น${TD.ENEMY_DEFS[d.groundTwin].name}เดินดินแทน` : '';
+      const note = [d.flying ? '✈ บินได้ (ป้อมยิงอากาศเท่านั้น)' : '', twin, ...resist].filter(Boolean).join(' · ');
       return `<div class="legend-item"><b><span class="dot" style="background:${d.color}"></span>${d.flying ? '✈ ' : ''}${d.name}</b><span>ฐาน -${d.dmg} HP</span></div>`
         + (note ? `<div class="legend-note">${note}</div>` : '');
     }

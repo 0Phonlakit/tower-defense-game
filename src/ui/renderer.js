@@ -23,6 +23,7 @@
 
     setMap(map) {
       this.map = map;
+      this.infoCorner = Renderer.infoCorner(map);
       this.deco = Renderer.scatterDeco(map);
     }
 
@@ -49,9 +50,9 @@
       this.drawDeco();
       this.drawPaths(open);
       this.drawSpawns(open);
-      this.drawBase(game);
+      this.drawBase();
       if (!game) return;
-      this.drawTracking(game.upcoming);
+      this.drawTracking(game.upcoming, open);
 
       if (view.placing) this.drawGrid();
       if (view.selected) this.drawRange(view.selected.x, view.selected.y, game.towerStats(view.selected).range, true);
@@ -60,6 +61,7 @@
       for (const p of game.projectiles) this.drawProjectile(p);
       for (const fx of game.effects) this.drawEffect(fx);
       if (view.placing && view.hover) this.drawGhost(game, view.placing, view.hover);
+      this.drawInfoBox(game);
     }
 
     drawGround() {
@@ -96,20 +98,34 @@
       const [edge, fill] = map.theme.path;
       ctx.lineCap = 'square';
       ctx.lineJoin = 'miter';
-      const order = map.routes.map((r, i) => i).reverse();
-      for (const i of order) {
-        const route = map.routes[i];
-        ctx.globalAlpha = i < open ? 1 : 0.4;
-        for (const [color, width] of [[edge, map.tile], [fill, map.tile - 8]]) {
-          ctx.strokeStyle = color;
-          ctx.lineWidth = width;
+      // All edges first, then all fills, so roads that join look like one connected road.
+      // Closed routes use colors mixed toward the ground instead of transparency, so they join cleanly too.
+      const ground = map.theme.ground[0];
+      const closedOrder = map.routes.map((r, i) => i).filter(i => i >= open);
+      const openOrder = map.routes.map((r, i) => i).filter(i => i < open);
+      const passes = [
+        [closedOrder, Renderer.mix(edge, ground, 0.55), map.tile],
+        [openOrder, edge, map.tile],
+        [closedOrder, Renderer.mix(fill, ground, 0.55), map.tile - 8],
+        [openOrder, fill, map.tile - 8],
+      ];
+      for (const [ids, color, width] of passes) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = width;
+        for (const i of ids) {
+          const route = map.routes[i];
           ctx.beginPath();
           ctx.moveTo(route.points[0].x, route.points[0].y);
           for (const p of route.points.slice(1)) ctx.lineTo(p.x, p.y);
           ctx.stroke();
         }
       }
-      ctx.globalAlpha = 1;
+    }
+
+    // Blends hex color a toward hex color b by t (0..1).
+    static mix(a, b, t) {
+      const ch = (hex, i) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+      return '#' + [0, 1, 2].map(i => Math.round(ch(a, i) + (ch(b, i) - ch(a, i)) * t).toString(16).padStart(2, '0')).join('');
     }
 
     drawSpawns(open) {
@@ -118,32 +134,36 @@
       map.routes.forEach((route, i) => {
         const x = route.spawnTile[0] * map.tile + map.tile / 2;
         const y = route.spawnTile[1] * map.tile + map.tile / 2;
-        if (i < open) {
-          ctx.fillStyle = 'rgba(155, 81, 224, 0.35)';
-          this.circle(x, y, 16 + pulse); ctx.fill();
-          ctx.fillStyle = '#9b51e0';
-          this.circle(x, y, 9); ctx.fill();
-          return;
-        }
-        ctx.fillStyle = 'rgba(30, 30, 30, 0.7)';
-        this.circle(x, y, 12); ctx.fill();
-        this.label(`W${map.routeOpensAt(i)}`, x, y + 4, '#ddd', 11);
+        if (i >= open) return; // spawners of routes that open later stay hidden
+        ctx.fillStyle = 'rgba(155, 81, 224, 0.35)';
+        this.circle(x, y, 16 + pulse); ctx.fill();
+        ctx.fillStyle = '#9b51e0';
+        this.circle(x, y, 9); ctx.fill();
       });
     }
 
-    // Arrows run along the routes the next wave will use; the badge shows how many enemies take each one.
-    drawTracking(plan) {
+    // Arrows run along the open routes the next wave will use (routes that open later stay unmarked),
+    // and a corner label shows how many enemies the next wave has in total.
+    drawTracking(plan, open) {
       if (!plan) return;
       const { ctx, map } = this;
-      const shift = (performance.now() / 1000 * 70) % 46;
+      const gap = 46;
+      const shift = (performance.now() / 1000 * 70) % gap;
+      // Arrows sit at fixed distances from the base, so routes that share a road put their
+      // arrows on the same spots; each spot is drawn once.
+      const drawn = new Set();
+      ctx.fillStyle = 'rgba(229, 72, 77, 0.9)';
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.lineWidth = 1.5;
       plan.counts.forEach((count, i) => {
-        if (!count) return;
+        if (!count || i >= open) return;
         const route = map.routes[i];
-        ctx.fillStyle = 'rgba(229, 72, 77, 0.9)';
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
-        ctx.lineWidth = 1.5;
-        for (let d = shift; d < route.length - map.tile / 2; d += 46) {
+        for (let toBase = map.tile / 2 + gap - shift; toBase <= route.length; toBase += gap) {
+          const d = route.length - toBase;
           const p = route.positionAt(d), q = route.positionAt(d + 2);
+          const key = `${Math.round(p.x)},${Math.round(p.y)}`;
+          if (drawn.has(key)) continue;
+          drawn.add(key);
           const a = Math.atan2(q.y - p.y, q.x - p.x);
           ctx.beginPath();
           ctx.moveTo(p.x + Math.cos(a) * 7, p.y + Math.sin(a) * 7);
@@ -151,12 +171,34 @@
           ctx.lineTo(p.x + Math.cos(a - 2.4) * 6, p.y + Math.sin(a - 2.4) * 6);
           ctx.closePath(); ctx.fill(); ctx.stroke();
         }
-        const x = route.spawnTile[0] * map.tile + map.tile / 2;
-        const y = route.spawnTile[1] * map.tile + map.tile / 2;
-        ctx.fillStyle = '#e5484d';
-        this.circle(x + 12, y - 12, 10); ctx.fill();
-        this.label(String(count), x + 12, y - 8, '#fff', 12);
       });
+    }
+
+    // Always-on box at the bottom of the board: base HP and wave, plus the next wave's size
+    // while it is being previewed.
+    drawInfoBox(game) {
+      const { ctx } = this;
+      const plan = game.upcoming;
+      const text = `❤ ${game.hp}/${TD.MAX_HP} · Wave ${game.wave}` + (plan ? ` · ถัดไป: ${plan.queue.length} ตัว` : '');
+      ctx.font = 'bold 13px system-ui';
+      const w = ctx.measureText(text).width + 20, h = 26;
+      const x = this.infoCorner.right ? this.width - w - 8 : 8;
+      const y = this.height - h - 8;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.beginPath(); ctx.roundRect(x, y, w, h, 6); ctx.fill();
+      this.label(text, x + w / 2, y + 18, '#fff', 13);
+    }
+
+    // The bottom corner farthest from every spawner and the base, so the info box never covers them.
+    static infoCorner(map) {
+      const W = map.cols * map.tile, H = map.rows * map.tile;
+      const spots = map.routes.map(r => r.spawnTile).concat([map.baseTile])
+        .map(([c, r]) => ({ x: (c + 0.5) * map.tile, y: (r + 0.5) * map.tile }));
+      const corners = [false, true].map(right => {
+        const cx = right ? W : 0;
+        return { right, d: Math.min(...spots.map(p => Math.hypot(p.x - cx, p.y - H))) };
+      });
+      return corners.sort((a, b) => b.d - a.d)[0];
     }
 
     // Bold centered text with a dark outline, readable on light and dark maps.
@@ -171,7 +213,7 @@
       ctx.fillText(text, x, y);
     }
 
-    drawBase(game) {
+    drawBase() {
       const { ctx, map } = this;
       const T = map.tile;
       const x = map.baseTile[0] * T, y = map.baseTile[1] * T;
@@ -186,10 +228,6 @@
       ctx.beginPath(); ctx.moveTo(x + 20, y + 4); ctx.lineTo(x + 20, y - 12); ctx.stroke();
       ctx.fillStyle = '#e5484d';
       ctx.fillRect(x + 20, y - 12, 12, 7);
-      if (game) {
-        const lx = Math.min(this.width - 24, Math.max(24, x + T / 2));
-        this.label(`❤ ${game.hp}`, lx, y < T ? y + T + 14 : y - 16, '#fff', 12);
-      }
     }
 
     drawGrid() {
