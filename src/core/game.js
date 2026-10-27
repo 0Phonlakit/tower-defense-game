@@ -251,10 +251,11 @@
       const damage = stats.dmg * (crit ? 2 : 1);
       this.emit('fire', { type: tower.type });
       if (def.instant) {
-        this._effect({ kind: 'tracer', x: tower.x, y: tower.y, x2: target.x, y2: target.y, color: def.color, life: 0.15 });
+        this._effect({ kind: 'tracer', style: tower.type, x: tower.x, y: tower.y, x2: target.x, y2: target.y, color: def.color, life: 0.18 });
+        this._effect({ kind: 'impact', style: tower.type, x: target.x, y: target.y, color: def.color, life: 0.3 });
         this._hit(target, damage, stats);
         if (crit) this._text(target.x, target.y - 18, 'CRIT!', '#ff6b6b', 0.6);
-        if (stats.chain) this._chain(target, damage, stats, def.color);
+        if (stats.chain) this._chain(target, damage, stats, def.color, tower.type);
         return;
       }
       this.projectiles.push(new TD.Projectile({
@@ -263,19 +264,19 @@
         target, speed: def.proj, damage, crit,
         splash: stats.splash, slow: stats.slow, slowDur: stats.slowDur,
         element: stats.element, burn: stats.burn, poison: stats.poison,
-        dmgType: stats.dmgType, air: stats.air, color: def.color,
+        dmgType: stats.dmgType, air: stats.air, color: def.color, kind: tower.type,
       }));
     }
 
     // Lightning jumps to the nearest enemy not hit yet, losing damage on each jump.
-    _chain(from, damage, stats, color) {
+    _chain(from, damage, stats, color, style = null) {
       const hit = new Set([from]);
       let last = from;
       for (let i = 0; i < stats.chain; i++) {
         const next = this._enemiesNear(last, TD.CHAIN_RANGE, hit)[0];
         if (!next) break;
         damage *= TD.CHAIN_FALLOFF;
-        this._effect({ kind: 'tracer', x: last.x, y: last.y, x2: next.x, y2: next.y, color, life: 0.15 });
+        this._effect({ kind: 'tracer', style, x: last.x, y: last.y, x2: next.x, y2: next.y, color, life: 0.18 });
         this._hit(next, damage, stats);
         hit.add(next);
         last = next;
@@ -299,6 +300,7 @@
       } else if (p.target && !p.target.dead) {
         this._hit(p.target, p.damage, p);
       }
+      this._effect({ kind: 'impact', style: p.kind, x: p.tx, y: p.ty, r: p.splash || 12, color: p.color, life: p.splash ? 0.45 : 0.3 });
       if (p.crit) this._text(p.tx, p.ty - 18, 'CRIT!', '#ff6b6b', 0.6);
     }
 
