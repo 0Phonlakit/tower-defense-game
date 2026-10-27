@@ -21,6 +21,8 @@
       this.quitting = false;
       this.upgradeTab = 'attack';
       this.settingsReturn = 'ov-menu';
+      this.guideTab = 'enemies';
+      this.guideReturn = 'ov-menu';
       this.placing = null;
       this.selected = null;
       this.hover = null;
@@ -73,7 +75,6 @@
     rollMap() {
       this.map = TD.GameMap.random();
       this.renderer.setMap(this.map);
-      this.renderLegend();
     }
 
     // The main menu draws a random map behind it as a backdrop.
@@ -99,9 +100,17 @@
       this.showOverlay('ov-settings');
     }
 
+    // from: the overlay to return to (main menu or pause menu). In a run it shows this map's units.
+    openGuide(from) {
+      this.guideReturn = from;
+      this.renderGuide();
+      this.showOverlay('ov-guide');
+    }
+
     pause() {
       if (!this.game || this.game.isOver || this.game.phase === 'perk' || this.paused) return;
       this.paused = true;
+      this.renderPerkList();
       this.showOverlay('ov-pause');
     }
 
@@ -182,6 +191,9 @@
       this.$('btn-start').onclick = () => this.startRun();
       this.$('btn-open-upgrade').onclick = () => this.openUpgrades();
       this.$('btn-open-settings').onclick = () => this.openSettings('ov-menu');
+      this.$('btn-open-guide').onclick = () => this.openGuide('ov-menu');
+      this.$('btn-pause-guide').onclick = () => this.openGuide('ov-pause');
+      this.$('btn-guide-back').onclick = () => this.showOverlay(this.guideReturn);
       this.$('btn-exit').onclick = () => this.exitGame();
       this.$('btn-exit-back').onclick = () => this.openMenu();
       this.$('btn-upgrade-back').onclick = () => this.openMenu();
@@ -331,15 +343,42 @@
         + (note ? `<div class="legend-note">${note}</div>` : '');
     }
 
-    renderLegend() {
-      const types = Object.keys(TD.ENEMY_DEFS).filter(t => !TD.ENEMY_DEFS[t].unique).concat(this.map ? this.map.uniques : []);
-      this.$('enemy-legend').innerHTML = types.map(t => this.unitLine(t)).join('');
+    // ---------- Guide ----------
+    renderGuide() {
+      const tabs = this.$('guide-tabs');
+      tabs.innerHTML = '';
+      for (const [id, label] of [['enemies', 'ศัตรู'], ['reactions', 'ปฏิกิริยาธาตุ']]) {
+        const b = this.doc.createElement('button');
+        b.className = 'tab' + (id === this.guideTab ? ' active' : '');
+        b.setAttribute('role', 'tab');
+        b.setAttribute('aria-selected', String(id === this.guideTab));
+        b.textContent = label;
+        b.onclick = () => { this.guideTab = id; this.renderGuide(); };
+        tabs.appendChild(b);
+      }
+      this.$('guide-body').innerHTML = this.guideTab === 'enemies' ? this.guideEnemies() : this.guideReactions();
+    }
+
+    // Common enemies, then map units: this map's during a run, every map's from the main menu.
+    guideEnemies() {
+      const common = Object.keys(TD.ENEMY_DEFS).filter(t => !TD.ENEMY_DEFS[t].unique);
+      let html = `<div class="legend">${common.map(t => this.unitLine(t)).join('')}</div>`;
+      const maps = this.game ? [this.game.map] : TD.MAP_DEFS;
+      html += '<h3>ศัตรูเฉพาะแผนที่ <small>(ตั้งแต่ wave 5)</small></h3>';
+      for (const m of maps) {
+        html += `<div class="legend guide-map"><div class="guide-map-name">${m.name}</div>${m.uniques.map(t => this.unitLine(t)).join('')}</div>`;
+      }
+      return html;
+    }
+
+    guideReactions() {
       const el = k => `<span class="dot" style="background:${TD.ELEMENTS[k].color}"></span>${TD.ELEMENTS[k].name}`;
-      this.$('reaction-legend').innerHTML = Object.entries(TD.REACTIONS).map(([pair, r]) => {
-        const [a, b] = pair.split('+');
-        return `<div class="legend-item"><b>${el(a)} + ${el(b)}</b><span>${r.name}</span></div>`
-          + `<div class="legend-note">${r.desc}</div>`;
-      }).join('');
+      return '<p class="muted small">โจมตีด้วยธาตุหนึ่งจะติดสถานะธาตุนั้น 3 วินาที ถ้าโดนธาตุอื่นซ้ำจะเกิดปฏิกิริยา</p><div class="legend">'
+        + Object.entries(TD.REACTIONS).map(([pair, r]) => {
+          const [a, b] = pair.split('+');
+          return `<div class="legend-item"><b>${el(a)} + ${el(b)}</b><span>${r.name}</span></div>`
+            + `<div class="legend-note">${r.desc}</div>`;
+        }).join('') + '</div>';
     }
 
     setText(id, value) {

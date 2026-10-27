@@ -13,11 +13,12 @@ The game opens on the main menu:
 - **เริ่มเกม (Start)**: starts a run right away on a random map.
 - **อัพเกรด (Upgrade)**: spend Coins on permanent upgrades, split into tabs: Attack (damage, fire rate, range, crit), Economy (starting gold, gold per kill) and Tower unlocks. The reset-save button is here too.
 - **ตั้งค่า (Settings)**: resolution (Auto fits the window, or a fixed 800×520 / 1200×780 / 1600×1040 board, drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
+- **คู่มือ (Guide)**: two tabs: enemies (common enemies plus every map's special units, with flying and resistances) and elemental reactions.
 - **ออกจากเกม (Exit)**: tries to close the tab. Browsers only let a page close a tab that a script opened, so if that is blocked you get a goodbye screen; close the tab yourself.
 
 All sounds and the music are generated with the Web Audio API (no sound files). They start after your first click or key press, because browsers block audio before that.
 
-During a run, `Esc` or the ⏸ button pauses the game: resume, open settings, or quit to the menu. Quitting ends the run like a Game Over, so you still get Coins for the waves you cleared.
+During a run the sidebar shows only three blocks: status (HP, gold, wave, enemies left, map), tower building (with the selected tower's upgrade/sell panel), and the wave controls. `Esc` or the ⏸ button pauses the game; the pause screen lists the perks taken this run and has resume, settings, guide (showing this map's special units) and quit to menu. Quitting ends the run like a Game Over, so you still get Coins for the waves you cleared.
 
 Progress (Coins, upgrades, unlocked towers) and settings are saved in the browser's `localStorage`. Clearing site data or playing in a private window loses them.
 
@@ -36,7 +37,7 @@ The right-hand panel has x1/x2/x3 speed buttons.
 
 ## Rules
 
-- **Maps**: each run picks 1 of 10 maps at random ("Play again" also rolls a new one; the map's 2 special units are listed in the sidebar). Every map has its own background and 5 routes from separate spawners to one base. Routes never cross: where two routes meet they join and share the rest of the road to the base. 2 routes are open at the start, and 1 more opens at waves 10, 20 and 30. Routes that are not open yet are drawn in muted colors with no spawner, and you can't build on them. Where roads meet they are drawn as one connected road.
+- **Maps**: each run picks 1 of 10 maps at random ("Play again" also rolls a new one; the map's 2 special units are listed in the Guide from the pause screen). Every map has its own background and 5 routes from separate spawners to one base. Routes never cross: where two routes meet they join and share the rest of the road to the base. 2 routes are open at the start, and 1 more opens at waves 10, 20 and 30. Routes that are not open yet are drawn in muted colors with no spawner, and you can't build on them. Where roads meet they are drawn as one connected road.
 - **Route tracking**: before wave 1 and during each countdown, red arrows run along the open routes the next wave will use, with one arrow stream per road (routes sharing a road share its arrows). A box in a bottom corner of the board always shows base HP and the current wave, plus how many enemies the next wave has in total while it is previewed. Routes that haven't opened yet show no arrows, even right before they open; from the wave they open on, they are tracked like the others. Each enemy's route is picked at random from the open routes.
 - **Base**: has 20 HP. Each enemy that reaches it removes HP depending on its type. 0 HP = Game Over.
 - **Gold** (per run): earned by killing enemies and from end-of-wave bonuses. Spend it to build and upgrade towers (max Lv.4). Selling a tower refunds 70%.

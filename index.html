@@ -24,14 +24,13 @@
       <section>
         <h3>สร้างป้อม <small>(กด 1-8)</small></h3>
         <div id="tower-buttons" class="tower-buttons"></div>
-      </section>
-
-      <section id="sel-panel" hidden>
-        <h3 id="sel-name"></h3>
-        <div id="sel-stats" class="sel-stats"></div>
-        <div class="row">
-          <button id="btn-upgrade" class="btn"></button>
-          <button id="btn-sell" class="btn danger"></button>
+        <div id="sel-panel" class="sel-panel" hidden>
+          <h3 id="sel-name"></h3>
+          <div id="sel-stats" class="sel-stats"></div>
+          <div class="row">
+            <button id="btn-upgrade" class="btn"></button>
+            <button id="btn-sell" class="btn danger"></button>
+          </div>
         </div>
       </section>
 
@@ -41,21 +40,6 @@
           <button id="btn-speed" class="btn">ความเร็ว x1</button>
           <button id="btn-pause" class="btn">⏸ พัก (Esc)</button>
         </div>
-      </section>
-
-      <section>
-        <h3>Perk ที่ได้รอบนี้</h3>
-        <ul id="perk-list" class="perk-list"><li class="muted">ยังไม่มี</li></ul>
-      </section>
-
-      <section class="legend">
-        <h3>ศัตรู</h3>
-        <div id="enemy-legend"></div>
-      </section>
-
-      <section class="legend">
-        <h3>ปฏิกิริยาธาตุ</h3>
-        <div id="reaction-legend"></div>
       </section>
     </aside>
   </div>
@@ -70,6 +54,7 @@
         <button id="btn-start" class="btn primary big">เริ่มเกม</button>
         <button id="btn-open-upgrade" class="btn big">อัพเกรด</button>
         <button id="btn-open-settings" class="btn big">ตั้งค่า</button>
+        <button id="btn-open-guide" class="btn big">คู่มือ</button>
         <button id="btn-exit" class="btn big">ออกจากเกม</button>
       </div>
     </div>
@@ -120,10 +105,27 @@
   <div id="ov-pause" class="overlay" hidden>
     <div class="modal menu">
       <h2>พักเกม</h2>
+      <div class="pause-perks">
+        <h3>Perk ที่ได้รอบนี้</h3>
+        <ul id="perk-list" class="perk-list"><li class="muted">ยังไม่มี</li></ul>
+      </div>
       <div class="menu-buttons">
         <button id="btn-resume" class="btn primary big">เล่นต่อ</button>
         <button id="btn-pause-settings" class="btn big">ตั้งค่า</button>
+        <button id="btn-pause-guide" class="btn big">คู่มือ</button>
         <button id="btn-quit-run" class="btn danger big">ออกไปเมนู (จบรอบนี้)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guide: enemies and elemental reactions -->
+  <div id="ov-guide" class="overlay" hidden>
+    <div class="modal wide">
+      <h2>คู่มือ</h2>
+      <div id="guide-tabs" class="tabs" role="tablist"></div>
+      <div id="guide-body" class="guide-body"></div>
+      <div class="row center">
+        <button id="btn-guide-back" class="btn primary big">กลับ</button>
       </div>
     </div>
   </div>

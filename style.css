@@ -109,6 +109,12 @@ h3 small { color: var(--muted); font-weight: normal; }
 
 
 .perk-list { margin: 0; padding-left: 18px; color: var(--muted); font-size: 13px; }
+.pause-perks { text-align: left; background: var(--panel-2); border-radius: 8px; padding: 10px 12px; margin: 8px 0 16px; }
+.pause-perks h3 { margin: 0 0 6px; }
+.sel-panel { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.guide-body h3 { margin: 16px 0 8px; }
+.guide-map { margin-bottom: 10px; }
+.guide-map-name { font-weight: bold; margin-bottom: 2px; }
 .perk-list li { margin-bottom: 2px; }
 
 .legend-item { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); padding: 2px 0; }
