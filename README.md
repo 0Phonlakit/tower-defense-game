@@ -16,7 +16,7 @@ After picking a slot you get the main menu, which shows the current slot and a "
 
 - **เริ่มเกม (Start)**: starts a run right away on a random map.
 - **อัพเกรด (Upgrade)**: spend Coins on permanent upgrades, split into tabs: Attack (damage, fire rate, range, crit), Economy (starting gold, gold per kill) and Tower unlocks. The reset-save button here clears only the current slot.
-- **ตั้งค่า (Settings)**: language (ไทย / English — every screen, name and in-game message switches right away, and the choice is saved), resolution (Auto fits the window, or a fixed 960×640 / 1200×800 / 1440×960 board, drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
+- **ตั้งค่า (Settings)**: language (ไทย / English / 한국어 / 日本語 / Français — every screen, name and in-game message switches right away, and the choice is saved), resolution (Auto fits the window, or a fixed 960×640 / 1200×800 / 1440×960 board, drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
 - **คู่มือ (Guide)**: three tabs: towers (each tower's level-1 stats, cost and unlock price), enemies (common enemies plus every map's special units, with flying and resistances) and elemental reactions.
 - **ออกจากเกม (Exit)**: tries to close the tab. Browsers only let a page close a tab that a script opened, so if that is blocked you get a goodbye screen; close the tab yourself.
 
@@ -126,7 +126,8 @@ tower-defense/
 ├── src/
 │   ├── core/             Game logic, no DOM access — testable in Node
 │   │   ├── config.js     Constants: grid, towers, enemies, permanent upgrades, elements/reactions
-│   │   ├── i18n.js       Thai/English UI text (t) and English names for game data (loc)
+│   │   ├── i18n.js       UI text (t) and game-data names (loc); Thai + English built in
+│   │   ├── lang-ko.js / lang-ja.js / lang-fr.js   Korean, Japanese and French packs
 │   │   ├── utils.js      createRng (seeded random), pickRandom
 │   │   ├── path.js       class Path        One enemy route
 │   │   ├── maps.js       MAP_DEFS, class GameMap  The 10 maps (themes + 5 routes each), route opening
@@ -202,4 +203,6 @@ Everything is pixel art drawn in code (`src/ui/sprites.js`), with no image files
 
 ## Languages
 
-The game is in Thai and English, chosen in Settings (default Thai). UI text lives in `src/core/i18n.js` under one key per string (`STRINGS.th` / `STRINGS.en`, with `{name}` placeholders filled by `TD.t`). Game data keeps its Thai names in its own file (towers and enemies in `config.js`, maps in `maps.js`, perks in `perks.js`) and gets English names from `DATA_EN` via `TD.loc`. Fixed page text is tagged with `data-i18n` in `index.html`. To add a string, add the key to both languages; a test fails if the two languages' keys or placeholders differ, or if any tower, enemy, map, upgrade, perk, element, reaction, damage type or tab has no English name.
+The game is in Thai, English, Korean, Japanese and French, chosen in Settings (default Thai). UI text lives under one key per string: Thai and English in `src/core/i18n.js` (`STRINGS.th` / `STRINGS.en`), Korean, Japanese and French in their own packs (`src/core/lang-ko.js`, `lang-ja.js`, `lang-fr.js`). `{name}` placeholders are filled by `TD.t`. Game data keeps its Thai names in its own file (towers and enemies in `config.js`, maps in `maps.js`, perks in `perks.js`); the other languages' names come from each language's data table via `TD.loc`, falling back to English. Fixed page text is tagged with `data-i18n` in `index.html`.
+
+To add a string, add the key to every language; a test fails if any language's keys or placeholders differ from Thai, or if any tower, enemy, map, upgrade, perk, element, reaction, damage type or tab has no name in a language. The Korean, Japanese and French texts have not been reviewed by native speakers yet.

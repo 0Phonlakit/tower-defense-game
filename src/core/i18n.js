@@ -1,9 +1,14 @@
-// Thai / English text. UI strings live here by key; game data (towers, enemies, maps, upgrades,
-// perks, elements, reactions) keeps its Thai names in its own file and gets English names here.
+// Game text in Thai, English, Korean, Japanese and French. Thai and English live here; Korean,
+// Japanese and French come as packs from lang-ko.js / lang-ja.js / lang-fr.js. UI strings are
+// looked up by key; game data (towers, enemies, maps, ...) keeps its Thai names in its own file and
+// gets the other languages' names from each language's data table.
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else root.TD = Object.assign(root.TD || {}, factory());
-})(typeof self !== 'undefined' ? self : this, function () {
+  if (typeof module === 'object' && module.exports) {
+    module.exports = factory(Object.assign({}, require('./lang-ko.js'), require('./lang-ja.js'), require('./lang-fr.js')));
+  } else {
+    root.TD = Object.assign(root.TD || {}, factory(root.TD));
+  }
+})(typeof self !== 'undefined' ? self : this, function (packs) {
   'use strict';
 
   const LANGUAGES = { th: 'ไทย', en: 'English' };
@@ -299,6 +304,15 @@
     tab: { attack: { name: 'Attack' }, economy: { name: 'Economy' }, towers: { name: 'Tower unlocks' } },
   };
 
+  // Names of game data per language (not Thai). Missing entries fall back to English, then Thai.
+  const DATA = { en: DATA_EN };
+  for (const pack of [packs.LANG_KO, packs.LANG_JA, packs.LANG_FR]) {
+    if (!pack) continue;
+    LANGUAGES[pack.code] = pack.name;
+    STRINGS[pack.code] = pack.strings;
+    DATA[pack.code] = pack.data;
+  }
+
   let lang = 'th';
 
   function setLang(l) {
@@ -316,13 +330,15 @@
     return s.replace(/\{(\w+)\}/g, (_, k) => (k in params ? params[k] : ''));
   }
 
-  // Game data text: `thai` as given in Thai; otherwise the English entry (a function gets `arg`).
+  // Game data text: `thai` as given in Thai; otherwise this language's entry, then English
+  // (a function entry gets `arg`).
   function loc(kind, id, field, thai, arg) {
     if (lang === 'th') return thai;
-    const v = DATA_EN[kind] && DATA_EN[kind][id] && DATA_EN[kind][id][field];
+    const pick = table => table && table[kind] && table[kind][id] && table[kind][id][field];
+    const v = pick(DATA[lang]) ?? pick(DATA_EN);
     if (typeof v === 'function') return v(arg);
     return v ?? thai;
   }
 
-  return { LANGUAGES, STRINGS, DATA_EN, setLang, getLang, t, loc };
+  return { LANGUAGES, STRINGS, DATA, DATA_EN, setLang, getLang, t, loc };
 });
