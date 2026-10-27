@@ -1,26 +1,43 @@
 # Rogue Tower Defense
 
-A roguelike tower defense game that runs in the browser. It is written in plain JavaScript (HTML5 Canvas), with nothing to install and no build step.
+A roguelike tower defense game for the browser or Windows. It is written in plain JavaScript (HTML5 Canvas). The browser version has nothing to install and no build step. The Windows version is the same game in its own window, installed from a `.exe`.
 
-Each run is played on a random map. Enemies walk along several routes toward your base, and you build towers to stop them. The base has 20 HP. When it reaches 0 the run ends (Game Over), and you earn Coins based on how many waves you cleared. Spend them on permanent upgrades before starting the next run.
+A fantasy tower defense drawn in pixel art: archer towers, catapults and mages against goblins, orcs and dragons. Each run is played on a random map. Enemies walk along several routes toward your base, and you build towers to stop them. The base has 20 HP. When it reaches 0 the run ends (Game Over), and you earn Coins based on how many waves you cleared. Spend them on permanent upgrades before starting the next run.
+
+## Install on Windows
+
+1. Download `Rogue-Tower-Defense-Setup-<version>.exe` from the repository's **Releases** page. Builds of each pull request are also under **Actions** → *Windows installer* → *Artifacts*.
+2. Run it and follow the installer. It installs for your user only, so no admin rights are needed. You can pick the folder, and it adds desktop and Start menu shortcuts.
+3. The installer is not code-signed, so Windows SmartScreen may show "Windows protected your PC". Click **More info** → **Run anyway**.
+
+The desktop version runs the same game files as the browser version, and plays offline (fonts included).
+- `F11` switches full screen, and the menu's Exit button closes the game.
+- Progress and settings are saved in `%APPDATA%\Rogue Tower Defense`.
+- Uninstalling (Settings → Apps) keeps that folder, so your saves are still there if you reinstall.
 
 ## How to play
 
-Open `index.html` in a browser (double-click it, or drag it into a browser window).
+Open `index.html` in a browser (double-click it, or drag it into a browser window), or start the installed Windows game.
 
-The game opens on the main menu:
+Every launch starts with a short "Made By 0Phonlakit" splash that fades into the save-slot screen (click or press any key to skip it). Behind the menu screens a silent demo game plays itself on a random map, using its own throwaway progress, so it never touches your save. Menus use a parchment-and-wood look with wooden buttons, and each screen fades in. Titles use the Mitr font, bundled in `assets/fonts/` so it works offline. Korean and Japanese text uses a system font.
+
+The game opens on the save slot screen. There are 3 slots; each keeps its own Coins, permanent upgrades, unlocked towers, best wave and run count. Each card shows that summary (or "empty"), with Play/New and Delete. The last slot played is highlighted. Progress saved before slots existed is moved into slot 1 the first time (the old data is kept as a backup). Settings are shared by all slots.
+
+After picking a slot you get the main menu, which shows the current slot and a "change slot" button:
 
 - **เริ่มเกม (Start)**: starts a run right away on a random map.
-- **อัพเกรด (Upgrade)**: spend Coins on permanent upgrades, split into tabs: Attack (damage, fire rate, range, crit), Economy (starting gold, gold per kill) and Tower unlocks. The reset-save button is here too.
-- **ตั้งค่า (Settings)**: resolution (Auto fits the window, or a fixed 800×520 / 1200×780 / 1600×1040 board, drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
+- **อัพเกรด (Upgrade)**: spend Coins on permanent upgrades, split into tabs: Attack (damage, fire rate, range, crit), Economy (starting gold, gold per kill) and Tower unlocks. The reset-save button here clears only the current slot.
+- **ตั้งค่า (Settings)**: language (ไทย / English / 한국어 / 日本語 / Français — every screen, name and in-game message switches right away, and the choice is saved), resolution (Auto fits the window, or a fixed 960×640 / 1200×800 / 1440×960 board that shrinks if the window is smaller; drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
 - **คู่มือ (Guide)**: three tabs: towers (each tower's level-1 stats, cost and unlock price), enemies (common enemies plus every map's special units, with flying and resistances) and elemental reactions.
-- **ออกจากเกม (Exit)**: tries to close the tab. Browsers only let a page close a tab that a script opened, so if that is blocked you get a goodbye screen; close the tab yourself.
+- **ออกจากเกม (Exit)**: closes the game. In the Windows version this quits the app. In a browser it tries to close the tab, but browsers only let a page close a tab that a script opened; if that is blocked you get a goodbye screen and close the tab yourself.
 
 All sounds and the music are generated with the Web Audio API (no sound files). They start after your first click or key press, because browsers block audio before that.
 
+The whole game fits on one screen without scrolling on desktop and laptop windows (checked from 1024×640 to 1920×1080): the board is sized so it and the HP/wave bar under it fit the window, a fixed resolution shrinks if the window is smaller, and on short screens the sidebar gets tighter and tower descriptions move to a hover tooltip (they are also in the Guide). Only on narrow screens under 760px wide (phones) does the sidebar go under the board and the page scroll.
+
 During a run the sidebar shows only three blocks: status (HP, gold, wave, enemies left, map), tower building, and the wave controls. Clicking a built tower opens a small popup next to it with its level and the Upgrade (cost) and Sell (refund) buttons. `Esc` or the ⏸ button pauses the game; the pause screen lists the perks taken this run (4 lines, scroll for more) and has resume, settings, guide (showing this map's special units) and quit to menu. Quitting ends the run like a Game Over, so you still get Coins for the waves you cleared.
 
-Progress (Coins, upgrades, unlocked towers) and settings are saved in the browser's `localStorage`. Clearing site data or playing in a private window loses them.
+Progress (Coins, upgrades, unlocked towers) and settings are saved in `localStorage`. In a browser, clearing site data or playing in a private window loses them. The Windows version keeps them in its own app data folder.
 
 ### Controls
 
@@ -37,12 +54,12 @@ The right-hand panel has x1/x2/x3 speed buttons.
 
 ## Rules
 
-- **Maps**: each run picks 1 of 10 maps at random ("Play again" also rolls a new one; the map's 2 special units are listed in the Guide from the pause screen). Every map has its own background and 5 routes from separate spawners to one base. Routes never cross: where two routes meet they join and share the rest of the road to the base. 2 routes are open at the start, and 1 more opens at waves 10, 20 and 30. Routes that are not open yet are drawn in muted colors with no spawner, and you can't build on them. Where roads meet they are drawn as one connected road.
-- **Route tracking**: before wave 1 and during each countdown, red arrows run along the open routes the next wave will use, with one arrow stream per road (routes sharing a road share its arrows). A box in a bottom corner of the board always shows base HP and the current wave, plus how many enemies the next wave has in total while it is previewed. Routes that haven't opened yet show no arrows, even right before they open; from the wave they open on, they are tracked like the others. Each enemy's route is picked at random from the open routes.
+- **Maps**: each run picks 1 of 10 maps at random ("Play again" also rolls a new one; the map's 2 special units are listed in the Guide from the pause screen). Every map has its own background and 5 routes from separate spawners to one base. Routes never cross: where two routes meet they join and share the rest of the road to the base. Roads that are not joined keep at least 2 free tiles between them, so there is always room for 2 towers side by side. The board is 24×16 tiles. 2 routes are open at the start, and 1 more opens at waves 10, 20 and 30. Routes that are not open yet are drawn in muted colors with no spawner, and you can't build on them. Where roads meet they are drawn as one connected road.
+- **Route tracking**: before wave 1 and during each countdown, red arrows run along the open routes the next wave will use, with one arrow stream per road (routes sharing a road share its arrows). A bar under the board always shows base HP and the current wave, plus how many enemies the next wave has in total while it is previewed. Routes that haven't opened yet show no arrows, even right before they open; from the wave they open on, they are tracked like the others. Each enemy's route is picked at random from the open routes.
 - **Base**: has 20 HP. Each enemy that reaches it removes HP depending on its type. 0 HP = Game Over.
 - **Gold** (per run): earned by killing enemies and from end-of-wave bonuses. Spend it to build and upgrade towers (max Lv.4). Selling a tower refunds 70%.
 - **Wave countdown**: once the last enemy of a wave has spawned, a 30-second countdown starts. Press Skip (or `Space`) to start the next wave early and get bonus gold: the full clear bonus with 30s left, scaling down to 0 as the timer runs out. When it reaches 0 the next wave starts automatically with no bonus. Waves can overlap; each wave still pays its clear bonus when all of its own enemies are gone.
-- **Perks**: after each wave is cleared, pick 1 of 3 random perks. They last for the current run only.
+- **Perks**: after each wave is cleared, pick 1 of 3 random perks. They last for the current run only. Taking the same perk again stacks it, up to 10 times per perk (one-time perks like emergency funds count too); at 10 it is no longer offered. Some perks still stop earlier at their own limit (range, crit, splash, slow, build cost, interest). Perk cards show how many you already have, and the pause screen lists each perk once with its count.
 - **Coins** (permanent): awarded at Game Over based on waves cleared:
 
   `coin = wave × 5 + wave² ÷ 3` → 5 waves gives 33, 10 waves gives 83, 20 waves gives 233
@@ -51,10 +68,10 @@ The right-hand panel has x1/x2/x3 speed buttons.
 
 | Type | Base damage | Notes |
 |---|---|---|
-| Normal | -1 | Standard |
-| Fast | -1 | Low HP, fast (from wave 3) |
-| Armored | -2 | High HP, slow (from wave 5) |
-| Boss | -5 | Every 10 waves |
+| Goblin (ก็อบลิน) | -1 | Standard |
+| Wolf (หมาป่า) | -1 | Low HP, fast (from wave 3) |
+| Orc knight (อัศวินออร์ค) | -2 | High HP, slow (from wave 5) |
+| Dragon (มังกร, boss) | -5 | Every 10 waves |
 | Map units | -3 | 2 per map, from wave 5 (see below) |
 
 Enemy HP grows every wave; see `Enemy.hpMultiplier()`.
@@ -84,14 +101,14 @@ Damage types: physical (Gun, Cannon, Sniper), poison (Poison), fire, ice, water,
 
 | Tower | Element | Air | Cost | Unlock | Strength |
 |---|---|---|---|---|---|
-| Machine gun | – | ✔ | 50 | Available from the start | Fast fire, single target |
-| Cannon | – | | 90 | 60 coins | Area splash damage |
-| Frost | Ice | | 70 | 50 coins | Slows enemies |
-| Sniper | – | ✔ | 120 | 100 coins | Long range, high damage |
-| Flame | Fire | | 80 | 80 coins | Sets enemies on fire (damage over 3s) |
-| Tesla | Lightning | ✔ | 100 | 120 coins | Instant zap that chains to 2 more enemies (70% per jump) |
-| Tide | Water | | 60 | 70 coins | Cheap splash that sets up reactions |
-| Poison | – | | 90 | 90 coins | Poison stacks up to 5 times (4s), strong vs tanks and bosses |
+| Archer tower (หอธนู) | – | ✔ | 50 | Available from the start | Fast fire, single target |
+| Catapult (เครื่องยิงหิน) | – | | 90 | 60 coins | Area splash damage |
+| Frost mage (จอมเวทน้ำแข็ง) | Ice | | 70 | 50 coins | Slows enemies |
+| Ballista (หน้าไม้ยักษ์) | – | ✔ | 120 | 100 coins | Long range, high damage |
+| Fire mage (จอมเวทไฟ) | Fire | | 80 | 80 coins | Sets enemies on fire (damage over 3s) |
+| Storm crystal (คริสตัลพายุ) | Lightning | ✔ | 100 | 120 coins | Instant zap that chains to 2 more enemies (70% per jump) |
+| Water shrine (ศาลเจ้าน้ำ) | Water | | 60 | 70 coins | Cheap splash that sets up reactions |
+| Alchemist (นักเล่นแร่แปรธาตุ) | – | | 90 | 90 coins | Poison stacks up to 5 times (4s), strong vs tanks and bosses |
 
 Burn and poison damage scale with tower level and damage bonuses, like normal hits.
 
@@ -114,31 +131,66 @@ Damage, fire rate, range, starting gold, gold per enemy, critical hit chance
 
 ## Project structure
 
+The code is split by part: **data** (what things are: numbers, art, maps, text), **core** (the rules), **render** (drawing the board) and **ui** (screens and input). Data files hold no game logic, so balancing, art and translations can be changed without touching the rules.
+
 ```
 tower-defense/
-├── index.html            Game page; loads scripts in order
-├── style.css
-├── package.json          Only a test script (no dependencies)
+├── index.html                Game page; loads every script and stylesheet in order
+├── package.json              Scripts; Electron + electron-builder for the Windows build only
+├── electron/main.js          Windows desktop app: opens index.html in a window (F11, Exit, smoke test)
+├── build/icon.png            App icon (the castle sprite)
+├── assets/fonts/             Mitr font files (OFL) so text looks the same offline
+├── .github/workflows/        Builds, installs and smoke-tests the Windows installer
+├── styles/                   CSS, loaded in this order
+│   ├── fonts.css             The bundled Mitr font
+│   ├── base.css              Colors (dark theme), page and text basics
+│   ├── layout.css            Board beside the sidebar, fitted to one screen
+│   ├── hud.css               In-game widgets: status, tower buttons, info bar, tower popup
+│   ├── screens.css           Overlay screens: menu, slots, upgrades, settings, perks, game over
+│   ├── theme-parchment.css   Parchment-and-wood look for every overlay, menu background, transitions
+│   └── splash.css            "Made By 0Phonlakit" splash
 ├── src/
-│   ├── core/             Game logic, no DOM access — testable in Node
-│   │   ├── config.js     Constants: grid, towers, enemies, permanent upgrades, elements/reactions
-│   │   ├── utils.js      createRng (seeded random), pickRandom
-│   │   ├── path.js       class Path        One enemy route
-│   │   ├── maps.js       MAP_DEFS, class GameMap  The 10 maps (themes + 5 routes each), route opening
-│   │   ├── enemy.js      class Enemy       Movement, HP, slow/freeze, aura, burn/poison
-│   │   ├── tower.js      class Tower       Stats, targeting, upgrade/sell
-│   │   ├── projectile.js class Projectile  Homing projectiles
-│   │   ├── wave.js       class WaveGenerator  Composition of each wave
-│   │   ├── perks.js      PERKS, class PerkPicker
-│   │   ├── meta.js       class MetaProgress   Coins/permanent upgrades + saving
-│   │   ├── settings.js   class Settings    Resolution + volumes, saved separately
-│   │   └── game.js       class Game        One run (state machine)
-│   ├── ui/
-│   │   ├── renderer.js   class Renderer    Draws to the canvas (read-only)
-│   │   ├── audio.js      class SoundSystem Generated effects, music and UI sounds (Web Audio)
-│   │   └── app.js        class App         Menus, DOM, input, overlays, game loop
-│   └── main.js           Entry point
-└── tests/                Unit tests (node:test)
+│   ├── data/                 What things are: no game logic
+│   │   ├── towers.js         TOWER_DEFS, anti-air multipliers
+│   │   ├── enemies.js        ENEMY_DEFS (common enemies, map units, ground twins)
+│   │   ├── elements.js       Elements, reactions, damage types
+│   │   ├── upgrades.js       Permanent upgrades and their tabs
+│   │   ├── perks.js          PERKS (what each perk does and when it is offered)
+│   │   ├── maps.js           MAP_DEFS: the 10 maps (theme, map units, 5 routes each)
+│   │   ├── art/              Pixel art: pixel-grid.js (palette + shape builder),
+│   │   │                     enemies.js, towers.js (levels 1-4), bases.js, scenery.js
+│   │   └── lang/             Language packs: th.js, en.js, ko.js, ja.js, fr.js
+│   ├── core/                 The rules; no DOM access, testable in Node
+│   │   ├── config.js         Board size, base HP, starting gold, per-run modifiers
+│   │   ├── utils.js          createRng (seeded random), pickRandom
+│   │   ├── path.js           class Path        One enemy route
+│   │   ├── map.js            class GameMap     A map in play: routes, road tiles, route opening
+│   │   ├── enemy.js          class Enemy       Movement, HP, slow/freeze, aura, burn/poison
+│   │   ├── tower.js          class Tower       Stats, targeting, upgrade/sell
+│   │   ├── projectile.js     class Projectile  Homing projectiles
+│   │   ├── wave.js           class WaveGenerator  Composition of each wave
+│   │   ├── perks.js          class PerkPicker  Which perks to offer
+│   │   ├── meta.js           class MetaProgress   Coins/permanent upgrades + saving
+│   │   ├── saves.js          class SaveSlots   The 3 save slots
+│   │   ├── settings.js       class Settings    Language, resolution, volumes
+│   │   ├── i18n.js           t() for UI text, loc() for game-data names
+│   │   └── game.js           class Game        One run (state machine)
+│   ├── render/               Drawing the board (read-only)
+│   │   ├── sprites.js        Turns pixel-art data into canvases
+│   │   ├── renderer.js       class Renderer: draw() entry, cached static layer, helpers
+│   │   ├── map-layer.js      Ground, scenery, roads, spawners, base, route arrows
+│   │   ├── units.js          Towers, enemies, range circle, placement preview
+│   │   └── effects.js        Shots, hit effects, lightning, floating text
+│   ├── ui/                   The page around the board
+│   │   ├── text.js           t / L text helpers for the UI
+│   │   ├── app.js            class App: setup, main loop, game flow (screens add their methods)
+│   │   ├── input.js          Mouse and keyboard
+│   │   ├── hud.js            Sidebar, tower popup, info bar
+│   │   ├── screens/          splash, slots, menu, upgrades, settings, guide, pause, perk, game-over
+│   │   ├── audio.js          class SoundSystem Generated sound (Web Audio)
+│   │   └── demo.js           class MenuDemo    Self-playing game behind the menus
+│   └── main.js               Entry point
+└── tests/                    Unit tests (node:test)
 ```
 
 ### Architecture
@@ -147,13 +199,26 @@ tower-defense/
   - Created with a `GameMap`. Each wave is planned one wave ahead (`nextPlan`: enemy types + route per enemy); `upcoming` exposes that plan for the route preview.
   - Player commands: `buildTower`, `upgradeTower`, `sellTower`, `startWave`, `skipCountdown`, `choosePerk`
   - Advancing time: `update(dt)`
-  - Events via `on(name, fn)`: `wavestart`, `wavecleared`, `perkchosen`, `gameover`
+  - Events via `on(name, fn)`: `wavestart`, `wavecleared`, `perkchosen`, `gameover` (plus `fire`, `kill`, `basehit`, `reaction`, `skip`, `routeopen` for sound)
 - **`MetaProgress`** keeps progress across runs. It takes a `storage` object with `getItem`/`setItem` (`localStorage` in the browser, a fake in tests).
-- **`App`** creates a new `Game` for every run, listens to its events to show overlays, and forwards UI commands to the `Game`.
-- **`Renderer`** draws the `Game` state without changing it.
+- **`App`** creates a new `Game` for every run, listens to its events to show overlays, and forwards UI commands to the `Game`. `src/ui/app.js` holds the class with setup, the main loop and the game flow; `input.js`, `hud.js` and each file in `screens/` add their methods to `App.prototype`.
+- **`Renderer`** draws the `Game` state without changing it. `renderer.js` holds the class; `map-layer.js`, `units.js` and `effects.js` add their drawing methods the same way.
 - `Game` accepts an injected `rng`, so tests use `createRng(seed)` for repeatable results.
 
-Files in `src/core/` use the UMD pattern: in the browser they attach their classes to `window.TD`, and in Node they work with `require()`. That lets you open `index.html` straight from `file://` without a server (ES modules don't work over `file://`).
+Files use the UMD pattern: in the browser they attach to `window.TD`, and in Node they work with `require()`. That lets you open `index.html` straight from `file://` without a server or build step (ES modules don't work over `file://`). Because of that, `index.html` loads files in dependency order: data before the core module that reads it, the class file before the files that add methods to it. In Node, a core module that reads data `require`s it (for example `core/config.js` re-exports all of `src/data/`, `core/perks.js` re-exports `data/perks.js`), so tests can keep requiring one module.
+
+## Building the Windows installer
+
+Requires Node.js 20 or later. The browser game and the tests don't need this step.
+
+```bash
+npm install          # Electron and electron-builder (dev only)
+npm start            # run the desktop version
+npm run smoke        # start it once and check the game loaded with its font and no console errors
+npm run dist:win     # build dist/Rogue-Tower-Defense-Setup-<version>.exe (works from Windows, macOS or Linux)
+```
+
+GitHub Actions (`.github/workflows/windows.yml`) builds the installer on Windows for every pull request. It then installs it silently, starts the installed game in smoke-test mode and uploads the installer as an artifact. Pushing a `v*` tag also attaches the installer to a GitHub Release.
 
 ## Running tests
 
@@ -163,21 +228,41 @@ Requires Node.js 20 or later. No `npm install` needed.
 npm test
 ```
 
-Tests cover `src/core/` only (path, maps and route opening, map units, ground twins, resistances, anti-air, routes never crossing, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
+Tests cover `src/core/` and `src/data/` (including both languages having the same text keys and English names for all game data) and the sprite data, including the 4 looks per tower (road spacing, save slots, perk stacking, path, maps and route opening, map units, ground twins, resistances, anti-air, routes never crossing, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
 
 ## Balancing
 
 | To change | Edit |
 |---|---|
-| Tower/enemy stats, costs | `src/core/config.js` |
-| Reactions, aura/burn/poison durations | `REACTIONS` and the constants above it in `src/core/config.js` |
+| Tower stats, costs | `src/data/towers.js` |
+| Enemy stats | `src/data/enemies.js` |
+| Reactions, aura/burn/poison durations | `src/data/elements.js` |
 | How fast enemy HP grows | `Enemy.hpMultiplier()` in `src/core/enemy.js` |
 | Enemies per wave, end-of-wave bonus | `src/core/wave.js` |
-| Map units, resistances, flyers | `ENEMY_DEFS` (entries with `unique: true`) and `AIR_BONUS`/`AA_GROUND_MULT` in `src/core/config.js`; `uniques` in `MAP_DEFS`; `uniqueShare()` in `src/core/wave.js` |
-| Map layouts, themes, when routes open | `LAYOUTS`, `MAP_DEFS`, `START_ROUTES`, `ROUTE_STEP` in `src/core/maps.js` |
+| Map units, resistances, flyers | `ENEMY_DEFS` (entries with `unique: true`) in `src/data/enemies.js`, `AIR_BONUS`/`AA_GROUND_MULT` in `src/data/towers.js`, `uniques` in `src/data/maps.js`; `uniqueShare()` in `src/core/wave.js` |
+| Map layouts, themes | `LAYOUTS`, `MAP_DEFS` in `src/data/maps.js` |
+| When routes open | `START_ROUTES`, `ROUTE_STEP` in `src/core/map.js` |
 | Countdown length | `WAVE_COUNTDOWN` in `src/core/config.js` |
 | Skip bonus | `Game.skipBonus` in `src/core/game.js` |
 | Coin formula | `MetaProgress.coinsForWaves()` in `src/core/meta.js` |
-| Perks | `PERKS` in `src/core/perks.js` |
+| Perks | `PERKS` in `src/data/perks.js` |
+| Permanent upgrades | `src/data/upgrades.js` |
+| Pixel art | `src/data/art/` |
 
 After changing any formula, run `npm test` and update the expected values in the tests to match.
+
+## Art
+
+Everything is pixel art drawn in code (`src/data/art/`, drawn by `src/render/sprites.js`), with no image files:
+
+- **Enemies** use 12 hand-drawn 12×12 body shapes (goblin, knight, beast, dragon, bird, insect, bat, golem, spirit, crab, serpent, plant), each unit with its own colors. They face the way they walk; flyers bob above a shadow.
+- **Towers** (16×16) change look at every level (1–4) instead of showing level bars: each level keeps the shape and adds parts such as gold trim, side turrets, banners, a bigger crystal or orb, sparks and a crown, and level 3–4 towers glow in their color.
+- **Bases** (16×16, a different one per map: stone castle, sandstone fort, ice palace, obsidian keep, witch hut, lighthouse, moon tower, tree house, crystal citadel, ancient temple) and **scenery** (8×8) are built from rectangles, triangles and lines, with the outline added automatically.
+- **Shots** look different per tower and point the way they fly: arrows, tumbling boulders, ice shards with a sparkle trail, fireballs with embers, water orbs, spinning poison flasks; the ballista leaves a bolt streak and the storm crystal a jagged lightning bolt. Each hit has its own effect too: sparks, dust and debris, frost shards, a fire burst, a water splash, a poison cloud.
+- Ground and roads get a pixel texture in each map's colors. Ground, scenery, roads and the base are drawn once into a cached layer and only redrawn when the map, the open routes or the resolution change.
+
+## Languages
+
+The game is in Thai, English, Korean, Japanese and French, chosen in Settings (default Thai). UI text lives under one key per string in one pack per language: `src/data/lang/th.js`, `en.js`, `ko.js`, `ja.js`, `fr.js` (loaded by `src/core/i18n.js`). `{name}` placeholders are filled by `TD.t`. Game data keeps its Thai names in its own data file (`src/data/towers.js`, `enemies.js`, `maps.js`, `perks.js`, ...); the other languages' names come from each language's data table via `TD.loc`, falling back to English. Fixed page text is tagged with `data-i18n` in `index.html`.
+
+To add a string, add the key to every language; a test fails if any language's keys or placeholders differ from Thai, or if any tower, enemy, map, upgrade, perk, element, reaction, damage type or tab has no name in a language. The Korean, Japanese and French texts have not been reviewed by native speakers yet.

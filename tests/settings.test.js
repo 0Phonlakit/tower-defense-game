@@ -13,16 +13,22 @@ test('Settings: defaults are auto resolution, sfx 70%, music 40%, other 70%', ()
 test('Settings: changes are saved and survive a reload; volumes are clamped to 0..1', () => {
   const storage = new MemoryStorage();
   const s = new Settings(storage);
-  assert.ok(s.setResolution('1200x780'));
+  assert.ok(s.setResolution('1200x800'));
   assert.ok(s.setVolume('music', 1.5));
   assert.ok(s.setVolume('sfx', -1));
   assert.equal(s.setResolution('4k'), false);
   assert.equal(s.setVolume('master', 0.5), false);
   const again = new Settings(storage);
-  assert.equal(again.resolution, '1200x780');
+  assert.equal(again.resolution, '1200x800');
   assert.equal(again.music, 1);
   assert.equal(again.sfx, 0);
   assert.ok(storage.getItem(SETTINGS_KEY));
+});
+
+test('Settings: a resolution saved by an older version (old board size) falls back to auto', () => {
+  const s = new Settings(new MemoryStorage({ [SETTINGS_KEY]: JSON.stringify({ resolution: '1200x780', music: 0.2 }) }));
+  assert.equal(s.resolution, 'auto');
+  assert.equal(s.music, 0.2);
 });
 
 test('Settings: corrupt or blocked storage falls back to defaults', () => {
@@ -36,16 +42,17 @@ test('Settings: corrupt or blocked storage falls back to defaults', () => {
   assert.equal(s.ui, 0.2);
 });
 
-test('Settings.displaySize: fixed sizes keep the 20:13 board, auto fits the space given', () => {
+test('Settings.displaySize: fixed sizes keep the 3:2 board, auto fits the space given', () => {
   const s = new Settings();
   for (const [id, r] of Object.entries(RESOLUTIONS)) {
     if (!r.width) continue;
     s.setResolution(id);
-    assert.deepEqual(s.displaySize(300, 300), { width: r.width, height: r.width * BOARD_H / BOARD_W });
+    assert.deepEqual(s.displaySize(5000, 5000), { width: r.width, height: r.width * BOARD_H / BOARD_W }, `${id} when it fits`);
   }
   s.setResolution('auto');
-  assert.deepEqual(s.displaySize(1000, 2000), { width: 1000, height: 650 }, 'limited by width');
-  assert.deepEqual(s.displaySize(5000, 520), { width: 800, height: 520 }, 'limited by height');
+  assert.deepEqual(Object.keys(RESOLUTIONS), ['auto', '960x640', '1200x800', '1440x960']);
+  assert.deepEqual(s.displaySize(1200, 2000), { width: 1200, height: 800 }, 'limited by width');
+  assert.deepEqual(s.displaySize(5000, 640), { width: 960, height: 640 }, 'limited by height');
   assert.equal(s.displaySize(100, 100).width, 320, 'never smaller than 320px');
 });
 
@@ -85,4 +92,13 @@ test('Game: emits sound events for shots, kills, base hits, skips and new routes
   assert.equal(seen.skip, 1);
   while (game.wave < 10) { game.spawnQueue = []; game.countdown = 0.01; game.update(0.02); if (game.phase === 'perk') game.choosePerk(0); game.hp = 20; }
   assert.equal(seen.routeopen, 1);
+});
+
+test('Settings.displaySize: a fixed size bigger than the space shrinks to fit, so nothing scrolls', () => {
+  const s = new Settings();
+  s.setResolution('1440x960');
+  assert.deepEqual(s.displaySize(1200, 700), { width: 1050, height: 700 }, 'limited by height');
+  assert.deepEqual(s.displaySize(900, 2000), { width: 900, height: 600 }, 'limited by width');
+  s.setResolution('960x640');
+  assert.deepEqual(s.displaySize(2000, 2000), { width: 960, height: 640 }, 'never grows past the chosen size');
 });

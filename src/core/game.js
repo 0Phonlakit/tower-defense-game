@@ -2,7 +2,7 @@
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
     module.exports = factory(Object.assign({},
-      require('./config.js'), require('./maps.js'), require('./enemy.js'), require('./tower.js'),
+      require('./config.js'), require('./i18n.js'), require('./map.js'), require('./enemy.js'), require('./tower.js'),
       require('./projectile.js'), require('./wave.js'), require('./perks.js')));
   } else {
     root.TD = Object.assign(root.TD || {}, factory(root.TD));
@@ -41,6 +41,7 @@
       this.wavesCleared = 0;
       this.perkChoices = [];
       this.perksTaken = [];
+      this.perkStacks = {}; // perk id -> times taken this run, in the order first taken
       this.result = null;
       this.nextPlan = this._planWave(1);
     }
@@ -148,7 +149,7 @@
       const bonus = this.skipBonus;
       this.gold += bonus;
       this.emit('skip', { bonus });
-      if (bonus) this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2 + 30, `ข้าม! +${bonus} gold`, '#f5c542', 1.2);
+      if (bonus) this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2 + 30, TD.t('fx.skip', { bonus }), '#f5c542', 1.2);
       this._launchWave();
       return bonus;
     }
@@ -167,6 +168,7 @@
       const label = `${perk.name} — ${perk.desc(this)}`;
       perk.apply(this);
       this.perksTaken.push(label);
+      this.perkStacks[perk.id] = (this.perkStacks[perk.id] || 0) + 1;
       this.perkChoices = [];
       this.phase = 'wave';
       this.emit('perkchosen', { perk, label });
@@ -249,10 +251,11 @@
       const damage = stats.dmg * (crit ? 2 : 1);
       this.emit('fire', { type: tower.type });
       if (def.instant) {
-        this._effect({ kind: 'tracer', x: tower.x, y: tower.y, x2: target.x, y2: target.y, color: def.color, life: 0.15 });
+        this._effect({ kind: 'tracer', style: tower.type, x: tower.x, y: tower.y, x2: target.x, y2: target.y, color: def.color, life: 0.18 });
+        this._effect({ kind: 'impact', style: tower.type, x: target.x, y: target.y, color: def.color, life: 0.3 });
         this._hit(target, damage, stats);
         if (crit) this._text(target.x, target.y - 18, 'CRIT!', '#ff6b6b', 0.6);
-        if (stats.chain) this._chain(target, damage, stats, def.color);
+        if (stats.chain) this._chain(target, damage, stats, def.color, tower.type);
         return;
       }
       this.projectiles.push(new TD.Projectile({
@@ -261,19 +264,19 @@
         target, speed: def.proj, damage, crit,
         splash: stats.splash, slow: stats.slow, slowDur: stats.slowDur,
         element: stats.element, burn: stats.burn, poison: stats.poison,
-        dmgType: stats.dmgType, air: stats.air, color: def.color,
+        dmgType: stats.dmgType, air: stats.air, color: def.color, kind: tower.type,
       }));
     }
 
     // Lightning jumps to the nearest enemy not hit yet, losing damage on each jump.
-    _chain(from, damage, stats, color) {
+    _chain(from, damage, stats, color, style = null) {
       const hit = new Set([from]);
       let last = from;
       for (let i = 0; i < stats.chain; i++) {
         const next = this._enemiesNear(last, TD.CHAIN_RANGE, hit)[0];
         if (!next) break;
         damage *= TD.CHAIN_FALLOFF;
-        this._effect({ kind: 'tracer', x: last.x, y: last.y, x2: next.x, y2: next.y, color, life: 0.15 });
+        this._effect({ kind: 'tracer', style, x: last.x, y: last.y, x2: next.x, y2: next.y, color, life: 0.18 });
         this._hit(next, damage, stats);
         hit.add(next);
         last = next;
@@ -297,6 +300,7 @@
       } else if (p.target && !p.target.dead) {
         this._hit(p.target, p.damage, p);
       }
+      this._effect({ kind: 'impact', style: p.kind, x: p.tx, y: p.ty, r: p.splash || 12, color: p.color, life: p.splash ? 0.45 : 0.3 });
       if (p.crit) this._text(p.tx, p.ty - 18, 'CRIT!', '#ff6b6b', 0.6);
     }
 
@@ -374,7 +378,7 @@
       this.spawnQueue = [...this.nextPlan.queue];
       this.nextPlan = this._planWave(this.wave + 1);
       if (this.map.routesOpen(this.wave) > this.map.routesOpen(this.wave - 1)) {
-        this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2 - 30, 'เส้นทางใหม่เปิดแล้ว!', '#ff6b6b', 2);
+        this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2 - 30, TD.t('fx.routeOpen'), '#ff6b6b', 2);
         this.emit('routeopen', { wave: this.wave, open: this.map.routesOpen(this.wave) });
       }
       this.spawnInterval = this.waves.spawnInterval(this.wave);
@@ -391,7 +395,7 @@
       this.gold += bonus + interest;
       this.wavesCleared = wave;
       this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2,
-        `ผ่าน Wave ${wave}! +${bonus + interest} gold`, '#f5c542', 1.6);
+        TD.t('fx.waveCleared', { wave, gold: bonus + interest }), '#f5c542', 1.6);
       this.perkChoices = this.perkPicker.choices(this);
       if (this.perkChoices.length) this.phase = 'perk';
       this.emit('wavecleared', { wave, bonus, interest, choices: this.perkChoices });

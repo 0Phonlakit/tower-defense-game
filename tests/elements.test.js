@@ -195,3 +195,20 @@ test('Game: burn and poison damage enemies every frame and kills pay gold', () =
   assert.equal(game.kills, 1);
   assert.ok(game.gold > gold);
 });
+
+test('Shots remember which tower fired them and leave a matching hit effect', () => {
+  const meta = makeMeta();
+  for (const k of Object.keys(TOWER_DEFS)) meta.unlocked[k] = true;
+  const game = makeGame({ meta });
+  game.gold = 1e6;
+  const cannon = game.buildTower('cannon', 2, 0) || game.buildTower('cannon', 2, 1);
+  const tesla = game.buildTower('tesla', 6, 0) || game.buildTower('tesla', 6, 1);
+  const target = enemyAt(game, cannon.x + 30, cannon.y + 30);
+  game._fire(cannon, target, game.towerStats(cannon));
+  assert.equal(game.projectiles.at(-1).kind, 'cannon');
+  game._impact(game.projectiles.at(-1));
+  assert.ok(game.effects.some(fx => fx.kind === 'impact' && fx.style === 'cannon'));
+  game._fire(tesla, target, game.towerStats(tesla));
+  assert.ok(game.effects.some(fx => fx.kind === 'tracer' && fx.style === 'tesla'));
+  assert.ok(game.effects.some(fx => fx.kind === 'impact' && fx.style === 'tesla'));
+});

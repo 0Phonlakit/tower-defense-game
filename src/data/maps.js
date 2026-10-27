@@ -1,47 +1,41 @@
-// The 10 maps: themes plus 5 routes each. All routes of a map end at the same base.
-// Routes open in order: 2 at the start, then 1 more every ROUTE_STEP waves.
+// The 10 maps: name, theme, the 2 map-only units and 5 routes each (all ending at the same base).
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) {
-    module.exports = factory(Object.assign({}, require('./config.js'), require('./path.js')));
-  } else {
-    root.TD = Object.assign(root.TD || {}, factory(root.TD));
-  }
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('../core/config.js'));
+  else root.TD = Object.assign(root.TD || {}, factory(root.TD));
 })(typeof self !== 'undefined' ? self : this, function (TD) {
   'use strict';
 
-  const START_ROUTES = 2;
-  const ROUTE_STEP = 10;
-
   // Hand-made layouts (tile col,row). A route starts one tile off the map edge and ends at the base.
   // Routes never cross: where two routes meet they merge and share the rest of the road to the base.
+  // Roads that are not joined there keep at least 2 free tiles between them, so 2 towers fit in the gap.
   const LAYOUTS = {
     winding: [
-      [[-1, 2], [4, 2], [4, 9], [9, 9], [9, 3], [14, 3], [14, 10], [17, 10], [17, 6], [19, 6]],
-      [[-1, 11], [11, 11], [11, 10], [17, 10], [17, 6], [19, 6]],
-      [[5, 13], [5, 12], [13, 12], [13, 10], [17, 10], [17, 6], [19, 6]],
-      [[7, -1], [7, 5], [9, 5], [9, 3], [14, 3], [14, 10], [17, 10], [17, 6], [19, 6]],
-      [[20, 3], [14, 3], [14, 10], [17, 10], [17, 6], [19, 6]],
+      [[-1, 2], [5, 2], [5, 12], [11, 12], [11, 4], [17, 4], [17, 8], [23, 8]],
+      [[-1, 15], [20, 15], [20, 8], [23, 8]],
+      [[8, -1], [8, 9], [11, 9], [11, 4], [17, 4], [17, 8], [23, 8]],
+      [[14, -1], [14, 1], [21, 1], [21, 8], [23, 8]],
+      [[-1, 7], [5, 7], [5, 12], [11, 12], [11, 4], [17, 4], [17, 8], [23, 8]],
     ],
     crossroads: [
-      [[-1, 1], [3, 1], [3, 10], [7, 10], [7, 6], [10, 6]],
-      [[20, 11], [16, 11], [16, 2], [13, 2], [13, 6], [10, 6]],
-      [[8, -1], [8, 2], [5, 2], [5, 4], [10, 4], [10, 6]],
-      [[-1, 12], [9, 12], [9, 7], [10, 7], [10, 6]],
-      [[20, 1], [13, 1], [13, 6], [10, 6]],
+      [[-1, 2], [4, 2], [4, 11], [9, 11], [9, 8], [12, 8]],
+      [[24, 13], [19, 13], [19, 3], [15, 3], [15, 8], [12, 8]],
+      [[19, -1], [19, 3], [15, 3], [15, 8], [12, 8]],
+      [[1, 16], [1, 14], [12, 14], [12, 8]],
+      [[24, 8], [19, 8], [19, 3], [15, 3], [15, 8], [12, 8]],
     ],
     terraces: [
-      [[-1, 1], [6, 1], [6, 6], [12, 6], [12, 10], [19, 10]],
-      [[-1, 4], [6, 4], [6, 6], [12, 6], [12, 10], [19, 10]],
-      [[-1, 11], [13, 11], [13, 10], [19, 10]],
-      [[10, -1], [10, 3], [17, 3], [17, 10], [19, 10]],
-      [[5, 13], [5, 12], [15, 12], [15, 10], [19, 10]],
+      [[-1, 1], [7, 1], [7, 7], [14, 7], [14, 13], [23, 13]],
+      [[-1, 4], [4, 4], [4, 10], [14, 10], [14, 13], [23, 13]],
+      [[8, 16], [8, 10], [14, 10], [14, 13], [23, 13]],
+      [[11, -1], [11, 7], [14, 7], [14, 13], [23, 13]],
+      [[24, 4], [19, 4], [19, 13], [23, 13]],
     ],
     funnel: [
-      [[-1, 2], [8, 2], [8, 9], [10, 9], [10, 12]],
-      [[20, 2], [12, 2], [12, 9], [10, 9], [10, 12]],
-      [[20, 7], [17, 7], [17, 4], [13, 4], [13, 11], [11, 11], [11, 12], [10, 12]],
-      [[-1, 5], [2, 5], [2, 12], [10, 12]],
-      [[15, -1], [15, 2], [12, 2], [12, 9], [10, 9], [10, 12]],
+      [[-1, 2], [9, 2], [9, 11], [12, 11], [12, 15]],
+      [[24, 2], [15, 2], [15, 11], [12, 11], [12, 15]],
+      [[24, 7], [15, 7], [15, 11], [12, 11], [12, 15]],
+      [[-1, 7], [5, 7], [5, 15], [12, 15]],
+      [[12, -1], [12, 15]],
     ],
   };
 
@@ -74,46 +68,5 @@
       theme: { ground: ['#5d5a4f', '#646155'], path: ['#3f3c34', '#8c8778'], deco: '#85806f', shape: 'rubble' } },
   ];
 
-  class GameMap {
-    static random(rng = Math.random, defs = MAP_DEFS) {
-      return new GameMap(defs[Math.floor(rng() * defs.length)]);
-    }
-
-    constructor(def = MAP_DEFS[0], { tile = TD.TILE, cols = TD.COLS, rows = TD.ROWS } = {}) {
-      this.id = def.id;
-      this.name = def.name;
-      this.theme = def.theme;
-      this.uniques = def.uniques || [];
-      this.tile = tile;
-      this.cols = cols;
-      this.rows = rows;
-      this.routes = def.routes.map(wp => new TD.Path(wp, { tile, cols, rows }));
-      this.tiles = new Set(this.routes.flatMap(p => [...p.tiles]));
-      this.baseTile = this.routes[0].baseTile;
-    }
-
-    // Routes open at the start, plus one every ROUTE_STEP waves, up to all of them.
-    routesOpen(wave) {
-      return Math.min(this.routes.length, START_ROUTES + Math.floor(wave / ROUTE_STEP));
-    }
-
-    // Wave on which route i opens (routes 0 and 1 are open from wave 1).
-    routeOpensAt(i) {
-      return i < START_ROUTES ? 1 : (i - START_ROUTES + 1) * ROUTE_STEP;
-    }
-
-    inBounds(c, r) {
-      return c >= 0 && c < this.cols && r >= 0 && r < this.rows;
-    }
-
-    isPathTile(c, r) {
-      return this.tiles.has(`${c},${r}`);
-    }
-
-    get basePosition() {
-      return this.routes[0].basePosition;
-    }
-  }
-
-  return { MAP_DEFS, GameMap, START_ROUTES, ROUTE_STEP };
+  return { MAP_DEFS, LAYOUTS };
 });
