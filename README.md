@@ -8,7 +8,18 @@ Each run is played on a random map. Enemies walk along several routes toward you
 
 Open `index.html` in a browser (double-click it, or drag it into a browser window).
 
-Progress (Coins, upgrades, unlocked towers) is saved in the browser's `localStorage`. Clearing site data or playing in a private window loses your save.
+The game opens on the main menu:
+
+- **เริ่มเกม (Start)**: starts a run right away on a random map.
+- **อัพเกรด (Upgrade)**: spend Coins on permanent upgrades, split into tabs: Attack (damage, fire rate, range, crit), Economy (starting gold, gold per kill) and Tower unlocks. The reset-save button is here too.
+- **ตั้งค่า (Settings)**: resolution (Auto fits the window, or a fixed 800×520 / 1200×780 / 1600×1040 board, drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
+- **ออกจากเกม (Exit)**: tries to close the tab. Browsers only let a page close a tab that a script opened, so if that is blocked you get a goodbye screen; close the tab yourself.
+
+All sounds and the music are generated with the Web Audio API (no sound files). They start after your first click or key press, because browsers block audio before that.
+
+During a run, `Esc` or the ⏸ button pauses the game: resume, open settings, or quit to the menu. Quitting ends the run like a Game Over, so you still get Coins for the waves you cleared.
+
+Progress (Coins, upgrades, unlocked towers) and settings are saved in the browser's `localStorage`. Clearing site data or playing in a private window loses them.
 
 ### Controls
 
@@ -16,7 +27,8 @@ Progress (Coins, upgrades, unlocked towers) is saved in the browser's `localStor
 |---|---|
 | `1` – `8` | Select a tower to build (press again to cancel) |
 | Left click | Place a tower / select a built tower |
-| Right click, `Esc` | Cancel placement / selection |
+| Right click | Cancel placement / selection |
+| `Esc` | Cancel placement / selection, or pause if nothing is selected |
 | `Space` | Start wave 1 / skip the countdown to the next wave |
 | `U` | Upgrade the selected tower |
 
@@ -24,7 +36,7 @@ The right-hand panel has x1/x2/x3 speed buttons.
 
 ## Rules
 
-- **Maps**: each run picks 1 of 10 maps at random (shown in the hub before you start; "start over now" also rolls a new one). Every map has its own background and 5 routes from separate spawners to one base. 2 routes are open at the start, and 1 more opens at waves 10, 20 and 30. Routes that are not open yet are drawn faded with the wave they open on (W10/W20/W30), and you can't build on them.
+- **Maps**: each run picks 1 of 10 maps at random ("Play again" also rolls a new one; the map's 2 special units are listed in the sidebar). Every map has its own background and 5 routes from separate spawners to one base. 2 routes are open at the start, and 1 more opens at waves 10, 20 and 30. Routes that are not open yet are drawn faded with the wave they open on (W10/W20/W30), and you can't build on them.
 - **Route tracking**: before wave 1 and during each countdown, red arrows run along the routes the next wave will use, and the badge at each spawner shows how many enemies will come out of it. Each enemy's route is picked at random from the open routes.
 - **Base**: has 20 HP. Each enemy that reaches it removes HP depending on its type. 0 HP = Game Over.
 - **Gold** (per run): earned by killing enemies and from end-of-wave bonuses. Spend it to build and upgrade towers (max Lv.4). Selling a tower refunds 70%.
@@ -118,10 +130,12 @@ tower-defense/
 │   │   ├── wave.js       class WaveGenerator  Composition of each wave
 │   │   ├── perks.js      PERKS, class PerkPicker
 │   │   ├── meta.js       class MetaProgress   Coins/permanent upgrades + saving
+│   │   ├── settings.js   class Settings    Resolution + volumes, saved separately
 │   │   └── game.js       class Game        One run (state machine)
 │   ├── ui/
 │   │   ├── renderer.js   class Renderer    Draws to the canvas (read-only)
-│   │   └── app.js        class App         DOM, input, overlays, game loop
+│   │   ├── audio.js      class SoundSystem Generated effects, music and UI sounds (Web Audio)
+│   │   └── app.js        class App         Menus, DOM, input, overlays, game loop
 │   └── main.js           Entry point
 └── tests/                Unit tests (node:test)
 ```
@@ -148,7 +162,7 @@ Requires Node.js 20 or later. No `npm install` needed.
 npm test
 ```
 
-Tests cover `src/core/` only (path, maps and route opening, map units, resistances, anti-air, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, elemental reactions, burn/poison, Tesla chains, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
+Tests cover `src/core/` only (path, maps and route opening, map units, resistances, anti-air, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
 
 ## Balancing
 

@@ -4,7 +4,7 @@
   const TD = root.TD;
 
   class Renderer {
-    // scale < 1 draws a shrunken copy (the hub map preview).
+    // scale: canvas pixels per board pixel (resolution and screen density); see setScale.
     constructor(canvas, scale = 1) {
       this.canvas = canvas;
       this.ctx = canvas.getContext('2d');
@@ -13,6 +13,12 @@
       this.height = canvas.height / scale;
       this.map = null;
       this.deco = [];
+    }
+
+    setScale(scale) {
+      this.scale = scale;
+      this.width = this.canvas.width / scale;
+      this.height = this.canvas.height / scale;
     }
 
     setMap(map) {

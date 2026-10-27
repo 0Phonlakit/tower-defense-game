@@ -14,8 +14,13 @@
       this.map = null;
       this.canvas = this.$('game');
       this.renderer = new TD.Renderer(this.canvas);
-      this.hubRenderer = new TD.Renderer(this.$('hub-map'), 0.5);
+      this.settings = new TD.Settings(safeStorage());
+      this.sound = new TD.SoundSystem(this.settings);
       this.game = null;
+      this.paused = false;
+      this.quitting = false;
+      this.upgradeTab = 'attack';
+      this.settingsReturn = 'ov-menu';
       this.placing = null;
       this.selected = null;
       this.hover = null;
@@ -32,47 +37,91 @@
       this.$(id).hidden = !visible;
     }
 
+    // Shows exactly one overlay (or none) and hides the rest.
+    showOverlay(id) {
+      for (const el of this.doc.querySelectorAll('.overlay')) el.hidden = el.id !== id;
+    }
+
     start() {
       this.bindInput();
-      this.openHub();
+      this.applyResolution();
+      this.openMenu();
       this.lastFrame = performance.now();
       requestAnimationFrame(t => this.frame(t));
       return this;
     }
 
     // ---------- Flow ----------
+    // Start goes straight into a run on a freshly rolled random map.
     startRun() {
-      this.game = new TD.Game({ meta: this.meta, map: this.map });
-      this.game.on('wavecleared', e => this.showPerkChoice(e));
-      this.game.on('gameover', r => this.showGameOver(r));
+      this.rollMap();
+      const g = this.game = new TD.Game({ meta: this.meta, map: this.map });
+      g.on('wavecleared', e => { this.sound.play('waveclear'); this.showPerkChoice(e); });
+      g.on('gameover', r => { this.sound.play('gameover'); this.showGameOver(r); });
+      g.on('fire', e => this.sound.play(e.type));
+      for (const name of ['kill', 'reaction', 'basehit', 'wavestart', 'routeopen', 'skip']) g.on(name, () => this.sound.play(name));
       this.placing = null;
       this.selected = null;
-      this.show('ov-hub', false);
-      this.show('ov-over', false);
-      this.show('ov-perk', false);
+      this.paused = false;
+      this.quitting = false;
+      this.showOverlay(null);
       this.buildTowerButtons();
       this.renderSelection();
       this.renderPerkList();
     }
 
-    // Every run gets a random map, picked before the run starts.
     rollMap() {
       this.map = TD.GameMap.random();
       this.renderer.setMap(this.map);
-      this.hubRenderer.setMap(this.map);
-      this.hubRenderer.draw(null);
-      this.$('hub-map-name').textContent = this.map.name;
-      this.$('hub-map-units').innerHTML = this.map.uniques.map(t => this.unitLine(t)).join('');
       this.renderLegend();
     }
 
-    openHub() {
+    // The main menu draws a random map behind it as a backdrop.
+    openMenu() {
       this.game = null;
+      this.paused = false;
       this.rollMap();
-      this.show('ov-over', false);
-      this.show('ov-perk', false);
-      this.renderHub();
-      this.show('ov-hub', true);
+      this.$('menu-coins').textContent = this.meta.coins;
+      this.$('menu-best').textContent = this.meta.best;
+      this.$('menu-runs').textContent = this.meta.runs;
+      this.showOverlay('ov-menu');
+    }
+
+    openUpgrades() {
+      this.renderUpgrades();
+      this.showOverlay('ov-upgrade');
+    }
+
+    // from: the overlay to return to (main menu or pause menu).
+    openSettings(from) {
+      this.settingsReturn = from;
+      this.renderSettings();
+      this.showOverlay('ov-settings');
+    }
+
+    pause() {
+      if (!this.game || this.game.isOver || this.game.phase === 'perk' || this.paused) return;
+      this.paused = true;
+      this.showOverlay('ov-pause');
+    }
+
+    resume() {
+      this.paused = false;
+      this.showOverlay(null);
+    }
+
+    // Quitting ends the run like a Game Over, so the coins for cleared waves are still paid.
+    quitRun() {
+      this.paused = false;
+      this.quitting = true;
+      this.game.forfeit();
+    }
+
+    // Browsers only let a page close a tab that a script opened; otherwise show a goodbye screen.
+    exitGame() {
+      if (!confirm('ออกจากเกม?')) return;
+      root.close();
+      setTimeout(() => { if (!root.closed) this.showOverlay('ov-exit'); }, 300);
     }
 
     // Starts wave 1, or skips the countdown to the next wave for bonus gold.
@@ -84,6 +133,7 @@
 
     choosePerk(index) {
       if (!this.game.choosePerk(index)) return;
+      this.sound.play('perk');
       this.show('ov-perk', false);
       this.renderPerkList();
       this.renderSelection();
@@ -93,7 +143,7 @@
     frame(now) {
       const dt = Math.min(0.05, (now - this.lastFrame) / 1000);
       this.lastFrame = now;
-      if (this.game) {
+      if (this.game && !this.paused) {
         for (let i = 0; i < this.speed && this.game.canBuild; i++) this.game.update(dt);
       }
       this.renderer.draw(this.game, { placing: this.placing, selected: this.selected, hover: this.hover });
@@ -104,8 +154,8 @@
     // ---------- Input ----------
     tileFromEvent(ev) {
       const rect = this.canvas.getBoundingClientRect();
-      const x = (ev.clientX - rect.left) * (this.canvas.width / rect.width);
-      const y = (ev.clientY - rect.top) * (this.canvas.height / rect.height);
+      const x = (ev.clientX - rect.left) * (TD.BOARD_W / rect.width);
+      const y = (ev.clientY - rect.top) * (TD.BOARD_H / rect.height);
       return { c: Math.floor(x / this.map.tile), r: Math.floor(y / this.map.tile) };
     }
 
@@ -115,6 +165,11 @@
       this.canvas.addEventListener('click', ev => this.onCanvasClick(this.tileFromEvent(ev)));
       this.canvas.addEventListener('contextmenu', ev => { ev.preventDefault(); this.clearSelection(); });
       this.doc.addEventListener('keydown', ev => this.onKey(ev));
+      // Audio can only start after a user gesture.
+      this.doc.addEventListener('pointerdown', () => this.sound.unlock());
+      this.doc.addEventListener('keydown', () => this.sound.unlock());
+      this.doc.addEventListener('click', ev => { if (ev.target.closest('button')) this.sound.play('click'); }, true);
+      root.addEventListener('resize', () => { if (this.settings.resolution === 'auto') this.applyResolution(); });
 
       this.$('btn-wave').onclick = () => this.nextWave();
       this.$('btn-upgrade').onclick = () => this.upgradeSelected();
@@ -123,18 +178,29 @@
         this.speed = this.speed === 3 ? 1 : this.speed + 1;
         this.$('btn-speed').textContent = `ความเร็ว x${this.speed}`;
       };
+      this.$('btn-pause').onclick = () => this.pause();
       this.$('btn-start').onclick = () => this.startRun();
-      this.$('btn-retry').onclick = () => { this.rollMap(); this.startRun(); };
-      this.$('btn-to-hub').onclick = () => this.openHub();
+      this.$('btn-open-upgrade').onclick = () => this.openUpgrades();
+      this.$('btn-open-settings').onclick = () => this.openSettings('ov-menu');
+      this.$('btn-exit').onclick = () => this.exitGame();
+      this.$('btn-exit-back').onclick = () => this.openMenu();
+      this.$('btn-upgrade-back').onclick = () => this.openMenu();
+      this.$('btn-settings-back').onclick = () => this.showOverlay(this.settingsReturn);
+      this.$('btn-resume').onclick = () => this.resume();
+      this.$('btn-pause-settings').onclick = () => this.openSettings('ov-pause');
+      this.$('btn-quit-run').onclick = () => this.quitRun();
+      this.$('btn-retry').onclick = () => this.startRun();
+      this.$('btn-to-menu').onclick = () => this.openMenu();
       this.$('btn-reset').onclick = () => {
         if (!confirm('ล้างเซฟทั้งหมด (Coin, อัพเกรด, ป้อมที่ปลดล็อก)?')) return;
         this.meta.reset();
-        this.renderHub();
+        this.renderUpgrades();
       };
+      this.bindSettings();
     }
 
     onCanvasClick({ c, r }) {
-      if (!this.game || !this.game.canBuild) return;
+      if (!this.game || !this.game.canBuild || this.paused) return;
       if (this.placing) {
         if (this.game.buildTower(this.placing, c, r) && this.game.gold < this.game.towerCost(this.placing)) this.placing = null;
         return;
@@ -144,9 +210,15 @@
     }
 
     onKey(ev) {
-      if (!this.game || !this.game.canBuild) return;
+      if (!this.game || this.game.isOver) return;
+      if (ev.key === 'Escape') {
+        if (this.paused) { if (this.$('ov-pause').hidden) this.showOverlay('ov-pause'); else this.resume(); }
+        else if (this.placing || this.selected) this.clearSelection();
+        else this.pause();
+        return;
+      }
+      if (this.paused || !this.game.canBuild) return;
       if (ev.code === 'Space') { ev.preventDefault(); this.nextWave(); return; }
-      if (ev.key === 'Escape') { this.clearSelection(); return; }
       if (ev.key === 'u') { this.upgradeSelected(); return; }
       const type = Object.keys(TD.TOWER_DEFS).find(k => TD.TOWER_DEFS[k].key === ev.key);
       if (type) this.togglePlacing(type);
@@ -195,12 +267,13 @@
 
     showGameOver({ wavesCleared, coins, newBest, totalCoins, kills }) {
       this.placing = null;
+      this.$('over-title').textContent = this.quitting ? 'จบรอบ' : 'GAME OVER';
       this.$('over-summary').innerHTML = `
         <div>ผ่านไปได้ <b>${wavesCleared}</b> wave ${newBest ? '<b style="color:#4cd964">(สถิติใหม่!)</b>' : ''}</div>
         <div>กำจัดศัตรู <b>${kills}</b> ตัว</div>
         <div class="muted small">Coin = ${wavesCleared} × 5 + ${wavesCleared}² ÷ 3</div>
         <div class="coins">+${coins} Coin 🪙 (รวม ${totalCoins})</div>`;
-      this.show('ov-over', true);
+      this.showOverlay('ov-over');
     }
 
     // ---------- Panels ----------
@@ -247,7 +320,7 @@
         : '<li class="muted">ยังไม่มี</li>';
     }
 
-    // One enemy row for the legend/hub, with flying and resistances for map-unique units.
+    // One enemy row for the legend, with flying and resistances for map-unique units.
     unitLine(type) {
       const d = TD.ENEMY_DEFS[type];
       const resist = Object.entries(d.resist || {}).map(([k, v]) =>
@@ -312,27 +385,40 @@
       }
     }
 
-    renderHub() {
+    // ---------- Upgrade screen ----------
+    renderUpgrades() {
       const m = this.meta;
-      this.$('hub-coins').textContent = m.coins;
-      this.$('hub-best').textContent = m.best;
-      this.$('hub-runs').textContent = m.runs;
+      this.$('up-coins').textContent = m.coins;
+      const tabs = this.$('up-tabs');
+      tabs.innerHTML = '';
+      for (const [id, label] of Object.entries(TD.UPGRADE_TABS)) {
+        const b = this.doc.createElement('button');
+        b.className = 'tab' + (id === this.upgradeTab ? ' active' : '');
+        b.setAttribute('role', 'tab');
+        b.setAttribute('aria-selected', String(id === this.upgradeTab));
+        b.textContent = label;
+        b.onclick = () => { this.upgradeTab = id; this.renderUpgrades(); };
+        tabs.appendChild(b);
+      }
 
-      const up = this.$('shop-upgrades');
-      up.innerHTML = '';
+      const list = this.$('up-list');
+      list.innerHTML = '';
+      if (this.upgradeTab === 'towers') { this.renderUnlocks(list); return; }
       for (const [key, u] of Object.entries(TD.META_UPGRADES)) {
+        if (u.tab !== this.upgradeTab) continue;
         const lvl = m.upgrades[key];
         const cost = m.upgradeCost(key);
-        up.appendChild(this.shopItem(
+        list.appendChild(this.shopItem(
           `<div class="s-name">${u.name}</div><div class="s-desc">${u.desc}</div>
            <div class="s-level">Lv ${lvl}/${u.max} · ตอนนี้ ${u.show(lvl)}</div>`,
           m.isMaxed(key) ? 'สูงสุดแล้ว' : `อัพเกรด 🪙 ${cost}`,
           m.isMaxed(key) || m.coins < cost,
           () => m.buyUpgrade(key)));
       }
+    }
 
-      const un = this.$('shop-unlocks');
-      un.innerHTML = '';
+    renderUnlocks(list) {
+      const m = this.meta;
       for (const [type, d] of Object.entries(TD.TOWER_DEFS)) {
         if (!d.unlock) continue;
         const owned = m.isUnlocked(type);
@@ -343,8 +429,47 @@
           owned || m.coins < d.unlock,
           () => m.unlockTower(type));
         if (owned) item.classList.add('owned');
-        un.appendChild(item);
+        list.appendChild(item);
       }
+    }
+
+    // ---------- Settings ----------
+    bindSettings() {
+      const sel = this.$('set-resolution');
+      sel.innerHTML = Object.entries(TD.RESOLUTIONS).map(([id, r]) => `<option value="${id}">${r.label}</option>`).join('');
+      sel.onchange = () => { this.settings.setResolution(sel.value); this.applyResolution(); };
+      const preview = { sfx: 'cannon', ui: 'perk' };
+      for (const ch of ['sfx', 'music', 'ui']) {
+        const input = this.$(`set-${ch}`);
+        input.oninput = () => {
+          this.settings.setVolume(ch, Number(input.value) / 100);
+          this.sound.applyVolumes();
+          this.$(`set-${ch}-val`).textContent = `${input.value}%`;
+        };
+        input.onchange = () => { if (preview[ch]) this.sound.play(preview[ch]); };
+      }
+    }
+
+    renderSettings() {
+      this.$('set-resolution').value = this.settings.resolution;
+      for (const ch of ['sfx', 'music', 'ui']) {
+        const pct = Math.round(this.settings[ch] * 100);
+        this.$(`set-${ch}`).value = pct;
+        this.$(`set-${ch}-val`).textContent = `${pct}%`;
+      }
+    }
+
+    // Sizes the board for the chosen resolution and draws it at the screen's pixel density.
+    applyResolution() {
+      const narrow = root.innerWidth < 760;
+      const availW = root.innerWidth - (narrow ? 32 : 300 + 48);
+      const availH = root.innerHeight - 32;
+      const { width, height } = this.settings.displaySize(availW, availH);
+      const dpr = root.devicePixelRatio || 1;
+      this.canvas.style.width = `${width}px`;
+      this.canvas.width = Math.round(width * dpr);
+      this.canvas.height = Math.round(height * dpr);
+      this.renderer.setScale(this.canvas.width / TD.BOARD_W);
     }
 
     shopItem(html, label, disabled, onBuy) {

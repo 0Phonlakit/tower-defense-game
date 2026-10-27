@@ -39,6 +39,7 @@
         <button id="btn-wave" class="btn primary big">เริ่ม Wave (Space)</button>
         <div class="row">
           <button id="btn-speed" class="btn">ความเร็ว x1</button>
+          <button id="btn-pause" class="btn">⏸ พัก (Esc)</button>
         </div>
       </section>
 
@@ -59,32 +60,81 @@
     </aside>
   </div>
 
-  <!-- Hub / shop -->
-  <div id="ov-hub" class="overlay">
-    <div class="modal wide">
+  <!-- Main menu -->
+  <div id="ov-menu" class="overlay">
+    <div class="modal menu">
       <h1>Rogue Tower Defense</h1>
-      <p class="muted">ป้องกันฐาน (HP 20) จากศัตรูที่เดินตามเส้นทาง · จบแต่ละรอบได้ Coin ตามจำนวน wave ที่ผ่าน เอาไปอัพเกรดถาวร</p>
-      <div class="hub-top">
-        <div class="coin-box">🪙 <span id="hub-coins">0</span> Coin</div>
-        <div class="muted">Wave สูงสุด: <b id="hub-best">0</b> · เล่นไปแล้ว: <b id="hub-runs">0</b> รอบ</div>
-      </div>
-      <div class="hub-map">
-        <canvas id="hub-map" width="400" height="260"></canvas>
-        <div>
-          <div>แผนที่รอบนี้: <b id="hub-map-name"></b></div>
-          <div class="hub-units"><div class="muted small">ศัตรูเฉพาะแผนที่นี้ (ตั้งแต่ wave 5):</div><div id="hub-map-units"></div></div>
-          <p class="muted small">สุ่มใหม่ทุกรอบ · เริ่มด้วย 2 เส้นทาง และเปิดเพิ่ม 1 เส้นทางทุก 10 wave (สูงสุด 5) · เส้นทางจาง ๆ คือเส้นทางที่จะเปิดในอนาคต</p>
-          <p class="muted small">ก่อนเริ่มแต่ละ wave ลูกศรจะวิ่งบนเส้นทางที่ศัตรู wave ถัดไปจะใช้ พร้อมจำนวนศัตรูที่จุดเกิด</p>
-        </div>
-      </div>
-      <h3>อัพเกรดถาวร</h3>
-      <div id="shop-upgrades" class="shop-grid"></div>
-      <h3>ปลดล็อกป้อม</h3>
-      <div id="shop-unlocks" class="shop-grid"></div>
-      <p class="muted small">Coin ที่ได้ = wave ที่ผ่าน × 5 + (wave ที่ผ่าน)² ÷ 3 — ยิ่งไปได้ไกล ยิ่งได้เยอะ</p>
-      <div class="row center">
+      <p class="muted">ป้องกันฐานจากศัตรูบนแผนที่สุ่ม · จบแต่ละรอบได้ Coin เอาไปอัพเกรดถาวร</p>
+      <div class="menu-stats">🪙 <b id="menu-coins">0</b> Coin · Wave สูงสุด <b id="menu-best">0</b> · เล่นไปแล้ว <b id="menu-runs">0</b> รอบ</div>
+      <div class="menu-buttons">
         <button id="btn-start" class="btn primary big">เริ่มเกม</button>
+        <button id="btn-open-upgrade" class="btn big">อัพเกรด</button>
+        <button id="btn-open-settings" class="btn big">ตั้งค่า</button>
+        <button id="btn-exit" class="btn big">ออกจากเกม</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upgrades (tabs) -->
+  <div id="ov-upgrade" class="overlay" hidden>
+    <div class="modal wide">
+      <div class="modal-head">
+        <h2>อัพเกรด</h2>
+        <div class="coin-box">🪙 <span id="up-coins">0</span> Coin</div>
+      </div>
+      <div id="up-tabs" class="tabs" role="tablist"></div>
+      <div id="up-list" class="shop-grid"></div>
+      <p class="muted small">Coin ที่ได้ต่อรอบ = wave ที่ผ่าน × 5 + (wave ที่ผ่าน)² ÷ 3 — ยิ่งไปได้ไกล ยิ่งได้เยอะ</p>
+      <div class="row center">
+        <button id="btn-upgrade-back" class="btn primary big">กลับ</button>
         <button id="btn-reset" class="btn danger small-btn">ล้างเซฟ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div id="ov-settings" class="overlay" hidden>
+    <div class="modal">
+      <h2>ตั้งค่า</h2>
+      <div class="settings">
+        <label>ความละเอียด
+          <select id="set-resolution"></select>
+        </label>
+        <label>เสียงเอฟเฟกต์ <span id="set-sfx-val" class="muted"></span>
+          <input type="range" id="set-sfx" min="0" max="100" step="5">
+        </label>
+        <label>เพลงพื้นหลัง <span id="set-music-val" class="muted"></span>
+          <input type="range" id="set-music" min="0" max="100" step="5">
+        </label>
+        <label>เสียงอื่น ๆ (ปุ่ม, แจ้งเตือน) <span id="set-ui-val" class="muted"></span>
+          <input type="range" id="set-ui" min="0" max="100" step="5">
+        </label>
+      </div>
+      <div class="row center">
+        <button id="btn-settings-back" class="btn primary big">กลับ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pause -->
+  <div id="ov-pause" class="overlay" hidden>
+    <div class="modal menu">
+      <h2>พักเกม</h2>
+      <div class="menu-buttons">
+        <button id="btn-resume" class="btn primary big">เล่นต่อ</button>
+        <button id="btn-pause-settings" class="btn big">ตั้งค่า</button>
+        <button id="btn-quit-run" class="btn danger big">ออกไปเมนู (จบรอบนี้)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exit (shown when the browser won't let the page close its tab) -->
+  <div id="ov-exit" class="overlay" hidden>
+    <div class="modal menu">
+      <h2>ขอบคุณที่เล่น!</h2>
+      <p class="muted">เบราว์เซอร์ไม่อนุญาตให้หน้าเว็บปิดแท็บเอง ปิดแท็บนี้ได้เลย</p>
+      <div class="menu-buttons">
+        <button id="btn-exit-back" class="btn big">กลับเมนู</button>
       </div>
     </div>
   </div>
@@ -101,11 +151,11 @@
   <!-- Game over -->
   <div id="ov-over" class="overlay" hidden>
     <div class="modal">
-      <h1 class="danger-text">GAME OVER</h1>
+      <h1 id="over-title" class="danger-text">GAME OVER</h1>
       <div id="over-summary" class="summary"></div>
       <div class="row center">
-        <button id="btn-to-hub" class="btn primary big">อัพเกรด แล้วเริ่มใหม่</button>
-        <button id="btn-retry" class="btn big">เริ่มใหม่ทันที</button>
+        <button id="btn-to-menu" class="btn primary big">กลับเมนู</button>
+        <button id="btn-retry" class="btn big">เล่นอีกครั้ง</button>
       </div>
     </div>
   </div>
@@ -120,8 +170,10 @@
   <script src="src/core/wave.js"></script>
   <script src="src/core/perks.js"></script>
   <script src="src/core/meta.js"></script>
+  <script src="src/core/settings.js"></script>
   <script src="src/core/game.js"></script>
   <script src="src/ui/renderer.js"></script>
+  <script src="src/ui/audio.js"></script>
   <script src="src/ui/app.js"></script>
   <script src="src/main.js"></script>
 </body>

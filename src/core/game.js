@@ -142,9 +142,17 @@
       if (this.phase !== 'wave' || this.countdown === null) return null;
       const bonus = this.skipBonus;
       this.gold += bonus;
+      this.emit('skip', { bonus });
       if (bonus) this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2 + 30, `ข้าม! +${bonus} gold`, '#f5c542', 1.2);
       this._launchWave();
       return bonus;
+    }
+
+    // Ends the run now (quit from the pause menu). Coins are paid for the waves cleared, like a Game Over.
+    forfeit() {
+      if (this.phase === 'over') return false;
+      this._gameOver();
+      return true;
     }
 
     choosePerk(index) {
@@ -187,6 +195,7 @@
       for (const e of this.enemies) {
         if (!e.update(dt, this.time)) continue;
         this.hp = Math.max(0, this.hp - e.damage);
+        this.emit('basehit', { damage: e.damage, hp: this.hp });
         const base = this.map.basePosition;
         this._text(base.x, base.y - 24, `-${e.damage} HP`, '#ff6b6b', 1);
         this._effect({ kind: 'ring', x: base.x, y: base.y, r0: 10, r1: 34, color: '#ff6b6b', life: 0.4 });
@@ -230,6 +239,7 @@
       const def = tower.def;
       const crit = this.rng() < stats.crit;
       const damage = stats.dmg * (crit ? 2 : 1);
+      this.emit('fire', { type: tower.type });
       if (def.instant) {
         this._effect({ kind: 'tracer', x: tower.x, y: tower.y, x2: target.x, y2: target.y, color: def.color, life: 0.15 });
         this._hit(target, damage, stats);
@@ -335,6 +345,7 @@
     _damage(enemy, amount) {
       if (!enemy.takeDamage(amount * enemy.damageTakenMultiplier(this.time))) return;
       this.kills++;
+      this.emit('kill', { enemy });
       const gold = Math.max(1, Math.floor(enemy.reward * this.mods.gold * (1 + 0.08 * this.meta.upgrades.gold)));
       this.gold += gold;
       this._text(enemy.x, enemy.y - 10, `+${gold}`, '#f5c542', 0.8);
@@ -356,6 +367,7 @@
       this.nextPlan = this._planWave(this.wave + 1);
       if (this.map.routesOpen(this.wave) > this.map.routesOpen(this.wave - 1)) {
         this._text(this.map.cols * this.map.tile / 2, this.map.rows * this.map.tile / 2 - 30, 'เส้นทางใหม่เปิดแล้ว!', '#ff6b6b', 2);
+        this.emit('routeopen', { wave: this.wave, open: this.map.routesOpen(this.wave) });
       }
       this.spawnInterval = this.waves.spawnInterval(this.wave);
       this.spawnTimer = 0;

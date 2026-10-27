@@ -97,12 +97,19 @@
   const AA_GROUND_MULT = 0.8;
 
   const META_UPGRADES = {
-    dmg:       { name: 'ดาเมจ',        desc: 'ดาเมจทุกป้อม +10%',         max: 20, base: 20, step: 15, show: l => `+${l * 10}%` },
-    rate:      { name: 'ความเร็วยิง',  desc: 'ความเร็วยิงทุกป้อม +6%',     max: 10, base: 25, step: 20, show: l => `+${l * 6}%` },
-    range:     { name: 'ระยะยิง',      desc: 'ระยะยิงทุกป้อม +5%',         max: 10, base: 25, step: 20, show: l => `+${l * 5}%` },
-    startGold: { name: 'ทุนเริ่มต้น',   desc: 'Gold เริ่มต้น +30',          max: 10, base: 15, step: 12, show: l => `+${l * 30}` },
-    gold:      { name: 'ค่าหัวศัตรู',   desc: 'Gold จากศัตรู +8%',          max: 10, base: 20, step: 15, show: l => `+${l * 8}%` },
-    crit:      { name: 'คริติคอล',     desc: 'โอกาสคริติคอล (x2) +3%',    max: 10, base: 30, step: 20, show: l => `${l * 3}%` },
+    dmg:       { tab: 'attack', name: 'ดาเมจ',        desc: 'ดาเมจทุกป้อม +10%',         max: 20, base: 20, step: 15, show: l => `+${l * 10}%` },
+    rate:      { tab: 'attack', name: 'ความเร็วยิง',  desc: 'ความเร็วยิงทุกป้อม +6%',     max: 10, base: 25, step: 20, show: l => `+${l * 6}%` },
+    range:     { tab: 'attack', name: 'ระยะยิง',      desc: 'ระยะยิงทุกป้อม +5%',         max: 10, base: 25, step: 20, show: l => `+${l * 5}%` },
+    startGold: { tab: 'economy', name: 'ทุนเริ่มต้น',   desc: 'Gold เริ่มต้น +30',          max: 10, base: 15, step: 12, show: l => `+${l * 30}` },
+    gold:      { tab: 'economy', name: 'ค่าหัวศัตรู',   desc: 'Gold จากศัตรู +8%',          max: 10, base: 20, step: 15, show: l => `+${l * 8}%` },
+    crit:      { tab: 'attack', name: 'คริติคอล',     desc: 'โอกาสคริติคอล (x2) +3%',    max: 10, base: 30, step: 20, show: l => `${l * 3}%` },
+  };
+
+  // Tabs of the upgrade screen. 'towers' lists tower unlocks; the others list META_UPGRADES with that tab.
+  const UPGRADE_TABS = {
+    attack:  'โจมตี',
+    economy: 'เศรษฐกิจ',
+    towers:  'ปลดล็อกป้อม',
   };
 
   // Per-run modifiers changed by perks.
@@ -112,7 +119,7 @@
 
   return {
     TILE, COLS, ROWS, MAX_HP, MAX_TOWER_LEVEL, STARTING_GOLD, WAVE_COUNTDOWN, SAVE_KEY,
-    WAYPOINTS, TOWER_DEFS, ENEMY_DEFS, META_UPGRADES, defaultModifiers,
+    WAYPOINTS, TOWER_DEFS, ENEMY_DEFS, META_UPGRADES, UPGRADE_TABS, defaultModifiers,
     AURA_DURATION, BURN_DURATION, POISON_DURATION, POISON_MAX_STACKS, CHAIN_RANGE, CHAIN_FALLOFF,
     ELEMENTS, REACTIONS, reactionFor, DAMAGE_TYPES, AIR_BONUS, AA_GROUND_MULT,
   };
