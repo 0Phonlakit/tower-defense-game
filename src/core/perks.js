@@ -22,7 +22,7 @@
     { id: 'heal',     name: 'ซ่อมฐาน',        desc: () => 'ฟื้นพลังชีวิตฐาน +4 (สูงสุด 20)',       cond: g => g.hp < TD.MAX_HP, apply: g => { g.hp = Math.min(TD.MAX_HP, g.hp + 4); } },
     { id: 'crit',     name: 'จุดตาย',         desc: () => 'โอกาสคริติคอล (x2) +8%',                cond: g => g.mods.crit < 0.4, apply: g => { g.mods.crit += 0.08; } },
     { id: 'splash',   name: 'ดินปืนพิเศษ',     desc: () => 'รัศมีระเบิด/น้ำแข็ง/น้ำ +25%',          cond: g => ['cannon', 'frost', 'tide'].some(t => g.meta.isUnlocked(t)) && g.mods.splash < 2, apply: g => { g.mods.splash += 0.25; } },
-    { id: 'slow',     name: 'ความเย็นยะเยือก', desc: () => 'ป้อมน้ำแข็งชะลอศัตรูเพิ่ม +10%',        cond: g => g.meta.isUnlocked('frost') && g.mods.slow < 0.3, apply: g => { g.mods.slow += 0.1; } },
+    { id: 'slow',     name: 'ความเย็นยะเยือก', desc: () => 'จอมเวทน้ำแข็งชะลอศัตรูเพิ่ม +10%',        cond: g => g.meta.isUnlocked('frost') && g.mods.slow < 0.3, apply: g => { g.mods.slow += 0.1; } },
     { id: 'cost',     name: 'ช่างราคามิตร',    desc: () => 'ราคาสร้าง/อัพเกรดป้อม -10%',           cond: g => g.mods.cost > 0.6, apply: g => { g.mods.cost *= 0.9; } },
     { id: 'interest', name: 'ดอกเบี้ย',        desc: () => 'จบ wave ได้ดอกเบี้ย +5% ของ gold ที่มี', cond: g => g.mods.interest < 0.2, apply: g => { g.mods.interest += 0.05; } },
   ];
