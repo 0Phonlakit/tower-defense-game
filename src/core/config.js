@@ -18,14 +18,14 @@
   const WAYPOINTS = [[-1, 2], [4, 2], [4, 9], [9, 9], [9, 3], [14, 3], [14, 10], [17, 10], [17, 6], [19, 6]];
 
   const TOWER_DEFS = {
-    gun:    { key: '1', name: 'ปืนกล',    cost: 50,  dmg: 8,  rate: 2.2,  range: 110, proj: 420, color: '#4a90d9', unlock: 0,   desc: 'ยิงเร็ว เป้าเดี่ยว' },
+    gun:    { key: '1', name: 'ปืนกล',    cost: 50,  dmg: 8,  rate: 2.2,  range: 110, proj: 420, air: true, color: '#4a90d9', unlock: 0,   desc: 'ยิงเร็ว เป้าเดี่ยว · ยิงอากาศได้' },
     cannon: { key: '2', name: 'ปืนใหญ่',  cost: 90,  dmg: 22, rate: 0.7,  range: 100, proj: 260, splash: 55, color: '#e08a2e', unlock: 60, desc: 'กระสุนระเบิดวงกว้าง' },
     frost:  { key: '3', name: 'น้ำแข็ง',  cost: 70,  dmg: 4,  rate: 1.2,  range: 95,  proj: 300, splash: 40, slow: 0.4, slowDur: 1.6, element: 'ice', color: '#5bc8e8', unlock: 50, desc: 'ทำให้ศัตรูช้าลง · ธาตุน้ำแข็ง' },
-    sniper: { key: '4', name: 'สไนเปอร์', cost: 120, dmg: 70, rate: 0.45, range: 230, instant: true, color: '#a66bd6', unlock: 100, desc: 'ระยะไกล ดาเมจสูง' },
+    sniper: { key: '4', name: 'สไนเปอร์', cost: 120, dmg: 70, rate: 0.45, range: 230, instant: true, air: true, color: '#a66bd6', unlock: 100, desc: 'ระยะไกล ดาเมจสูง · ยิงอากาศได้' },
     flame:  { key: '5', name: 'เปลวไฟ',   cost: 80,  dmg: 6,  rate: 1.6,  range: 85,  proj: 300, burn: 8, element: 'fire', color: '#ff6b35', unlock: 80, desc: 'ติดไฟ ดาเมจต่อเนื่อง 3 วิ · ธาตุไฟ' },
-    tesla:  { key: '6', name: 'เทสลา',    cost: 100, dmg: 18, rate: 0.9,  range: 110, instant: true, chain: 2, element: 'lightning', color: '#e8f55b', unlock: 120, desc: 'สายฟ้ากระโดดไปอีก 2 ตัว · ธาตุไฟฟ้า' },
+    tesla:  { key: '6', name: 'เทสลา',    cost: 100, dmg: 18, rate: 0.9,  range: 110, instant: true, chain: 2, air: true, element: 'lightning', color: '#e8f55b', unlock: 120, desc: 'สายฟ้ากระโดดไปอีก 2 ตัว · ธาตุไฟฟ้า · ยิงอากาศได้' },
     tide:   { key: '7', name: 'สายน้ำ',   cost: 60,  dmg: 5,  rate: 1.0,  range: 100, proj: 280, splash: 45, element: 'water', color: '#1fb5a5', unlock: 70, desc: 'สาดน้ำเป็นวง เปิดทางให้ปฏิกิริยา · ธาตุน้ำ' },
-    poison: { key: '8', name: 'พิษ',      cost: 90,  dmg: 4,  rate: 1.0,  range: 105, proj: 300, poison: 6, color: '#7bc043', unlock: 90, desc: 'พิษซ้อนได้ 5 ชั้น แรงกับตัวถึก' },
+    poison: { key: '8', name: 'พิษ',      cost: 90,  dmg: 4,  rate: 1.0,  range: 105, proj: 300, poison: 6, dmgType: 'poison', color: '#7bc043', unlock: 90, desc: 'พิษซ้อนได้ 5 ชั้น แรงกับตัวถึก' },
   };
 
   // An elemental hit leaves an aura; a different element hitting that aura triggers a reaction and clears it.
@@ -63,7 +63,38 @@
     fast:   { name: 'วิ่งเร็ว',    hp: 13,  speed: 100, dmg: 1, reward: 5,  r: 7,  color: '#f2c94c' },
     tank:   { name: 'หุ้มเกราะ',   hp: 85,  speed: 33,  dmg: 2, reward: 12, r: 12, color: '#8a939e' },
     boss:   { name: 'บอส (ทุก 10 wave)', hp: 500, speed: 28, dmg: 5, reward: 80, r: 17, color: '#9b51e0' },
+
+    // Map-only units (see uniques in MAP_DEFS). resist: damage type -> share of damage taken (0 = immune).
+    bee:          { unique: true, flying: true, name: 'ผึ้งยักษ์',         hp: 40,  speed: 70, dmg: 3, reward: 9,  r: 9,  color: '#f2b705', resist: { poison: 0 } },
+    beetle:       { unique: true,               name: 'ด้วงเขาเหล็ก',      hp: 220, speed: 30, dmg: 3, reward: 20, r: 13, color: '#4f6d3a', resist: { poison: 0.35 } },
+    firehawk:     { unique: true, flying: true, name: 'เหยี่ยวเพลิง',       hp: 40,  speed: 70, dmg: 3, reward: 9,  r: 9,  color: '#ff7a1a', resist: { fire: 0 } },
+    sandworm:     { unique: true,               name: 'หนอนทรายยักษ์',     hp: 220, speed: 30, dmg: 3, reward: 20, r: 13, color: '#b0894f', resist: { fire: 0.35 } },
+    snowowl:      { unique: true, flying: true, name: 'นกฮูกหิมะ',         hp: 40,  speed: 70, dmg: 3, reward: 9,  r: 9,  color: '#f4f8fb', resist: { ice: 0 } },
+    frostgiant:   { unique: true,               name: 'ยักษ์น้ำแข็ง',       hp: 220, speed: 30, dmg: 3, reward: 20, r: 13, color: '#7fb8e0', resist: { ice: 0.35 } },
+    lavaspirit:   { unique: true,               name: 'ภูตลาวา',           hp: 60,  speed: 55, dmg: 3, reward: 9,  r: 10, color: '#ff4500', resist: { fire: 0 } },
+    magmagolem:   { unique: true,               name: 'โกเลมแมกมา',        hp: 220, speed: 30, dmg: 3, reward: 20, r: 13, color: '#8b2f1c', resist: { fire: 0.35 } },
+    mosquito:     { unique: true, flying: true, name: 'ยุงยักษ์',           hp: 40,  speed: 70, dmg: 3, reward: 9,  r: 9,  color: '#9aa35a', resist: { water: 0 } },
+    bogcroc:      { unique: true,               name: 'จระเข้บึง',          hp: 220, speed: 30, dmg: 3, reward: 20, r: 13, color: '#4b6b3c', resist: { water: 0.35 } },
+    stormgull:    { unique: true, flying: true, name: 'นกนางนวลพายุ',      hp: 40,  speed: 70, dmg: 3, reward: 9,  r: 9,  color: '#c9d6e3', resist: { lightning: 0 } },
+    crab:         { unique: true,               name: 'ปูเกราะ',            hp: 220, speed: 30, dmg: 3, reward: 20, r: 13, color: '#d1503a', resist: { lightning: 0.35 } },
+    bat:          { unique: true, flying: true, name: 'ค้างคาวแวมไพร์',     hp: 40,  speed: 70, dmg: 3, reward: 9,  r: 9,  color: '#5a2d6e', resist: { poison: 0 } },
+    hauntedarmor: { unique: true,               name: 'ชุดเกราะผีสิง',      hp: 220, speed: 30, dmg: 3, reward: 20, r: 13, color: '#6d7a99', resist: { physical: 0.35 } },
+    crow:         { unique: true, flying: true, name: 'อีกา',              hp: 40,  speed: 70, dmg: 3, reward: 9,  r: 9,  color: '#2a2a2a', resist: { lightning: 0 } },
+    treant:       { unique: true,               name: 'ต้นไม้เดินได้',       hp: 220, speed: 30, dmg: 3, reward: 20, r: 13, color: '#7a5a2e', resist: { water: 0.35 } },
+    crystalgolem: { unique: true,               name: 'โกเลมคริสตัล',       hp: 60,  speed: 55, dmg: 3, reward: 9,  r: 10, color: '#9f7aea', resist: { lightning: 0 } },
+    crystalmoth:  { unique: true, flying: true, name: 'ผีเสื้อคริสตัล',      hp: 220, speed: 35, dmg: 3, reward: 20, r: 12, color: '#d4b8ff', resist: { ice: 0.35 } },
+    gargoyle:     { unique: true, flying: true, name: 'การ์กอยล์',          hp: 40,  speed: 70, dmg: 3, reward: 9,  r: 9,  color: '#8a8478', resist: { physical: 0.5 } },
+    mummy:        { unique: true,               name: 'มัมมี่',              hp: 220, speed: 30, dmg: 3, reward: 20, r: 13, color: '#d8ccaa', resist: { fire: 0.35 } },
   };
+
+  // Damage types: physical (default), poison, and the four elements.
+  const DAMAGE_TYPES = {
+    physical: 'กายภาพ', poison: 'พิษ', fire: 'ไฟ', ice: 'น้ำแข็ง', water: 'น้ำ', lightning: 'ไฟฟ้า',
+  };
+
+  // Anti-air towers (air: true) hit flyers harder and ground units softer than other towers.
+  const AIR_BONUS = 1.15;
+  const AA_GROUND_MULT = 0.8;
 
   const META_UPGRADES = {
     dmg:       { name: 'ดาเมจ',        desc: 'ดาเมจทุกป้อม +10%',         max: 20, base: 20, step: 15, show: l => `+${l * 10}%` },
@@ -83,6 +114,6 @@
     TILE, COLS, ROWS, MAX_HP, MAX_TOWER_LEVEL, STARTING_GOLD, WAVE_COUNTDOWN, SAVE_KEY,
     WAYPOINTS, TOWER_DEFS, ENEMY_DEFS, META_UPGRADES, defaultModifiers,
     AURA_DURATION, BURN_DURATION, POISON_DURATION, POISON_MAX_STACKS, CHAIN_RANGE, CHAIN_FALLOFF,
-    ELEMENTS, REACTIONS, reactionFor,
+    ELEMENTS, REACTIONS, reactionFor, DAMAGE_TYPES, AIR_BONUS, AA_GROUND_MULT,
   };
 });

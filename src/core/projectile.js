@@ -7,7 +7,7 @@
   // Homing shot. If the target dies mid-flight it lands on the last known position.
   class Projectile {
     constructor({ x, y, target, speed, damage, crit = false, splash = 0, slow = 0, slowDur = 0,
-      element = null, burn = 0, poison = 0, color = '#fff' }) {
+      element = null, burn = 0, poison = 0, dmgType = 'physical', air = false, color = '#fff' }) {
       this.x = x;
       this.y = y;
       this.target = target;
@@ -22,6 +22,8 @@
       this.element = element;
       this.burn = burn;
       this.poison = poison;
+      this.dmgType = dmgType;
+      this.air = air;
       this.color = color;
       this.done = false;
     }

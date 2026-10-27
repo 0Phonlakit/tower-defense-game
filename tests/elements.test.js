@@ -175,7 +175,7 @@ test('Game: Tesla chains to 2 more enemies with 70% falloff per jump', () => {
   const [a, b, c] = [0, 50, 100].map(dx => enemyAt(game, tower.x + 40 + dx, tower.y));
   a.distance = 10; // furthest along the path, so the tower targets it first
   game._fire(tower, a, game.towerStats(tower));
-  const dmg = TOWER_DEFS.tesla.dmg;
+  const dmg = TOWER_DEFS.tesla.dmg * 0.8; // anti-air tower vs ground
   assert.ok(near(a.maxHp - a.hp, dmg));
   assert.ok(near(b.maxHp - b.hp, dmg * 0.7));
   assert.ok(near(c.maxHp - c.hp, dmg * 0.49));

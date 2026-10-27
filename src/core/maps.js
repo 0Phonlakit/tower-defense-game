@@ -51,25 +51,25 @@
 
   // theme: ground = checker colors, path = [edge, fill], deco = scattered detail color/shape.
   const MAP_DEFS = [
-    { id: 'meadow',  name: 'ทุ่งหญ้า',        routes: LAYOUTS.winding,
+    { id: 'meadow',  name: 'ทุ่งหญ้า',        uniques: ['bee', 'beetle'], routes: LAYOUTS.winding,
       theme: { ground: ['#3d6b3a', '#427240'], path: ['#8f7650', '#c9ad7c'], deco: '#2c5429', shape: 'bush' } },
-    { id: 'desert',  name: 'ทะเลทราย',       routes: LAYOUTS.crossroads,
+    { id: 'desert',  name: 'ทะเลทราย',       uniques: ['firehawk', 'sandworm'], routes: LAYOUTS.crossroads,
       theme: { ground: ['#c9a25e', '#d1ab68'], path: ['#8a6a3e', '#e8d3a0'], deco: '#6f8f3c', shape: 'cactus' } },
-    { id: 'snow',    name: 'ลานหิมะ',        routes: LAYOUTS.terraces,
+    { id: 'snow',    name: 'ลานหิมะ',        uniques: ['snowowl', 'frostgiant'], routes: LAYOUTS.terraces,
       theme: { ground: ['#d9e3ec', '#e3ebf2'], path: ['#7d8d9b', '#aebccb'], deco: '#ffffff', shape: 'flake' } },
-    { id: 'lava',    name: 'ภูเขาไฟ',        routes: LAYOUTS.funnel,
+    { id: 'lava',    name: 'ภูเขาไฟ',        uniques: ['lavaspirit', 'magmagolem'], routes: LAYOUTS.funnel,
       theme: { ground: ['#2b1d1d', '#332121'], path: ['#5a2a1a', '#7a3b22'], deco: '#ff5a1f', shape: 'ember' } },
-    { id: 'swamp',   name: 'บึงหมอก',        routes: mirror(LAYOUTS.winding, { h: true }),
+    { id: 'swamp',   name: 'บึงหมอก',        uniques: ['mosquito', 'bogcroc'], routes: mirror(LAYOUTS.winding, { h: true }),
       theme: { ground: ['#3b4a2f', '#425234'], path: ['#4a3c28', '#6b5a3a'], deco: '#6f8f45', shape: 'reed' } },
-    { id: 'beach',   name: 'ชายหาด',         routes: mirror(LAYOUTS.terraces, { v: true }),
+    { id: 'beach',   name: 'ชายหาด',         uniques: ['stormgull', 'crab'], routes: mirror(LAYOUTS.terraces, { v: true }),
       theme: { ground: ['#e6d3a0', '#ecdcae'], path: ['#b2945a', '#d6bb84'], deco: '#3fa7c9', shape: 'shell' } },
-    { id: 'night',   name: 'ทุ่งราตรี',       routes: mirror(LAYOUTS.funnel, { v: true }),
+    { id: 'night',   name: 'ทุ่งราตรี',       uniques: ['bat', 'hauntedarmor'], routes: mirror(LAYOUTS.funnel, { v: true }),
       theme: { ground: ['#1d2740', '#222d4a'], path: ['#3c4566', '#56608a'], deco: '#f5e6a8', shape: 'star' } },
-    { id: 'autumn',  name: 'ป่าใบไม้ร่วง',    routes: mirror(LAYOUTS.terraces, { h: true }),
+    { id: 'autumn',  name: 'ป่าใบไม้ร่วง',    uniques: ['crow', 'treant'], routes: mirror(LAYOUTS.terraces, { h: true }),
       theme: { ground: ['#6e4a26', '#77512c'], path: ['#4f341c', '#a37a48'], deco: '#e0662c', shape: 'leaf' } },
-    { id: 'crystal', name: 'ถ้ำคริสตัล',      routes: mirror(LAYOUTS.crossroads, { v: true }),
+    { id: 'crystal', name: 'ถ้ำคริสตัล',      uniques: ['crystalgolem', 'crystalmoth'], routes: mirror(LAYOUTS.crossroads, { v: true }),
       theme: { ground: ['#2a2140', '#30264a'], path: ['#4a3d6a', '#6e5c9a'], deco: '#b58cff', shape: 'crystal' } },
-    { id: 'ruins',   name: 'ซากเมืองโบราณ',   routes: mirror(LAYOUTS.crossroads, { h: true }),
+    { id: 'ruins',   name: 'ซากเมืองโบราณ',   uniques: ['gargoyle', 'mummy'], routes: mirror(LAYOUTS.crossroads, { h: true }),
       theme: { ground: ['#5d5a4f', '#646155'], path: ['#3f3c34', '#8c8778'], deco: '#85806f', shape: 'rubble' } },
   ];
 
@@ -82,6 +82,7 @@
       this.id = def.id;
       this.name = def.name;
       this.theme = def.theme;
+      this.uniques = def.uniques || [];
       this.tile = tile;
       this.cols = cols;
       this.rows = rows;
