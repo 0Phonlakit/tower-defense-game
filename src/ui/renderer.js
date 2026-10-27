@@ -9,6 +9,8 @@
       this.canvas = canvas;
       this.ctx = canvas.getContext('2d');
       this.scale = scale;
+      this.ox = 0;
+      this.oy = 0;
       this.width = canvas.width / scale;
       this.height = canvas.height / scale;
       this.map = null;
@@ -17,8 +19,11 @@
       this.layerKey = '';
     }
 
-    setScale(scale) {
+    // scale: canvas px per board px; ox/oy: where the board's top-left sits on the canvas (canvas px).
+    setScale(scale, ox = 0, oy = 0) {
       this.scale = scale;
+      this.ox = ox;
+      this.oy = oy;
       this.width = this.canvas.width / scale;
       this.height = this.canvas.height / scale;
     }
@@ -45,7 +50,7 @@
     // view: { placing, selected, hover } from the App
     draw(game, view = {}) {
       if (!this.map) return;
-      this.ctx.setTransform(this.scale, 0, 0, this.scale, 0, 0);
+      this.ctx.setTransform(this.scale, 0, 0, this.scale, this.ox, this.oy);
       const open = this.map.routesOpen(game ? Math.max(1, game.wave) : 1);
       this.drawStatic(open);
       this.drawSpawns(open);
@@ -64,14 +69,14 @@
     // Ground, scenery, roads and the base only change with the map, the open routes or the scale,
     // so they are drawn into an offscreen canvas once and copied every frame.
     drawStatic(open) {
-      const key = `${this.map.id}|${open}|${this.canvas.width}x${this.canvas.height}`;
+      const key = `${this.map.id}|${open}|${this.canvas.width}x${this.canvas.height}|${this.ox},${this.oy}`;
       if (key !== this.layerKey || !this.layer) {
         const layer = this.layer || document.createElement('canvas');
         layer.width = this.canvas.width;
         layer.height = this.canvas.height;
         const main = this.ctx;
         this.ctx = layer.getContext('2d');
-        this.ctx.setTransform(this.scale, 0, 0, this.scale, 0, 0);
+        this.ctx.setTransform(this.scale, 0, 0, this.scale, this.ox, this.oy);
         this.drawGround();
         this.drawDeco();
         this.drawPaths(open);
