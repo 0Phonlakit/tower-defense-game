@@ -21,6 +21,8 @@
       this.quitting = false;
       this.upgradeTab = 'attack';
       this.settingsReturn = 'ov-menu';
+      this.guideTab = 'towers';
+      this.guideReturn = 'ov-menu';
       this.placing = null;
       this.selected = null;
       this.hover = null;
@@ -73,7 +75,6 @@
     rollMap() {
       this.map = TD.GameMap.random();
       this.renderer.setMap(this.map);
-      this.renderLegend();
     }
 
     // The main menu draws a random map behind it as a backdrop.
@@ -99,9 +100,17 @@
       this.showOverlay('ov-settings');
     }
 
+    // from: the overlay to return to (main menu or pause menu). In a run it shows this map's units.
+    openGuide(from) {
+      this.guideReturn = from;
+      this.renderGuide();
+      this.showOverlay('ov-guide');
+    }
+
     pause() {
       if (!this.game || this.game.isOver || this.game.phase === 'perk' || this.paused) return;
       this.paused = true;
+      this.renderPerkList();
       this.showOverlay('ov-pause');
     }
 
@@ -182,6 +191,9 @@
       this.$('btn-start').onclick = () => this.startRun();
       this.$('btn-open-upgrade').onclick = () => this.openUpgrades();
       this.$('btn-open-settings').onclick = () => this.openSettings('ov-menu');
+      this.$('btn-open-guide').onclick = () => this.openGuide('ov-menu');
+      this.$('btn-pause-guide').onclick = () => this.openGuide('ov-pause');
+      this.$('btn-guide-back').onclick = () => this.showOverlay(this.guideReturn);
       this.$('btn-exit').onclick = () => this.exitGame();
       this.$('btn-exit-back').onclick = () => this.openMenu();
       this.$('btn-upgrade-back').onclick = () => this.openMenu();
@@ -293,12 +305,33 @@
       }
     }
 
+    // Upgrade/sell popup for the tower the player clicked; positioned every frame in placeTowerPop().
     renderSelection() {
       const t = this.selected;
-      if (!t || !this.game) { this.show('sel-panel', false); return; }
-      this.show('sel-panel', true);
-      const s = this.game.towerStats(t);
-      this.$('sel-name').textContent = `${t.def.name} (Lv.${t.level})`;
+      if (!t || !this.game) { this.show('tower-pop', false); return; }
+      this.$('pop-name').textContent = `${t.def.name} Lv.${t.level}`;
+      this.$('btn-sell').textContent = `ขาย (+${t.sellValue})`;
+      this.show('tower-pop', true);
+    }
+
+    // Above the tower if there is room, otherwise below it; kept inside the board.
+    placeTowerPop() {
+      const pop = this.$('tower-pop');
+      const t = this.selected;
+      if (!t || !this.game || this.paused || this.game.isOver) { pop.hidden = true; return; }
+      pop.hidden = false;
+      const c = this.canvas;
+      const k = c.clientWidth / TD.BOARD_W;
+      const half = pop.offsetWidth / 2;
+      const x = Math.min(c.offsetLeft + c.clientWidth - half, Math.max(c.offsetLeft + half, c.offsetLeft + t.x * k));
+      const above = t.y * k - 24 * k > pop.offsetHeight;
+      pop.style.left = `${x}px`;
+      pop.style.top = `${c.offsetTop + (above ? t.y - 24 : t.y + 24) * k}px`;
+      pop.classList.toggle('below', !above);
+    }
+
+    // Stat lines for one tower's stats object (Guide tab).
+    towerStatLines(s) {
       const lines = [`ดาเมจ: ${s.dmg.toFixed(1)}`, `ยิง/วินาที: ${s.rate.toFixed(2)}`, `ระยะ: ${Math.round(s.range)}`];
       if (s.splash) lines.push(`รัศมีระเบิด: ${Math.round(s.splash)}`);
       if (s.slow) lines.push(`ชะลอ: ${Math.round(s.slow * 100)}% / ${s.slowDur}s`);
@@ -309,8 +342,7 @@
       if (s.chain) lines.push(`กระโดด: ${s.chain} ตัว`);
       lines.push(`ชนิดดาเมจ: ${TD.DAMAGE_TYPES[s.dmgType]}`);
       lines.push(s.air ? `ยิงอากาศได้ (อากาศ x${TD.AIR_BONUS} · พื้น x${TD.AA_GROUND_MULT})` : 'ยิงได้เฉพาะพื้นดิน');
-      this.$('sel-stats').innerHTML = lines.join('<br>');
-      this.$('btn-sell').textContent = `ขาย (+${t.sellValue})`;
+      return lines;
     }
 
     renderPerkList() {
@@ -331,15 +363,55 @@
         + (note ? `<div class="legend-note">${note}</div>` : '');
     }
 
-    renderLegend() {
-      const types = Object.keys(TD.ENEMY_DEFS).filter(t => !TD.ENEMY_DEFS[t].unique).concat(this.map ? this.map.uniques : []);
-      this.$('enemy-legend').innerHTML = types.map(t => this.unitLine(t)).join('');
+    // ---------- Guide ----------
+    renderGuide() {
+      const tabs = this.$('guide-tabs');
+      tabs.innerHTML = '';
+      for (const [id, label] of [['towers', 'ป้อม'], ['enemies', 'ศัตรู'], ['reactions', 'ปฏิกิริยาธาตุ']]) {
+        const b = this.doc.createElement('button');
+        b.className = 'tab' + (id === this.guideTab ? ' active' : '');
+        b.setAttribute('role', 'tab');
+        b.setAttribute('aria-selected', String(id === this.guideTab));
+        b.textContent = label;
+        b.onclick = () => { this.guideTab = id; this.renderGuide(); };
+        tabs.appendChild(b);
+      }
+      const body = { towers: () => this.guideTowers(), enemies: () => this.guideEnemies(), reactions: () => this.guideReactions() };
+      this.$('guide-body').innerHTML = body[this.guideTab]();
+    }
+
+    // Level-1 base stats of every tower, before permanent upgrades and perks.
+    guideTowers() {
+      return '<p class="muted small">ค่าพื้นฐานที่ Lv.1 ก่อนอัพเกรดถาวรและ Perk · กดที่ป้อมบนแผนที่เพื่ออัพเกรดหรือขาย</p><div class="shop-grid">'
+        + Object.entries(TD.TOWER_DEFS).map(([type, d]) => {
+          const lines = this.towerStatLines(new TD.Tower(type, 0, 0).stats());
+          const unlock = d.unlock ? `ปลดล็อก 🪙 ${d.unlock}` : 'มีตั้งแต่เริ่ม';
+          return `<div class="shop-item"><div class="s-name"><span class="dot" style="background:${d.color}"></span> ${d.key}. ${d.name}</div>`
+            + `<div class="s-desc">${d.desc}</div><div class="s-level">สร้าง ${d.cost} gold · ${unlock}</div>`
+            + `<div class="sel-stats">${lines.join('<br>')}</div></div>`;
+        }).join('') + '</div>';
+    }
+
+    // Common enemies, then map units: this map's during a run, every map's from the main menu.
+    guideEnemies() {
+      const common = Object.keys(TD.ENEMY_DEFS).filter(t => !TD.ENEMY_DEFS[t].unique);
+      let html = `<div class="legend">${common.map(t => this.unitLine(t)).join('')}</div>`;
+      const maps = this.game ? [this.game.map] : TD.MAP_DEFS;
+      html += '<h3>ศัตรูเฉพาะแผนที่ <small>(ตั้งแต่ wave 5)</small></h3>';
+      for (const m of maps) {
+        html += `<div class="legend guide-map"><div class="guide-map-name">${m.name}</div>${m.uniques.map(t => this.unitLine(t)).join('')}</div>`;
+      }
+      return html;
+    }
+
+    guideReactions() {
       const el = k => `<span class="dot" style="background:${TD.ELEMENTS[k].color}"></span>${TD.ELEMENTS[k].name}`;
-      this.$('reaction-legend').innerHTML = Object.entries(TD.REACTIONS).map(([pair, r]) => {
-        const [a, b] = pair.split('+');
-        return `<div class="legend-item"><b>${el(a)} + ${el(b)}</b><span>${r.name}</span></div>`
-          + `<div class="legend-note">${r.desc}</div>`;
-      }).join('');
+      return '<p class="muted small">โจมตีด้วยธาตุหนึ่งจะติดสถานะธาตุนั้น 3 วินาที ถ้าโดนธาตุอื่นซ้ำจะเกิดปฏิกิริยา</p><div class="legend">'
+        + Object.entries(TD.REACTIONS).map(([pair, r]) => {
+          const [a, b] = pair.split('+');
+          return `<div class="legend-item"><b>${el(a)} + ${el(b)}</b><span>${r.name}</span></div>`
+            + `<div class="legend-note">${r.desc}</div>`;
+        }).join('') + '</div>';
     }
 
     setText(id, value) {
@@ -373,6 +445,7 @@
       else if (canSkip) waveBtn.textContent = `ข้ามไป Wave ${g.wave + 1} (+${g.skipBonus} gold) · ${Math.ceil(g.countdown)}s`;
       else waveBtn.textContent = `Wave ${g.wave} กำลังดำเนิน...`;
 
+      this.placeTowerPop();
       if (this.selected) {
         const up = this.$('btn-upgrade');
         if (this.selected.isMaxLevel) {
