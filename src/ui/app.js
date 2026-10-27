@@ -270,7 +270,7 @@
       this.doc.addEventListener('click', ev => { if (ev.target.closest('button')) this.sound.play('click'); }, true);
       root.addEventListener('resize', () => {
         this.demo.resize();
-        if (this.settings.resolution === 'auto') this.applyResolution();
+        this.applyResolution();
       });
 
       this.$('btn-wave').onclick = () => this.nextWave();
@@ -396,6 +396,7 @@
           <div class="t-name"><span class="dot" style="background:${d.color}"></span>${d.key}. ${L.tower(type)}</div>
           <div class="t-cost"></div>
           <div class="t-desc">${this.meta.isUnlocked(type) ? L.tower(type, 'desc') : t('tower.locked')}</div>`;
+        b.title = `${L.tower(type)} — ${this.meta.isUnlocked(type) ? L.tower(type, 'desc') : t('tower.locked')}`;
         b.onclick = () => this.togglePlacing(type);
         box.appendChild(b);
       }
@@ -665,10 +666,18 @@
     }
 
     // Sizes the board for the chosen resolution and draws it at the screen's pixel density.
+    // The board and the info bar under it must fit the window together, so the bar's height is
+    // taken off the space the board can use.
     applyResolution() {
       const narrow = root.innerWidth < 760;
-      const availW = root.innerWidth - (narrow ? 32 : 300 + 48);
-      const availH = root.innerHeight - 32;
+      const bar = this.$('info-bar');
+      const barHeight = bar.offsetHeight + parseFloat(getComputedStyle(bar).marginTop || 0);
+      const app = this.$('app');
+      const pad = parseFloat(getComputedStyle(app).paddingTop) || 16;
+      const gap = parseFloat(getComputedStyle(app).columnGap) || 16;
+      const border = 2; // the canvas has a 1px border on each side
+      const availW = root.innerWidth - pad * 2 - (narrow ? 0 : 300 + gap) - border - 1;
+      const availH = root.innerHeight - pad * 2 - barHeight - border - 1;
       const { width, height } = this.settings.displaySize(availW, availH);
       const dpr = root.devicePixelRatio || 1;
       this.canvas.style.width = `${width}px`;
