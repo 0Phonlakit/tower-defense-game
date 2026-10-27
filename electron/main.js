@@ -57,6 +57,14 @@ function smokeTest(win) {
         page: [de.scrollWidth, de.scrollHeight],
         screen: [screen.availWidth, screen.availHeight],
         pixelRatio: devicePixelRatio,
+        // Elements that stick out of the window, to see what to fix when it does not fit.
+        overflow: [...document.querySelectorAll('body *')].filter((el) => {
+          const r = el.getBoundingClientRect();
+          return r.width && getComputedStyle(el).display !== 'none' && (r.bottom > innerHeight + 0.5 || r.right > innerWidth + 0.5);
+        }).slice(0, 10).map((el) => {
+          const r = el.getBoundingClientRect();
+          return \`\${el.id || el.className || el.tagName} \${Math.round(r.width)}x\${Math.round(r.height)} bottom=\${Math.round(r.bottom)}\`;
+        }),
       };
     })()`);
     // Narrow windows (under 760px) stack the sidebar under the board and scroll on purpose.
