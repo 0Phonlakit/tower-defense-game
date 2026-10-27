@@ -7,7 +7,7 @@
   'use strict';
 
   // '.' is transparent. Letters are looked up in the sprite's palette, then in these defaults.
-  const BASE_PALETTE = { o: '#1b1b1f', w: '#ffffff', e: '#ffe14d' };
+  const BASE_PALETTE = { o: '#1b1b1f', w: '#ffffff', e: '#ffe14d', g: '#f5c542', m: '#c9ced6', f: '#ff6b35' };
 
   // ---------- Enemy body shapes (12x12, facing right) ----------
   const BODIES = {
@@ -263,63 +263,97 @@
     for (const [x, y] of marks) g[y][x] = 'o';
   }
 
-  // Towers (16x16): a/b stone or wood, c the tower's color piece, d dark detail, w highlight.
+  // Towers (16x16), drawn per level 1-4: each level keeps the shape and adds parts (trim, banners,
+  // turrets, bigger crystals, crowns) so an upgraded tower looks stronger.
+  // a/b stone or wood, c the tower's color piece, d dark detail, w highlight, g gold, m steel, f fire.
   const TOWER_ART = {
-    archer: { pal: { a: '#9aa0a8', b: '#6f757e', c: '#a8331f', d: '#2b2b2b' }, grid: build(16, 16, P => {
+    archer: { pal: { a: '#9aa0a8', b: '#6f757e', c: '#a8331f', d: '#2b2b2b' }, draw(P, lv) {
+      if (lv >= 3) { P.rect(1, 7, 3, 6, 'a'); P.rect(12, 7, 3, 6, 'a'); P.px(1, 6, 'a'); P.px(3, 6, 'a'); P.px(12, 6, 'a'); P.px(14, 6, 'a'); }
       P.tri(7.5, 1, 5, 10, 'c');
       P.rect(4, 6, 8, 7, 'a');
       P.rect(4, 6, 8, 1, 'b');
       P.rect(7, 8, 2, 3, 'd');
       P.rect(3, 13, 10, 2, 'b');
-    }) },
-    catapult: { pal: { a: '#9aa0a8', b: '#8a8478', c: '#8b5a2b', d: '#3a2a1a' }, grid: build(16, 16, P => {
-      P.rect(10, 1, 4, 3, 'b');
+      if (lv >= 2) { P.px(5, 9, 'd'); P.px(10, 9, 'd'); P.rect(7, 1, 2, 1, 'g'); }
+      if (lv >= 3) { P.rect(4, 12, 8, 1, 'g'); P.px(2, 9, 'd'); P.px(13, 9, 'd'); }
+      if (lv >= 4) { P.rect(2, 9, 1, 3, 'c'); P.rect(13, 9, 1, 3, 'c'); P.px(6, 0, 'g'); P.px(9, 0, 'g'); P.rect(7, 0, 2, 1, 'w'); P.rect(3, 14, 10, 1, 'g'); }
+    } },
+    catapult: { pal: { a: '#9aa0a8', b: '#8a8478', c: '#8b5a2b', d: '#3a2a1a' }, draw(P, lv) {
+      P.rect(10, 1, 4, 3, lv >= 4 ? 'f' : 'b');
+      if (lv >= 4) P.px(11, 1, 'e');
       P.line(11, 4, 5, 10, 'c');
       P.rect(7, 8, 2, 3, 'c');
       P.rect(2, 11, 12, 2, 'c');
       P.rect(2, 13, 3, 2, 'd');
       P.rect(11, 13, 3, 2, 'd');
-    }) },
-    mage: { grid: build(16, 16, P => {
-      P.rect(6, 1, 4, 4, 'c');
+      if (lv >= 2) { P.px(9, 6, 'm'); P.px(7, 8, 'm'); P.px(3, 13, 'm'); P.px(12, 13, 'm'); }
+      if (lv >= 3) { P.rect(3, 8, 3, 3, 'm'); P.rect(2, 11, 12, 1, 'g'); P.rect(6, 13, 4, 2, 'd'); }
+      if (lv >= 4) { P.rect(0, 9, 1, 4, 'c'); P.rect(15, 9, 1, 4, 'c'); P.px(0, 8, 'g'); P.px(15, 8, 'g'); }
+    } },
+    mage: { draw(P, lv) {
+      if (lv >= 2) P.rect(5, 1, 6, 4, 'c'); else P.rect(6, 1, 4, 4, 'c');
       P.px(7, 2, 'w');
       P.rect(6, 6, 4, 2, 'a');
       P.rect(5, 8, 6, 5, 'a');
       P.rect(7, 9, 2, 2, 'd');
       P.rect(4, 13, 8, 2, 'b');
-    }) },
-    ballista: { pal: { a: '#9aa0a8', b: '#6f757e', c: '#8b5a2b', w: '#e8e8e8' }, grid: build(16, 16, P => {
+      if (lv >= 2) P.px(6, 2, 'w');
+      if (lv >= 3) { P.rect(2, 3, 2, 2, 'c'); P.rect(12, 3, 2, 2, 'c'); P.rect(5, 8, 6, 1, 'g'); P.rect(4, 12, 1, 1, 'g'); P.rect(11, 12, 1, 1, 'g'); }
+      if (lv >= 4) { P.px(4, 0, 'w'); P.px(11, 0, 'w'); P.rect(7, 0, 2, 1, 'w'); P.px(1, 7, 'c'); P.px(14, 7, 'c'); P.rect(4, 14, 8, 1, 'g'); }
+    } },
+    ballista: { pal: { a: '#9aa0a8', b: '#6f757e', c: '#8b5a2b', w: '#e8e8e8' }, draw(P, lv) {
       P.line(2, 3, 7, 6, 'c');
       P.line(13, 3, 8, 6, 'c');
       P.rect(1, 6, 14, 1, 'w');
       P.rect(7, 7, 2, 4, 'c');
       P.rect(4, 11, 8, 2, 'a');
       P.rect(3, 13, 10, 2, 'b');
-    }) },
-    crystal: { pal: { a: '#9aa0a8', b: '#6f757e', c: '#e8f55b', w: '#fffde0' }, grid: build(16, 16, P => {
-      P.tri(7.5, 1, 6, 6, 'c');
-      P.vtri(7.5, 7, 10, 6, 'c');
+      if (lv >= 2) { P.px(2, 3, 'm'); P.px(13, 3, 'm'); P.px(15, 6, 'm'); }
+      if (lv >= 3) { P.rect(4, 11, 8, 1, 'm'); P.rect(3, 14, 10, 1, 'g'); P.rect(1, 4, 1, 1, 'w'); P.rect(14, 4, 1, 1, 'w'); }
+      if (lv >= 4) { P.rect(1, 9, 2, 4, 'm'); P.rect(13, 9, 2, 4, 'm'); P.px(1, 8, 'g'); P.px(14, 8, 'g'); P.rect(6, 1, 4, 1, 'g'); P.px(7, 0, 'g'); P.px(8, 0, 'g'); }
+    } },
+    crystal: { pal: { a: '#9aa0a8', b: '#6f757e', c: '#e8f55b', w: '#fffde0' }, draw(P, lv) {
+      const top = lv >= 3 ? 0 : 1;
+      P.tri(7.5, top, 6, lv >= 3 ? 8 : 6, 'c');
+      P.vtri(7.5, 7, 10, lv >= 3 ? 8 : 6, 'c');
       P.px(7, 3, 'w');
       P.px(6, 5, 'w');
       P.rect(5, 11, 6, 2, 'a');
       P.rect(4, 13, 8, 2, 'b');
-    }) },
-    shrine: { pal: { a: '#cfd6dc', b: '#1f8a7e', c: '#3fa7ff', w: '#dff3ff' }, grid: build(16, 16, P => {
+      if (lv >= 2) { P.tri(2.5, 7, 10, 2, 'c'); P.tri(12.5, 7, 10, 2, 'c'); }
+      if (lv >= 3) { P.rect(5, 11, 6, 1, 'g'); P.px(1, 2, 'w'); P.px(14, 4, 'w'); }
+      if (lv >= 4) { P.px(0, 5, 'w'); P.px(15, 1, 'w'); P.px(2, 0, 'w'); P.px(13, 8, 'w'); P.rect(4, 14, 8, 1, 'g'); P.px(3, 6, 'g'); P.px(12, 6, 'g'); }
+    } },
+    shrine: { pal: { a: '#cfd6dc', b: '#1f8a7e', c: '#3fa7ff', w: '#dff3ff' }, draw(P, lv) {
+      if (lv >= 2) P.tri(7.5, 0, 2, 10, 'b');
       P.rect(3, 3, 10, 2, 'b');
       P.rect(4, 5, 2, 7, 'a');
       P.rect(10, 5, 2, 7, 'a');
-      P.rect(6, 8, 4, 3, 'c');
+      if (lv >= 4) P.rect(6, 6, 4, 5, 'c'); else P.rect(6, 8, 4, 3, 'c');
       P.px(7, 8, 'w');
       P.rect(3, 12, 10, 3, 'a');
-    }) },
-    alchemist: { pal: { a: '#8b6a4a', b: '#5a2d6e', c: '#7bc043', d: '#3a2a1a', w: '#e8e8e8' }, grid: build(16, 16, P => {
+      if (lv >= 3) { P.rect(3, 5, 10, 1, 'g'); P.rect(5, 6, 1, 6, 'c'); P.rect(10, 6, 1, 6, 'c'); }
+      if (lv >= 4) { P.px(7, 6, 'w'); P.px(1, 9, 'c'); P.px(14, 9, 'c'); P.px(1, 11, 'c'); P.px(14, 11, 'c'); P.rect(3, 14, 10, 1, 'g'); P.px(7, 0, 'g'); P.px(8, 0, 'g'); }
+    } },
+    alchemist: { pal: { a: '#8b6a4a', b: '#5a2d6e', c: '#7bc043', d: '#3a2a1a', w: '#e8e8e8' }, draw(P, lv) {
+      if (lv >= 2) { P.rect(11, 2, 2, 4, 'd'); P.px(11, 0, 'w'); P.px(12, 1, 'w'); }
       P.tri(7.5, 2, 7, 12, 'b');
       P.rect(4, 8, 8, 5, 'a');
       P.rect(7, 8, 2, 1, 'w');
       P.rect(6, 9, 4, 3, 'c');
       P.rect(3, 13, 10, 2, 'd');
-    }) },
+      if (lv >= 3) { P.rect(4, 8, 1, 5, 'g'); P.rect(11, 8, 1, 5, 'g'); P.px(2, 12, 'c'); P.px(13, 12, 'e'); P.px(2, 11, 'w'); P.px(13, 11, 'w'); }
+      if (lv >= 4) { P.px(7, 1, 'g'); P.px(8, 1, 'g'); P.px(7, 9, 'e'); P.px(8, 10, 'e'); P.rect(3, 14, 10, 1, 'g'); P.px(0, 10, 'c'); P.px(15, 10, 'c'); }
+    } },
   };
+
+  // Built grids per tower art and level, made on first use.
+  const towerGrids = new Map();
+  function towerGrid(art, lv) {
+    const k = `${art}:${lv}`;
+    if (!towerGrids.has(k)) towerGrids.set(k, build(16, 16, P => TOWER_ART[art].draw(P, lv)));
+    return towerGrids.get(k);
+  }
 
   // Which tower art each tower type uses, with palette overrides (frost and fire share the mage).
   const TOWER_LOOKS = {
@@ -430,11 +464,15 @@
     return '#' + [0, 1, 2].map(i => Math.round(c(i) * (1 - t)).toString(16).padStart(2, '0')).join('');
   }
 
-  // Every sprite as { grid, pal } by key: enemy:<type>, tower:<type>, base:<mapId>, deco:<shape>.
+  // Every sprite as { grid, pal } by key: enemy:<type>, tower:<type>[:<level 1-4>], base:<mapId>, deco:<shape>.
   function sprite(key) {
     const [kind, id] = key.split(':');
     if (kind === 'enemy') { const L = ENEMY_LOOKS[id]; return L && { grid: BODIES[L.body], pal: L }; }
-    if (kind === 'tower') { const L = TOWER_LOOKS[id]; return L && { grid: TOWER_ART[L.art].grid, pal: Object.assign({}, TOWER_ART[L.art].pal, L.pal) }; }
+    if (kind === 'tower') {
+      const L = TOWER_LOOKS[id];
+      const lv = Math.min(4, Math.max(1, Number(key.split(':')[2]) || 1));
+      return L && { grid: towerGrid(L.art, lv), pal: Object.assign({}, TOWER_ART[L.art].pal, L.pal) };
+    }
     if (kind === 'base') { const L = BASE_LOOKS[id]; return L && { grid: BASE_ART[L.art], pal: L.pal }; }
     if (kind === 'deco') return DECO_ART[id] && { grid: DECO_ART[id], pal: {} };
     return null;

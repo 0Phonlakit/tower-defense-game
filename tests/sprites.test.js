@@ -23,8 +23,18 @@ test('Sprites: every enemy type (including map units and ground twins) has pixel
   assert.equal(Object.keys(S.ENEMY_LOOKS).length, Object.keys(ENEMY_DEFS).length);
 });
 
-test('Sprites: every tower has pixel art', () => {
-  for (const type of Object.keys(TOWER_DEFS)) checkSprite(`tower:${type}`);
+test('Sprites: every tower has pixel art for each level 1-4', () => {
+  for (const type of Object.keys(TOWER_DEFS)) for (let lv = 1; lv <= 4; lv++) checkSprite(`tower:${type}:${lv}`);
+});
+
+test('Sprites: each tower level looks different and adds detail as it goes up', () => {
+  const painted = g => g.join('').replace(/[.o]/g, '').length;
+  for (const type of Object.keys(TOWER_DEFS)) {
+    const grids = [1, 2, 3, 4].map(lv => S.sprite(`tower:${type}:${lv}`).grid);
+    assert.equal(new Set(grids.map(g => g.join('|'))).size, 4, `${type}: 4 different looks`);
+    for (let i = 1; i < 4; i++) assert.ok(painted(grids[i]) >= painted(grids[i - 1]), `${type}: level ${i + 1} not less detailed than ${i}`);
+  }
+  assert.equal(S.sprite('tower:gun').grid.join(), S.sprite('tower:gun:1').grid.join(), 'no level means level 1');
 });
 
 test('Sprites: every map has its own base and scenery', () => {
@@ -37,7 +47,10 @@ test('Sprites: every map has its own base and scenery', () => {
 
 test('Sprites: enemy bodies are 12x12, towers and bases 16x16, scenery 8x8', () => {
   for (const g of Object.values(S.BODIES)) assert.deepEqual([g[0].length, g.length], [12, 12]);
-  for (const t of Object.values(S.TOWER_ART)) assert.deepEqual([t.grid[0].length, t.grid.length], [16, 16]);
+  for (const type of Object.keys(TOWER_DEFS)) for (let lv = 1; lv <= 4; lv++) {
+    const g = S.sprite(`tower:${type}:${lv}`).grid;
+    assert.deepEqual([g[0].length, g.length], [16, 16]);
+  }
   for (const g of Object.values(S.BASE_ART)) assert.deepEqual([g[0].length, g.length], [16, 16]);
   for (const g of Object.values(S.DECO_ART)) assert.deepEqual([g[0].length, g.length], [8, 8]);
 });

@@ -247,19 +247,27 @@
       this.circle(x, y, range); ctx.fill(); ctx.stroke();
     }
 
+    // Each level has its own tower art (no level bars); level 3-4 towers also glow in their color.
     drawTower(t, isSelected = false) {
       const { ctx } = this;
+      const level = t.level || 1;
+      if (level >= 3) {
+        const pulse = level >= 4 ? 0.12 * Math.sin(performance.now() / 300) : 0;
+        const glow = ctx.createRadialGradient(t.x, t.y, 4, t.x, t.y, 24);
+        glow.addColorStop(0, TD.TOWER_DEFS[t.type].color);
+        glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.globalAlpha = (level >= 4 ? 0.45 : 0.25) + pulse;
+        ctx.fillStyle = glow;
+        this.circle(t.x, t.y, 24); ctx.fill();
+        ctx.globalAlpha = 1;
+      }
       ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
       ctx.beginPath(); ctx.ellipse(t.x, t.y + 14, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
-      TD.drawSprite(ctx, `tower:${t.type}`, t.x, t.y - 2, 36);
-      ctx.fillStyle = '#f5c542';
-      ctx.strokeStyle = '#1b1b1f';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < t.level; i++) { ctx.fillRect(t.x - 14 + i * 8, t.y + 15, 5, 3); ctx.strokeRect(t.x - 14 + i * 8, t.y + 15, 5, 3); }
+      TD.drawSprite(ctx, `tower:${t.type}:${level}`, t.x, t.y - 2, 36 + (level - 1) * 2);
       if (isSelected) {
         ctx.strokeStyle = '#f5c542';
         ctx.lineWidth = 2;
-        ctx.strokeRect(t.x - 19, t.y - 19, 38, 38);
+        ctx.strokeRect(t.x - 20, t.y - 20, 40, 40);
       }
     }
 
