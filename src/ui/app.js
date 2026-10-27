@@ -34,7 +34,6 @@
 
     start() {
       this.bindInput();
-      this.renderLegend();
       this.openHub();
       this.lastFrame = performance.now();
       requestAnimationFrame(t => this.frame(t));
@@ -63,6 +62,8 @@
       this.hubRenderer.setMap(this.map);
       this.hubRenderer.draw(null);
       this.$('hub-map-name').textContent = this.map.name;
+      this.$('hub-map-units').innerHTML = this.map.uniques.map(t => this.unitLine(t)).join('');
+      this.renderLegend();
     }
 
     openHub() {
@@ -233,6 +234,8 @@
       if (s.burn) lines.push(`ติดไฟ: ${s.burn.toFixed(1)}/วิ นาน ${TD.BURN_DURATION} วิ`);
       if (s.poison) lines.push(`พิษ: ${s.poison.toFixed(1)}/วิ ต่อชั้น (สูงสุด ${TD.POISON_MAX_STACKS} ชั้น)`);
       if (s.chain) lines.push(`กระโดด: ${s.chain} ตัว`);
+      lines.push(`ชนิดดาเมจ: ${TD.DAMAGE_TYPES[s.dmgType]}`);
+      lines.push(s.air ? `ยิงอากาศได้ (อากาศ x${TD.AIR_BONUS} · พื้น x${TD.AA_GROUND_MULT})` : 'ยิงได้เฉพาะพื้นดิน');
       this.$('sel-stats').innerHTML = lines.join('<br>');
       this.$('btn-sell').textContent = `ขาย (+${t.sellValue})`;
     }
@@ -244,10 +247,19 @@
         : '<li class="muted">ยังไม่มี</li>';
     }
 
+    // One enemy row for the legend/hub, with flying and resistances for map-unique units.
+    unitLine(type) {
+      const d = TD.ENEMY_DEFS[type];
+      const resist = Object.entries(d.resist || {}).map(([k, v]) =>
+        v === 0 ? `ไม่รับ${TD.DAMAGE_TYPES[k]}` : `${TD.DAMAGE_TYPES[k]}เข้าแค่ ${Math.round(v * 100)}%`);
+      const note = [d.flying ? '✈ บินได้ (ป้อมยิงอากาศเท่านั้น)' : '', ...resist].filter(Boolean).join(' · ');
+      return `<div class="legend-item"><b><span class="dot" style="background:${d.color}"></span>${d.flying ? '✈ ' : ''}${d.name}</b><span>ฐาน -${d.dmg} HP</span></div>`
+        + (note ? `<div class="legend-note">${note}</div>` : '');
+    }
+
     renderLegend() {
-      this.$('enemy-legend').innerHTML = Object.values(TD.ENEMY_DEFS).map(e =>
-        `<div class="legend-item"><b><span class="dot" style="background:${e.color}"></span>${e.name}</b><span>ฐาน -${e.dmg} HP</span></div>`
-      ).join('');
+      const types = Object.keys(TD.ENEMY_DEFS).filter(t => !TD.ENEMY_DEFS[t].unique).concat(this.map ? this.map.uniques : []);
+      this.$('enemy-legend').innerHTML = types.map(t => this.unitLine(t)).join('');
       const el = k => `<span class="dot" style="background:${TD.ELEMENTS[k].color}"></span>${TD.ELEMENTS[k].name}`;
       this.$('reaction-legend').innerHTML = Object.entries(TD.REACTIONS).map(([pair, r]) => {
         const [a, b] = pair.split('+');

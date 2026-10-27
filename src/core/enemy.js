@@ -25,6 +25,9 @@
       this.damage = def.dmg;
       this.reward = def.reward * (1 + wave * 0.03);
       this.radius = def.r;
+      this.flying = !!def.flying;
+      this.unique = !!def.unique;
+      this.resist = def.resist || {};
       this.color = def.color;
       this.slowAmount = 0;
       this.slowUntil = 0;
@@ -53,6 +56,11 @@
     applySlow(amount, duration, time) {
       this.slowAmount = this.isSlowed(time) ? Math.max(this.slowAmount, amount) : amount;
       this.slowUntil = Math.max(this.slowUntil, time + duration);
+    }
+
+    // Share of damage of this type the enemy takes: 1 normally, 0 if immune.
+    resistance(type) {
+      return type in this.resist ? this.resist[type] : 1;
     }
 
     activeAura(time) {
@@ -103,8 +111,8 @@
     // Burn + poison damage for this frame (before the damage-taken multiplier).
     dotDamage(dt, time) {
       let dmg = 0;
-      if (time < this.burnUntil) dmg += this.burnDps * dt;
-      if (time < this.poisonUntil) dmg += this.poisonDps * this.poisonStacks * dt;
+      if (time < this.burnUntil) dmg += this.burnDps * this.resistance('fire') * dt;
+      if (time < this.poisonUntil) dmg += this.poisonDps * this.poisonStacks * this.resistance('poison') * dt;
       return dmg;
     }
 

@@ -226,8 +226,20 @@
       }
     }
 
+    // Flyers float above a shadow with flapping wings; map-unique units get a white ring.
     drawEnemy(e, time) {
       const { ctx } = this;
+      ctx.save();
+      if (e.flying) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.beginPath(); ctx.ellipse(e.x, e.y + 6, e.radius, e.radius * 0.45, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.translate(0, -10);
+        const flap = 0.6 + 0.4 * Math.sin(time * 18);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        for (const side of [-1, 1]) {
+          ctx.beginPath(); ctx.ellipse(e.x + side * e.radius, e.y - 2, e.radius * 0.8, e.radius * 0.45 * flap, side * 0.5, 0, Math.PI * 2); ctx.fill();
+        }
+      }
       ctx.fillStyle = e.color;
       ctx.strokeStyle = 'rgba(0,0,0,0.6)';
       ctx.lineWidth = 2;
@@ -242,6 +254,11 @@
         ctx.font = 'bold 14px system-ui';
         ctx.textAlign = 'center';
         ctx.fillText('♛', e.x, e.y + 5);
+      }
+      if (e.unique) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.lineWidth = 1.5;
+        this.circle(e.x, e.y, e.radius + 1.5); ctx.stroke();
       }
       if (e.isSlowed(time)) {
         ctx.strokeStyle = '#8be3ff';
@@ -265,6 +282,7 @@
       ctx.fillRect(e.x - w / 2, e.y - e.radius - 8, w, 4);
       ctx.fillStyle = ratio > 0.5 ? '#4cd964' : ratio > 0.25 ? '#f5c542' : '#e5484d';
       ctx.fillRect(e.x - w / 2, e.y - e.radius - 8, w * ratio, 4);
+      ctx.restore();
     }
 
     drawProjectile(p) {

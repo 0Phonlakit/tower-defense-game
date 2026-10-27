@@ -7,9 +7,11 @@ const { ENEMY_DEFS } = require('../src/core/config.js');
 
 const path = new Path([[0, 0], [5, 0]]); // 160px long
 
-test('Enemy: base damage per type (normal -1, fast -1, tank -2, boss -5)', () => {
-  const dmg = Object.fromEntries(Object.keys(ENEMY_DEFS).map(t => [t, new Enemy(t, 1, path).damage]));
+test('Enemy: base damage per type (normal -1, fast -1, tank -2, map uniques -3, boss -5)', () => {
+  const types = Object.keys(ENEMY_DEFS);
+  const dmg = Object.fromEntries(types.filter(t => !ENEMY_DEFS[t].unique).map(t => [t, new Enemy(t, 1, path).damage]));
   assert.deepEqual(dmg, { normal: 1, fast: 1, tank: 2, boss: 5 });
+  for (const t of types.filter(t => ENEMY_DEFS[t].unique)) assert.equal(new Enemy(t, 1, path).damage, 3, t);
 });
 
 test('Enemy: wave 1 HP equals the base HP, later waves scale up', () => {

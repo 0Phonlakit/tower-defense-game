@@ -242,7 +242,8 @@
         y: tower.y + Math.sin(tower.angle) * 14,
         target, speed: def.proj, damage, crit,
         splash: stats.splash, slow: stats.slow, slowDur: stats.slowDur,
-        element: stats.element, burn: stats.burn, poison: stats.poison, color: def.color,
+        element: stats.element, burn: stats.burn, poison: stats.poison,
+        dmgType: stats.dmgType, air: stats.air, color: def.color,
       }));
     }
 
@@ -271,7 +272,7 @@
     _impact(p) {
       if (p.splash) {
         for (const e of this.enemies) {
-          if (e.dead || Math.hypot(e.x - p.tx, e.y - p.ty) > p.splash + e.radius) continue;
+          if (e.dead || (e.flying && !p.air) || Math.hypot(e.x - p.tx, e.y - p.ty) > p.splash + e.radius) continue;
           this._hit(e, p.damage, p);
         }
         this._effect({ kind: 'ring', x: p.tx, y: p.ty, r0: 4, r1: p.splash, color: p.color, life: 0.3 });
@@ -281,9 +282,19 @@
       if (p.crit) this._text(p.tx, p.ty - 18, 'CRIT!', '#ff6b6b', 0.6);
     }
 
-    // One tower hit: status effects, element/reaction, then damage. `fx` is tower stats or a projectile.
+    // One tower hit: resistance, status effects, element/reaction, then damage. `fx` is tower stats or a projectile.
+    // An immune enemy ignores the hit completely (no damage, statuses or aura).
     _hit(enemy, damage, fx) {
       if (enemy.dead) return;
+      const resist = enemy.resistance(fx.dmgType || 'physical');
+      if (resist === 0) {
+        if (this.time >= (enemy.immuneTextAt || 0)) {
+          enemy.immuneTextAt = this.time + 1;
+          this._text(enemy.x, enemy.y - 22, 'IMMUNE', '#cfcfcf', 0.7);
+        }
+        return;
+      }
+      damage *= resist * (fx.air ? (enemy.flying ? TD.AIR_BONUS : TD.AA_GROUND_MULT) : 1);
       if (fx.slow) enemy.applySlow(fx.slow, fx.slowDur, this.time);
       if (fx.burn) enemy.applyBurn(fx.burn, this.time);
       if (fx.poison) enemy.applyPoison(fx.poison, this.time);
@@ -333,7 +344,7 @@
     // Picks the enemies of a wave and a random open route for each, so the route preview is known in advance.
     _planWave(wave) {
       const open = this.map.routesOpen(wave);
-      const queue = this.waves.build(wave).map(type => ({ type, route: Math.floor(this.rng() * open) }));
+      const queue = this.waves.build(wave, this.map.uniques).map(type => ({ type, route: Math.floor(this.rng() * open) }));
       const counts = new Array(open).fill(0);
       for (const e of queue) counts[e.route]++;
       return { wave, queue, counts };

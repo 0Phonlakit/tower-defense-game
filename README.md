@@ -42,21 +42,43 @@ The right-hand panel has x1/x2/x3 speed buttons.
 | Fast | -1 | Low HP, fast (from wave 3) |
 | Armored | -2 | High HP, slow (from wave 5) |
 | Boss | -5 | Every 10 waves |
+| Map units | -3 | 2 per map, from wave 5 (see below) |
 
 Enemy HP grows every wave; see `Enemy.hpMultiplier()`.
 
+### Map units, flyers and resistances
+
+Each map has 2 units that only appear there. From wave 5 they make up 25% of a wave's enemies, rising to 40% by wave 20. Each one takes 3 HP from the base. Unit A is **immune** to one damage type: it takes no damage and gets no burn, slow, poison or element mark from it. Unit B is tough (220 base HP, between a tank and a boss) and takes only **35%** from one damage type, including burn/poison from it.
+
+Damage types: physical (Gun, Cannon, Sniper), poison (Poison), fire, ice, water, lightning (the elemental towers).
+
+| Map | Unit A | Unit B |
+|---|---|---|
+| Meadow | ✈ Giant bee: immune to poison | Iron beetle: poison 35% |
+| Desert | ✈ Fire hawk: immune to fire | Sand worm: fire 35% |
+| Snow | ✈ Snow owl: immune to ice | Frost giant: ice 35% |
+| Volcano | Lava spirit: immune to fire | Magma golem: fire 35% |
+| Swamp | ✈ Giant mosquito: immune to water | Bog croc: water 35% |
+| Beach | ✈ Storm gull: immune to lightning | Armored crab: lightning 35% |
+| Night | ✈ Vampire bat: immune to poison | Haunted armor: physical 35% |
+| Autumn | ✈ Crow: immune to lightning | Treant: water 35% |
+| Crystal cave | Crystal golem: immune to lightning | ✈ Crystal moth: ice 35% |
+| Ruins | ✈ Gargoyle: physical 50% | Mummy: fire 35% |
+
+✈ = flying. Flyers follow the same routes but only **anti-air towers** (Gun, Sniper, Tesla) can target them. Splash from Cannon, Frost and Tide doesn't hit them either. Anti-air towers deal x1.15 damage to flyers and x0.8 to ground units.
+
 ### Towers
 
-| Tower | Element | Cost | Unlock | Strength |
-|---|---|---|---|---|
-| Machine gun | – | 50 | Available from the start | Fast fire, single target |
-| Cannon | – | 90 | 60 coins | Area splash damage |
-| Frost | Ice | 70 | 50 coins | Slows enemies |
-| Sniper | – | 120 | 100 coins | Long range, high damage |
-| Flame | Fire | 80 | 80 coins | Sets enemies on fire (damage over 3s) |
-| Tesla | Lightning | 100 | 120 coins | Instant zap that chains to 2 more enemies (70% per jump) |
-| Tide | Water | 60 | 70 coins | Cheap splash that sets up reactions |
-| Poison | – | 90 | 90 coins | Poison stacks up to 5 times (4s), strong vs tanks and bosses |
+| Tower | Element | Air | Cost | Unlock | Strength |
+|---|---|---|---|---|---|
+| Machine gun | – | ✔ | 50 | Available from the start | Fast fire, single target |
+| Cannon | – | | 90 | 60 coins | Area splash damage |
+| Frost | Ice | | 70 | 50 coins | Slows enemies |
+| Sniper | – | ✔ | 120 | 100 coins | Long range, high damage |
+| Flame | Fire | | 80 | 80 coins | Sets enemies on fire (damage over 3s) |
+| Tesla | Lightning | ✔ | 100 | 120 coins | Instant zap that chains to 2 more enemies (70% per jump) |
+| Tide | Water | | 60 | 70 coins | Cheap splash that sets up reactions |
+| Poison | – | | 90 | 90 coins | Poison stacks up to 5 times (4s), strong vs tanks and bosses |
 
 Burn and poison damage scale with tower level and damage bonuses, like normal hits.
 
@@ -126,7 +148,7 @@ Requires Node.js 20 or later. No `npm install` needed.
 npm test
 ```
 
-Tests cover `src/core/` only (path, maps and route opening, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, elemental reactions, burn/poison, Tesla chains, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
+Tests cover `src/core/` only (path, maps and route opening, map units, resistances, anti-air, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, elemental reactions, burn/poison, Tesla chains, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
 
 ## Balancing
 
@@ -136,6 +158,7 @@ Tests cover `src/core/` only (path, maps and route opening, next-wave route plan
 | Reactions, aura/burn/poison durations | `REACTIONS` and the constants above it in `src/core/config.js` |
 | How fast enemy HP grows | `Enemy.hpMultiplier()` in `src/core/enemy.js` |
 | Enemies per wave, end-of-wave bonus | `src/core/wave.js` |
+| Map units, resistances, flyers | `ENEMY_DEFS` (entries with `unique: true`) and `AIR_BONUS`/`AA_GROUND_MULT` in `src/core/config.js`; `uniques` in `MAP_DEFS`; `uniqueShare()` in `src/core/wave.js` |
 | Map layouts, themes, when routes open | `LAYOUTS`, `MAP_DEFS`, `START_ROUTES`, `ROUTE_STEP` in `src/core/maps.js` |
 | Countdown length | `WAVE_COUNTDOWN` in `src/core/config.js` |
 | Skip bonus | `Game.skipBonus` in `src/core/game.js` |

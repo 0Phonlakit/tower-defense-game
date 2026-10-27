@@ -38,6 +38,8 @@
         slowDur: d.slowDur || 0,
         crit: Math.min(0.9, 0.03 * metaUpgrades.crit + mods.crit),
         element: d.element || null,
+        dmgType: d.element || d.dmgType || 'physical',
+        air: !!d.air,
         burn: d.burn ? d.burn * dmgScale : 0,
         poison: d.poison ? d.poison * dmgScale : 0,
         chain: d.chain || 0,
@@ -63,11 +65,11 @@
       return Math.floor(this.spent * 7 / 10); // avoids 90 * 0.7 = 62.999...
     }
 
-    // Targets the enemy furthest along the path within range.
-    findTarget(enemies, range) {
+    // Targets the enemy furthest along the path within range. Flyers only if the tower can hit air.
+    findTarget(enemies, range, air = false) {
       let best = null;
       for (const e of enemies) {
-        if (e.dead) continue;
+        if (e.dead || (e.flying && !air)) continue;
         if (Math.hypot(e.x - this.x, e.y - this.y) > range + e.radius) continue;
         if (!best || e.distance > best.distance) best = e;
       }
@@ -77,7 +79,7 @@
     // Aims and counts down the cooldown. Returns the enemy to shoot this frame, or null.
     tick(dt, enemies, stats) {
       this.cooldown -= dt;
-      const target = this.findTarget(enemies, stats.range);
+      const target = this.findTarget(enemies, stats.range, stats.air);
       if (!target) return null;
       this.angle = Math.atan2(target.y - this.y, target.x - this.x);
       if (this.cooldown > 0) return null;
