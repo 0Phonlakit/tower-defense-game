@@ -13,16 +13,22 @@ test('Settings: defaults are auto resolution, sfx 70%, music 40%, other 70%', ()
 test('Settings: changes are saved and survive a reload; volumes are clamped to 0..1', () => {
   const storage = new MemoryStorage();
   const s = new Settings(storage);
-  assert.ok(s.setResolution('1200x780'));
+  assert.ok(s.setResolution('1200x800'));
   assert.ok(s.setVolume('music', 1.5));
   assert.ok(s.setVolume('sfx', -1));
   assert.equal(s.setResolution('4k'), false);
   assert.equal(s.setVolume('master', 0.5), false);
   const again = new Settings(storage);
-  assert.equal(again.resolution, '1200x780');
+  assert.equal(again.resolution, '1200x800');
   assert.equal(again.music, 1);
   assert.equal(again.sfx, 0);
   assert.ok(storage.getItem(SETTINGS_KEY));
+});
+
+test('Settings: a resolution saved by an older version (old board size) falls back to auto', () => {
+  const s = new Settings(new MemoryStorage({ [SETTINGS_KEY]: JSON.stringify({ resolution: '1200x780', music: 0.2 }) }));
+  assert.equal(s.resolution, 'auto');
+  assert.equal(s.music, 0.2);
 });
 
 test('Settings: corrupt or blocked storage falls back to defaults', () => {
@@ -36,7 +42,7 @@ test('Settings: corrupt or blocked storage falls back to defaults', () => {
   assert.equal(s.ui, 0.2);
 });
 
-test('Settings.displaySize: fixed sizes keep the 20:13 board, auto fits the space given', () => {
+test('Settings.displaySize: fixed sizes keep the 3:2 board, auto fits the space given', () => {
   const s = new Settings();
   for (const [id, r] of Object.entries(RESOLUTIONS)) {
     if (!r.width) continue;
@@ -44,8 +50,9 @@ test('Settings.displaySize: fixed sizes keep the 20:13 board, auto fits the spac
     assert.deepEqual(s.displaySize(300, 300), { width: r.width, height: r.width * BOARD_H / BOARD_W });
   }
   s.setResolution('auto');
-  assert.deepEqual(s.displaySize(1000, 2000), { width: 1000, height: 650 }, 'limited by width');
-  assert.deepEqual(s.displaySize(5000, 520), { width: 800, height: 520 }, 'limited by height');
+  assert.deepEqual(Object.keys(RESOLUTIONS), ['auto', '960x640', '1200x800', '1440x960']);
+  assert.deepEqual(s.displaySize(1200, 2000), { width: 1200, height: 800 }, 'limited by width');
+  assert.deepEqual(s.displaySize(5000, 640), { width: 960, height: 640 }, 'limited by height');
   assert.equal(s.displaySize(100, 100).width, 320, 'never smaller than 320px');
 });
 

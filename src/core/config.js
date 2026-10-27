@@ -6,8 +6,8 @@
   'use strict';
 
   const TILE = 40;
-  const COLS = 20;
-  const ROWS = 13;
+  const COLS = 24;
+  const ROWS = 16;
   const MAX_HP = 20;
   const MAX_TOWER_LEVEL = 4;
   const STARTING_GOLD = 120;
@@ -15,7 +15,7 @@
   const SAVE_KEY = 'rogue-td-save-v1';
 
   // Path waypoints (tile col,row). First point is off-screen spawn, last point is the base.
-  const WAYPOINTS = [[-1, 2], [4, 2], [4, 9], [9, 9], [9, 3], [14, 3], [14, 10], [17, 10], [17, 6], [19, 6]];
+  const WAYPOINTS = [[-1, 2], [5, 2], [5, 12], [11, 12], [11, 4], [17, 4], [17, 8], [23, 8]];
 
   const TOWER_DEFS = {
     gun:    { key: '1', name: 'ปืนกล',    cost: 50,  dmg: 8,  rate: 2.2,  range: 110, proj: 420, air: true, color: '#4a90d9', unlock: 0,   desc: 'ยิงเร็ว เป้าเดี่ยว · ยิงอากาศได้' },

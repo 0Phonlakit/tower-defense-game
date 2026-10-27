@@ -9,13 +9,12 @@
   const BOARD_W = TD.COLS * TD.TILE;
   const BOARD_H = TD.ROWS * TD.TILE;
 
-  // 'auto' fits the window; the others are fixed board sizes in CSS pixels.
-  const RESOLUTIONS = {
-    auto:      { label: 'อัตโนมัติ (พอดีหน้าจอ)' },
-    '800x520':  { label: '800 × 520', width: 800 },
-    '1200x780': { label: '1200 × 780', width: 1200 },
-    '1600x1040': { label: '1600 × 1040', width: 1600 },
-  };
+  // 'auto' fits the window; the others are fixed board sizes in CSS pixels (1x, 1.25x, 1.5x the board).
+  const RESOLUTIONS = { auto: { label: 'อัตโนมัติ (พอดีหน้าจอ)' } };
+  for (const width of [BOARD_W, Math.round(BOARD_W * 1.25), Math.round(BOARD_W * 1.5)]) {
+    const height = Math.round(width * BOARD_H / BOARD_W);
+    RESOLUTIONS[`${width}x${height}`] = { label: `${width} × ${height}`, width };
+  }
 
   const VOLUME_KEYS = ['sfx', 'music', 'ui'];
 
@@ -63,7 +62,7 @@
       return true;
     }
 
-    // Board size in CSS pixels. Keeps the 20:13 board ratio; 'auto' fits inside the space given.
+    // Board size in CSS pixels. Keeps the board's aspect ratio; 'auto' fits inside the space given.
     displaySize(availWidth = BOARD_W, availHeight = BOARD_H) {
       const fixed = RESOLUTIONS[this.resolution].width;
       const width = fixed || Math.max(320, Math.min(availWidth, availHeight * BOARD_W / BOARD_H));

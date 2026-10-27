@@ -23,7 +23,6 @@
 
     setMap(map) {
       this.map = map;
-      this.infoCorner = Renderer.infoCorner(map);
       this.deco = Renderer.scatterDeco(map);
     }
 
@@ -61,7 +60,6 @@
       for (const p of game.projectiles) this.drawProjectile(p);
       for (const fx of game.effects) this.drawEffect(fx);
       if (view.placing && view.hover) this.drawGhost(game, view.placing, view.hover);
-      this.drawInfoBox(game);
     }
 
     drawGround() {
@@ -172,33 +170,6 @@
           ctx.closePath(); ctx.fill(); ctx.stroke();
         }
       });
-    }
-
-    // Always-on box at the bottom of the board: base HP and wave, plus the next wave's size
-    // while it is being previewed.
-    drawInfoBox(game) {
-      const { ctx } = this;
-      const plan = game.upcoming;
-      const text = `❤ ${game.hp}/${TD.MAX_HP} · Wave ${game.wave}` + (plan ? ` · ถัดไป: ${plan.queue.length} ตัว` : '');
-      ctx.font = 'bold 13px system-ui';
-      const w = ctx.measureText(text).width + 20, h = 26;
-      const x = this.infoCorner.right ? this.width - w - 8 : 8;
-      const y = this.height - h - 8;
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-      ctx.beginPath(); ctx.roundRect(x, y, w, h, 6); ctx.fill();
-      this.label(text, x + w / 2, y + 18, '#fff', 13);
-    }
-
-    // The bottom corner farthest from every spawner and the base, so the info box never covers them.
-    static infoCorner(map) {
-      const W = map.cols * map.tile, H = map.rows * map.tile;
-      const spots = map.routes.map(r => r.spawnTile).concat([map.baseTile])
-        .map(([c, r]) => ({ x: (c + 0.5) * map.tile, y: (r + 0.5) * map.tile }));
-      const corners = [false, true].map(right => {
-        const cx = right ? W : 0;
-        return { right, d: Math.min(...spots.map(p => Math.hypot(p.x - cx, p.y - H))) };
-      });
-      return corners.sort((a, b) => b.d - a.d)[0];
     }
 
     // Bold centered text with a dark outline, readable on light and dark maps.

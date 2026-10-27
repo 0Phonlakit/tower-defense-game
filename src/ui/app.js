@@ -483,11 +483,13 @@
 
     updateHUD() {
       const g = this.game;
-      if (!g) return;
+      if (!g) { this.setText('info-bar', ''); return; }
       this.setText('hud-hp', `${g.hp} / ${TD.MAX_HP}`);
       this.setText('hud-gold', String(Math.floor(g.gold)));
       this.setText('hud-wave', String(g.wave));
       this.setText('hud-left', String(g.enemiesRemaining));
+      const plan = g.upcoming;
+      this.setText('info-bar', `❤ ${g.hp}/${TD.MAX_HP} · Wave ${g.wave}` + (plan ? ` · Wave ${plan.wave} ถัดไป: ${plan.queue.length} ตัว` : ''));
       this.setText('hud-map', `แผนที่: ${g.map.name} · เส้นทาง ${g.map.routesOpen(Math.max(1, g.wave))}/${g.map.routes.length}`);
 
       for (const b of this.$('tower-buttons').children) {
@@ -602,6 +604,7 @@
       const { width, height } = this.settings.displaySize(availW, availH);
       const dpr = root.devicePixelRatio || 1;
       this.canvas.style.width = `${width}px`;
+      this.$('info-bar').style.width = `${width}px`;
       this.canvas.width = Math.round(width * dpr);
       this.canvas.height = Math.round(height * dpr);
       this.renderer.setScale(this.canvas.width / TD.BOARD_W);
