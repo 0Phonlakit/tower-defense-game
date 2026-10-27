@@ -7,10 +7,10 @@ const { MemoryStorage } = require('./helpers.js');
 
 test('coinsForWaves: more waves give more coins, growing faster than linear', () => {
   assert.equal(MetaProgress.coinsForWaves(0), 0);
-  assert.equal(MetaProgress.coinsForWaves(2), 12);
-  assert.equal(MetaProgress.coinsForWaves(5), 37);
-  assert.equal(MetaProgress.coinsForWaves(10), 100);
-  assert.equal(MetaProgress.coinsForWaves(20), 300);
+  assert.equal(MetaProgress.coinsForWaves(2), 11);
+  assert.equal(MetaProgress.coinsForWaves(5), 33);
+  assert.equal(MetaProgress.coinsForWaves(10), 83);
+  assert.equal(MetaProgress.coinsForWaves(20), 233);
 });
 
 test('new save: no coins, only the machine gun unlocked', () => {
@@ -56,8 +56,8 @@ test('unlockTower: unlocks once and charges the unlock price', () => {
 
 test('recordRun: pays coins, tracks best and runs', () => {
   const meta = new MetaProgress(new MemoryStorage());
-  assert.deepEqual(meta.recordRun(10), { wavesCleared: 10, coins: 100, newBest: true, totalCoins: 100 });
-  assert.deepEqual(meta.recordRun(4), { wavesCleared: 4, coins: 28, newBest: false, totalCoins: 128 });
+  assert.deepEqual(meta.recordRun(10), { wavesCleared: 10, coins: 83, newBest: true, totalCoins: 83 });
+  assert.deepEqual(meta.recordRun(4), { wavesCleared: 4, coins: 25, newBest: false, totalCoins: 108 });
   assert.equal(meta.best, 10);
   assert.equal(meta.runs, 2);
 });

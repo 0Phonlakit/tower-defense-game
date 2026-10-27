@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { Game } = require('../src/core/game.js');
 const { Enemy } = require('../src/core/enemy.js');
-const { MAX_HP, STARTING_GOLD } = require('../src/core/config.js');
+const { MAX_HP, STARTING_GOLD, WAVE_COUNTDOWN } = require('../src/core/config.js');
 const { makeGame, makeMeta, runUntil } = require('./helpers.js');
 
 test('Game: new run starts with 20 HP, starting gold, wave 0 in build phase', () => {
@@ -79,6 +79,8 @@ test('Game: tanks cost 2 HP and bosses 5 HP', () => {
     const game = makeGame();
     game.startWave();
     game.spawnQueue = [type];
+    game.update(0.02);
+    game.countdown = Infinity; // keep the next wave out of the way of slow enemies
     runUntil(game, g => g.phase !== 'wave');
     assert.equal(game.hp, MAX_HP - expected, type);
   }
@@ -112,14 +114,14 @@ test('Game: clearing a wave pays the bonus and offers 3 perks', () => {
   assert.equal(game.perkChoices.length, 3);
 });
 
-test('Game: choosing a perk applies it and returns to build phase', () => {
+test('Game: choosing a perk applies it and resumes the wave phase', () => {
   const game = makeGame();
   game.startWave();
   game.spawnQueue = [];
   game.update(0.02);
   const before = JSON.stringify(game.mods) + game.gold + game.hp;
   assert.ok(game.choosePerk(0));
-  assert.equal(game.phase, 'build');
+  assert.equal(game.phase, 'wave');
   assert.equal(game.perksTaken.length, 1);
   assert.notEqual(JSON.stringify(game.mods) + game.gold + game.hp, before);
   assert.equal(game.choosePerk(0), false);
@@ -149,21 +151,21 @@ test('Game: HP 0 ends the run, pays coins by waves cleared and stops the simulat
   let result = null;
   game.on('gameover', r => { result = r; });
 
+  game.startWave();
   for (let i = 0; i < 2; i++) {
-    game.startWave();
     game.spawnQueue = [];
     game.update(0.02);
     game.choosePerk(0);
+    game.skipCountdown();
   }
   game.hp = 1;
-  game.startWave();
   runUntil(game, g => g.isOver);
 
   assert.equal(game.hp, 0);
   assert.equal(game.phase, 'over');
   assert.equal(result.wavesCleared, 2);
-  assert.equal(result.coins, 12);
-  assert.equal(meta.coins, 12);
+  assert.equal(result.coins, 11);
+  assert.equal(meta.coins, 11);
   assert.equal(meta.runs, 1);
 
   const time = game.time;
@@ -178,7 +180,7 @@ test('Game: a fresh Game after game over starts at full HP with banked coins', (
   const next = makeGame({ meta });
   assert.equal(next.hp, MAX_HP);
   assert.equal(next.wave, 0);
-  assert.equal(meta.coins, 37);
+  assert.equal(meta.coins, 33);
 });
 
 test('Game: frost slows and splash hits several enemies', () => {
@@ -197,4 +199,67 @@ test('Game: frost slows and splash hits several enemies', () => {
   assert.ok(tower);
   assert.ok(b.hp < b.maxHp, 'splash hit second enemy');
   assert.ok(a.isSlowed(game.time));
+});
+
+test('Game: the countdown starts only after the last enemy of the wave spawns', () => {
+  const game = makeGame();
+  game.startWave();
+  assert.equal(game.countdown, null);
+  assert.equal(game.skipCountdown(), null, 'nothing to skip while spawning');
+  runUntil(game, g => g.spawnQueue.length === 0);
+  game.update(0.02);
+  assert.equal(game.phase, 'wave');
+  assert.ok(game.countdown > WAVE_COUNTDOWN - 0.1 && game.countdown <= WAVE_COUNTDOWN);
+});
+
+test('Game: skipping early pays more gold than skipping late', () => {
+  const skipAt = elapsed => {
+    const game = makeGame();
+    game.startWave();
+    runUntil(game, g => g.countdown !== null);
+    game.countdown = WAVE_COUNTDOWN - elapsed;
+    const gold = game.gold;
+    const bonus = game.skipCountdown();
+    assert.equal(game.gold, gold + bonus);
+    assert.equal(game.wave, 2);
+    assert.equal(game.countdown, null);
+    return bonus;
+  };
+  assert.equal(skipAt(0), 25, 'full wave-1 clear bonus at 30s left');
+  assert.equal(skipAt(15), 12);
+  assert.equal(skipAt(27), 2);
+});
+
+test('Game: when the countdown runs out the next wave starts with no skip bonus', () => {
+  const game = makeGame();
+  game.startWave();
+  runUntil(game, g => g.countdown !== null);
+  game.countdown = 0.01;
+  const gold = game.gold;
+  let started = null;
+  game.on('wavestart', e => { started = e.wave; });
+  game.update(0.02);
+  assert.equal(started, 2);
+  assert.equal(game.wave, 2);
+  assert.equal(game.gold, gold, 'no gold for letting the timer run out');
+});
+
+test('Game: waves overlap and each wave is cleared once its own enemies are gone', () => {
+  const game = makeGame();
+  game.startWave();
+  runUntil(game, g => g.countdown !== null);
+  const cleared = [];
+  game.on('wavecleared', e => { cleared.push(e.wave); });
+  game.skipCountdown();
+  game.update(0.02);
+  assert.ok(game.enemies.some(e => e.wave === 1) && game.enemies.some(e => e.wave === 2));
+  assert.deepEqual(cleared, []);
+
+  game.enemies.filter(e => e.wave === 1).forEach(e => { e.dead = true; });
+  game.update(0.02);
+  assert.deepEqual(cleared, [1]);
+  assert.equal(game.wavesCleared, 1);
+  assert.equal(game.phase, 'perk');
+  game.choosePerk(0);
+  assert.equal(game.phase, 'wave');
 });

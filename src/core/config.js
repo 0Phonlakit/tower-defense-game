@@ -11,6 +11,7 @@
   const MAX_HP = 20;
   const MAX_TOWER_LEVEL = 4;
   const STARTING_GOLD = 120;
+  const WAVE_COUNTDOWN = 30; // seconds after a wave's last spawn before the next wave starts
   const SAVE_KEY = 'rogue-td-save-v1';
 
   // Path waypoints (tile col,row). First point is off-screen spawn, last point is the base.
@@ -45,7 +46,7 @@
   }
 
   return {
-    TILE, COLS, ROWS, MAX_HP, MAX_TOWER_LEVEL, STARTING_GOLD, SAVE_KEY,
+    TILE, COLS, ROWS, MAX_HP, MAX_TOWER_LEVEL, STARTING_GOLD, WAVE_COUNTDOWN, SAVE_KEY,
     WAYPOINTS, TOWER_DEFS, ENEMY_DEFS, META_UPGRADES, defaultModifiers,
   };
 });

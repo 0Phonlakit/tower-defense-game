@@ -10,7 +10,8 @@
 })(typeof self !== 'undefined' ? self : this, function (TD) {
   'use strict';
 
-  // Phases: build (between waves) -> wave -> perk (choose reward) -> build ... -> over
+  // Phases: build (before wave 1) -> wave -> perk (choose reward) -> wave ... -> over
+  // After a wave's last spawn a countdown runs; at 0 (or on skip) the next wave starts, so waves can overlap.
   class Game {
     constructor({ meta, path = new TD.Path(), rng = Math.random } = {}) {
       if (!meta) throw new Error('Game requires a MetaProgress');
@@ -35,6 +36,9 @@
       this.spawnQueue = [];
       this.spawnTimer = 0;
       this.spawnInterval = 1;
+      this.spawning = false;
+      this.countdown = null; // seconds until the next wave, null while spawning
+      this.wavesCleared = 0;
       this.perkChoices = [];
       this.perksTaken = [];
       this.result = null;
@@ -61,6 +65,12 @@
 
     get enemiesRemaining() {
       return this.enemies.length + this.spawnQueue.length;
+    }
+
+    // Gold paid for skipping the countdown now: the full clear bonus at 30s left, 0 at 0s.
+    get skipBonus() {
+      if (this.countdown === null) return 0;
+      return Math.floor(this.waves.clearBonus(this.wave) * this.countdown / TD.WAVE_COUNTDOWN);
     }
 
     towerCost(type) {
@@ -115,13 +125,18 @@
 
     startWave() {
       if (this.phase !== 'build') return false;
-      this.wave++;
-      this.spawnQueue = this.waves.build(this.wave);
-      this.spawnInterval = this.waves.spawnInterval(this.wave);
-      this.spawnTimer = 0;
-      this.phase = 'wave';
-      this.emit('wavestart', { wave: this.wave });
+      this._launchWave();
       return true;
+    }
+
+    // Starts the next wave early. Returns the gold bonus paid, or null if there is no countdown to skip.
+    skipCountdown() {
+      if (this.phase !== 'wave' || this.countdown === null) return null;
+      const bonus = this.skipBonus;
+      this.gold += bonus;
+      if (bonus) this._text(this.path.cols * this.path.tile / 2, this.path.rows * this.path.tile / 2 + 30, `ข้าม! +${bonus} gold`, '#f5c542', 1.2);
+      this._launchWave();
+      return bonus;
     }
 
     choosePerk(index) {
@@ -132,7 +147,7 @@
       perk.apply(this);
       this.perksTaken.push(label);
       this.perkChoices = [];
-      this.phase = 'build';
+      this.phase = 'wave';
       this.emit('perkchosen', { perk, label });
       return true;
     }
@@ -145,9 +160,18 @@
       if (this.phase === 'wave' && this.spawnQueue.length) {
         this.spawnTimer -= dt;
         if (this.spawnTimer <= 0) {
-          this.enemies.push(new TD.Enemy(this.spawnQueue.shift(), this.wave, this.path));
+          const enemy = new TD.Enemy(this.spawnQueue.shift(), this.wave, this.path);
+          enemy.wave = this.wave;
+          this.enemies.push(enemy);
           this.spawnTimer = this.spawnInterval;
         }
+      }
+      if (this.phase === 'wave' && this.spawning && !this.spawnQueue.length) {
+        this.spawning = false;
+        this.countdown = TD.WAVE_COUNTDOWN;
+      } else if (this.countdown !== null) {
+        this.countdown -= dt;
+        if (this.countdown <= 0) this._launchWave();
       }
 
       for (const e of this.enemies) {
@@ -178,7 +202,12 @@
       this.projectiles = this.projectiles.filter(p => !p.done);
       this.effects = this.effects.filter(fx => fx.life > 0);
 
-      if (this.phase === 'wave' && this.enemiesRemaining === 0) this._endWave();
+      // Older waves are fully spawned, so a wave is cleared once none of its enemies are left.
+      while (this.phase === 'wave' && this.wavesCleared < this.wave) {
+        const w = this.wavesCleared + 1;
+        if ((w === this.wave && this.spawnQueue.length) || this.enemies.some(e => e.wave === w)) break;
+        this._endWave(w);
+      }
     }
 
     // ---------- Internals ----------
@@ -223,21 +252,34 @@
       this._effect({ kind: 'ring', x: enemy.x, y: enemy.y, r0: enemy.radius, r1: enemy.radius * 2.2, color: enemy.color, life: 0.35 });
     }
 
-    _endWave() {
-      const bonus = this.waves.clearBonus(this.wave);
-      const interest = Math.floor(Math.min(this.gold * this.mods.interest, 50 + this.wave * 10));
+    _launchWave() {
+      this.wave++;
+      this.spawnQueue = this.waves.build(this.wave);
+      this.spawnInterval = this.waves.spawnInterval(this.wave);
+      this.spawnTimer = 0;
+      this.spawning = true;
+      this.countdown = null;
+      this.phase = 'wave';
+      this.emit('wavestart', { wave: this.wave });
+    }
+
+    _endWave(wave) {
+      const bonus = this.waves.clearBonus(wave);
+      const interest = Math.floor(Math.min(this.gold * this.mods.interest, 50 + wave * 10));
       this.gold += bonus + interest;
+      this.wavesCleared = wave;
       this._text(this.path.cols * this.path.tile / 2, this.path.rows * this.path.tile / 2,
-        `ผ่าน Wave ${this.wave}! +${bonus + interest} gold`, '#f5c542', 1.6);
+        `ผ่าน Wave ${wave}! +${bonus + interest} gold`, '#f5c542', 1.6);
       this.perkChoices = this.perkPicker.choices(this);
-      this.phase = this.perkChoices.length ? 'perk' : 'build';
-      this.emit('wavecleared', { wave: this.wave, bonus, interest, choices: this.perkChoices });
+      if (this.perkChoices.length) this.phase = 'perk';
+      this.emit('wavecleared', { wave, bonus, interest, choices: this.perkChoices });
     }
 
     _gameOver() {
       this.phase = 'over';
       this.spawnQueue = [];
-      this.result = { ...this.meta.recordRun(this.wave - 1), kills: this.kills };
+      this.countdown = null;
+      this.result = { ...this.meta.recordRun(this.wavesCleared), kills: this.kills };
       this.emit('gameover', this.result);
     }
 

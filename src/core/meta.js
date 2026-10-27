@@ -17,7 +17,7 @@
     }
 
     static coinsForWaves(cleared) {
-      return cleared * 5 + Math.floor(cleared * cleared / 2);
+      return cleared * 5 + Math.floor(cleared * cleared / 3);
     }
 
     // storage: any object with getItem/setItem (localStorage, or a fake in tests). null = no saving.
