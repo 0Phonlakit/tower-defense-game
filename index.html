@@ -44,11 +44,21 @@
     </aside>
   </div>
 
+  <!-- Save slots (first screen) -->
+  <div id="ov-slots" class="overlay">
+    <div class="modal menu">
+      <h1>Rogue Tower Defense</h1>
+      <p class="muted">เลือกช่องเซฟ · แต่ละช่องเก็บ Coin อัพเกรด และป้อมที่ปลดล็อกแยกกัน</p>
+      <div id="slot-list" class="slot-list"></div>
+    </div>
+  </div>
+
   <!-- Main menu -->
-  <div id="ov-menu" class="overlay">
+  <div id="ov-menu" class="overlay" hidden>
     <div class="modal menu">
       <h1>Rogue Tower Defense</h1>
       <p class="muted">ป้องกันฐานจากศัตรูบนแผนที่สุ่ม · จบแต่ละรอบได้ Coin เอาไปอัพเกรดถาวร</p>
+      <div class="menu-slot"><span>ช่องเซฟ <b id="menu-slot">1</b></span> <button id="btn-change-slot" class="btn small-btn">เปลี่ยนช่องเซฟ</button></div>
       <div class="menu-stats">🪙 <b id="menu-coins">0</b> Coin · Wave สูงสุด <b id="menu-best">0</b> · เล่นไปแล้ว <b id="menu-runs">0</b> รอบ</div>
       <div class="menu-buttons">
         <button id="btn-start" class="btn primary big">เริ่มเกม</button>
@@ -172,6 +182,7 @@
   <script src="src/core/wave.js"></script>
   <script src="src/core/perks.js"></script>
   <script src="src/core/meta.js"></script>
+  <script src="src/core/saves.js"></script>
   <script src="src/core/settings.js"></script>
   <script src="src/core/game.js"></script>
   <script src="src/ui/renderer.js"></script>

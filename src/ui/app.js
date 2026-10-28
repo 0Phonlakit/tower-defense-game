@@ -10,7 +10,9 @@
   class App {
     constructor(doc = document) {
       this.doc = doc;
-      this.meta = new TD.MetaProgress(safeStorage());
+      this.saves = new TD.SaveSlots(safeStorage());
+      this.slot = this.saves.lastSlot();
+      this.meta = this.saves.open(this.slot);
       this.map = null;
       this.canvas = this.$('game');
       this.renderer = new TD.Renderer(this.canvas);
@@ -47,7 +49,7 @@
     start() {
       this.bindInput();
       this.applyResolution();
-      this.openMenu();
+      this.openSlots();
       this.lastFrame = performance.now();
       requestAnimationFrame(t => this.frame(t));
       return this;
@@ -82,10 +84,60 @@
       this.game = null;
       this.paused = false;
       this.rollMap();
+      this.$('menu-slot').textContent = this.slot;
       this.$('menu-coins').textContent = this.meta.coins;
       this.$('menu-best').textContent = this.meta.best;
       this.$('menu-runs').textContent = this.meta.runs;
       this.showOverlay('ov-menu');
+    }
+
+    // ---------- Save slots ----------
+    // First screen: pick one of the 3 save slots. Each card shows coins, best wave and runs, or empty.
+    openSlots() {
+      this.game = null;
+      this.rollMap();
+      this.renderSlots();
+      this.showOverlay('ov-slots');
+    }
+
+    renderSlots() {
+      const list = this.$('slot-list');
+      list.innerHTML = '';
+      for (const s of this.saves.summaries()) {
+        const card = this.doc.createElement('div');
+        card.className = 'slot-card' + (s.slot === this.slot ? ' current' : '') + (s.empty ? ' empty' : '');
+        card.innerHTML = `<div class="slot-info"><b>ช่อง ${s.slot}</b>${s.slot === this.slot ? ' <span class="muted small">(ล่าสุด)</span>' : ''}<div class="muted small">`
+          + (s.empty ? 'ว่าง — เริ่มใหม่' : `🪙 ${s.coins} · Wave สูงสุด ${s.best} · เล่นไปแล้ว ${s.runs} รอบ`) + '</div></div>';
+        const actions = this.doc.createElement('div');
+        actions.className = 'row';
+        const play = this.doc.createElement('button');
+        play.className = 'btn primary small-btn';
+        play.textContent = s.empty ? 'เริ่มใหม่' : 'เล่น';
+        play.onclick = () => this.selectSlot(s.slot);
+        actions.appendChild(play);
+        if (!s.empty) {
+          const del = this.doc.createElement('button');
+          del.className = 'btn danger small-btn';
+          del.textContent = 'ลบ';
+          del.onclick = () => this.deleteSlot(s.slot);
+          actions.appendChild(del);
+        }
+        card.appendChild(actions);
+        list.appendChild(card);
+      }
+    }
+
+    selectSlot(n) {
+      this.slot = n;
+      this.meta = this.saves.open(n);
+      this.openMenu();
+    }
+
+    deleteSlot(n) {
+      if (!confirm(`ลบช่องเซฟ ${n}? (Coin, อัพเกรด และป้อมที่ปลดล็อกในช่องนี้จะหายทั้งหมด)`)) return;
+      this.saves.remove(n);
+      if (n === this.slot) this.meta = this.saves.open(n);
+      this.renderSlots();
     }
 
     openUpgrades() {
@@ -190,6 +242,7 @@
       this.$('btn-pause').onclick = () => this.pause();
       this.$('btn-start').onclick = () => this.startRun();
       this.$('btn-open-upgrade').onclick = () => this.openUpgrades();
+      this.$('btn-change-slot').onclick = () => this.openSlots();
       this.$('btn-open-settings').onclick = () => this.openSettings('ov-menu');
       this.$('btn-open-guide').onclick = () => this.openGuide('ov-menu');
       this.$('btn-pause-guide').onclick = () => this.openGuide('ov-pause');
@@ -204,7 +257,7 @@
       this.$('btn-retry').onclick = () => this.startRun();
       this.$('btn-to-menu').onclick = () => this.openMenu();
       this.$('btn-reset').onclick = () => {
-        if (!confirm('ล้างเซฟทั้งหมด (Coin, อัพเกรด, ป้อมที่ปลดล็อก)?')) return;
+        if (!confirm(`ล้างเซฟช่อง ${this.slot} (Coin, อัพเกรด, ป้อมที่ปลดล็อก)?`)) return;
         this.meta.reset();
         this.renderUpgrades();
       };
