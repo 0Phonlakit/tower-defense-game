@@ -42,7 +42,7 @@ The right-hand panel has x1/x2/x3 speed buttons.
 - **Base**: has 20 HP. Each enemy that reaches it removes HP depending on its type. 0 HP = Game Over.
 - **Gold** (per run): earned by killing enemies and from end-of-wave bonuses. Spend it to build and upgrade towers (max Lv.4). Selling a tower refunds 70%.
 - **Wave countdown**: once the last enemy of a wave has spawned, a 30-second countdown starts. Press Skip (or `Space`) to start the next wave early and get bonus gold: the full clear bonus with 30s left, scaling down to 0 as the timer runs out. When it reaches 0 the next wave starts automatically with no bonus. Waves can overlap; each wave still pays its clear bonus when all of its own enemies are gone.
-- **Perks**: after each wave is cleared, pick 1 of 3 random perks. They last for the current run only.
+- **Perks**: after each wave is cleared, pick 1 of 3 random perks. They last for the current run only. Taking the same perk again stacks it, up to 10 times per perk (one-time perks like emergency funds count too); at 10 it is no longer offered. Some perks still stop earlier at their own limit (range, crit, splash, slow, build cost, interest). Perk cards show how many you already have, and the pause screen lists each perk once with its count.
 - **Coins** (permanent): awarded at Game Over based on waves cleared:
 
   `coin = wave × 5 + wave² ÷ 3` → 5 waves gives 33, 10 waves gives 83, 20 waves gives 233
@@ -163,7 +163,7 @@ Requires Node.js 20 or later. No `npm install` needed.
 npm test
 ```
 
-Tests cover `src/core/` only (path, maps and route opening, map units, ground twins, resistances, anti-air, routes never crossing, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
+Tests cover `src/core/` only (perk stacking, path, maps and route opening, map units, ground twins, resistances, anti-air, routes never crossing, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
 
 ## Balancing
 
