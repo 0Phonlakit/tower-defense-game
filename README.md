@@ -2,7 +2,7 @@
 
 A roguelike tower defense game that runs in the browser. It is written in plain JavaScript (HTML5 Canvas), with nothing to install and no build step.
 
-Each run is played on a random map. Enemies walk along several routes toward your base, and you build towers to stop them. The base has 20 HP. When it reaches 0 the run ends (Game Over), and you earn Coins based on how many waves you cleared. Spend them on permanent upgrades before starting the next run.
+A fantasy tower defense drawn in pixel art: archer towers, catapults and mages against goblins, orcs and dragons. Each run is played on a random map. Enemies walk along several routes toward your base, and you build towers to stop them. The base has 20 HP. When it reaches 0 the run ends (Game Over), and you earn Coins based on how many waves you cleared. Spend them on permanent upgrades before starting the next run.
 
 ## How to play
 
@@ -53,10 +53,10 @@ The right-hand panel has x1/x2/x3 speed buttons.
 
 | Type | Base damage | Notes |
 |---|---|---|
-| Normal | -1 | Standard |
-| Fast | -1 | Low HP, fast (from wave 3) |
-| Armored | -2 | High HP, slow (from wave 5) |
-| Boss | -5 | Every 10 waves |
+| Goblin (ก็อบลิน) | -1 | Standard |
+| Wolf (หมาป่า) | -1 | Low HP, fast (from wave 3) |
+| Orc knight (อัศวินออร์ค) | -2 | High HP, slow (from wave 5) |
+| Dragon (มังกร, boss) | -5 | Every 10 waves |
 | Map units | -3 | 2 per map, from wave 5 (see below) |
 
 Enemy HP grows every wave; see `Enemy.hpMultiplier()`.
@@ -86,14 +86,14 @@ Damage types: physical (Gun, Cannon, Sniper), poison (Poison), fire, ice, water,
 
 | Tower | Element | Air | Cost | Unlock | Strength |
 |---|---|---|---|---|---|
-| Machine gun | – | ✔ | 50 | Available from the start | Fast fire, single target |
-| Cannon | – | | 90 | 60 coins | Area splash damage |
-| Frost | Ice | | 70 | 50 coins | Slows enemies |
-| Sniper | – | ✔ | 120 | 100 coins | Long range, high damage |
-| Flame | Fire | | 80 | 80 coins | Sets enemies on fire (damage over 3s) |
-| Tesla | Lightning | ✔ | 100 | 120 coins | Instant zap that chains to 2 more enemies (70% per jump) |
-| Tide | Water | | 60 | 70 coins | Cheap splash that sets up reactions |
-| Poison | – | | 90 | 90 coins | Poison stacks up to 5 times (4s), strong vs tanks and bosses |
+| Archer tower (หอธนู) | – | ✔ | 50 | Available from the start | Fast fire, single target |
+| Catapult (เครื่องยิงหิน) | – | | 90 | 60 coins | Area splash damage |
+| Frost mage (จอมเวทน้ำแข็ง) | Ice | | 70 | 50 coins | Slows enemies |
+| Ballista (หน้าไม้ยักษ์) | – | ✔ | 120 | 100 coins | Long range, high damage |
+| Fire mage (จอมเวทไฟ) | Fire | | 80 | 80 coins | Sets enemies on fire (damage over 3s) |
+| Storm crystal (คริสตัลพายุ) | Lightning | ✔ | 100 | 120 coins | Instant zap that chains to 2 more enemies (70% per jump) |
+| Water shrine (ศาลเจ้าน้ำ) | Water | | 60 | 70 coins | Cheap splash that sets up reactions |
+| Alchemist (นักเล่นแร่แปรธาตุ) | – | | 90 | 90 coins | Poison stacks up to 5 times (4s), strong vs tanks and bosses |
 
 Burn and poison damage scale with tower level and damage bonuses, like normal hits.
 
@@ -137,6 +137,7 @@ tower-defense/
 │   │   ├── settings.js   class Settings    Resolution + volumes, saved separately
 │   │   └── game.js       class Game        One run (state machine)
 │   ├── ui/
+│   │   ├── sprites.js    Pixel-art sprites (enemies, towers, bases, scenery) drawn in code
 │   │   ├── renderer.js   class Renderer    Draws to the canvas (read-only)
 │   │   ├── audio.js      class SoundSystem Generated effects, music and UI sounds (Web Audio)
 │   │   └── app.js        class App         Menus, DOM, input, overlays, game loop
@@ -166,7 +167,7 @@ Requires Node.js 20 or later. No `npm install` needed.
 npm test
 ```
 
-Tests cover `src/core/` only (road spacing, save slots, perk stacking, path, maps and route opening, map units, ground twins, resistances, anti-air, routes never crossing, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
+Tests cover `src/core/` and the sprite data (road spacing, save slots, perk stacking, path, maps and route opening, map units, ground twins, resistances, anti-air, routes never crossing, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
 
 ## Balancing
 
@@ -184,3 +185,11 @@ Tests cover `src/core/` only (road spacing, save slots, perk stacking, path, map
 | Perks | `PERKS` in `src/core/perks.js` |
 
 After changing any formula, run `npm test` and update the expected values in the tests to match.
+
+## Art
+
+Everything is pixel art drawn in code (`src/ui/sprites.js`), with no image files:
+
+- **Enemies** use 12 hand-drawn 12×12 body shapes (goblin, knight, beast, dragon, bird, insect, bat, golem, spirit, crab, serpent, plant), each unit with its own colors. They face the way they walk; flyers bob above a shadow.
+- **Towers** (16×16) and **bases** (16×16, a different one per map: stone castle, sandstone fort, ice palace, obsidian keep, witch hut, lighthouse, moon tower, tree house, crystal citadel, ancient temple) and **scenery** (8×8) are built from rectangles, triangles and lines, with the outline added automatically.
+- Ground and roads get a pixel texture in each map's colors. Ground, scenery, roads and the base are drawn once into a cached layer and only redrawn when the map, the open routes or the resolution change.

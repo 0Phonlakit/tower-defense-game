@@ -13,6 +13,8 @@
       this.height = canvas.height / scale;
       this.map = null;
       this.deco = [];
+      this.layer = null;    // cached static layer (ground, scenery, roads, base)
+      this.layerKey = '';
     }
 
     setScale(scale) {
@@ -45,11 +47,8 @@
       if (!this.map) return;
       this.ctx.setTransform(this.scale, 0, 0, this.scale, 0, 0);
       const open = this.map.routesOpen(game ? Math.max(1, game.wave) : 1);
-      this.drawGround();
-      this.drawDeco();
-      this.drawPaths(open);
+      this.drawStatic(open);
       this.drawSpawns(open);
-      this.drawBase();
       if (!game) return;
       this.drawTracking(game.upcoming, open);
 
@@ -62,6 +61,31 @@
       if (view.placing && view.hover) this.drawGhost(game, view.placing, view.hover);
     }
 
+    // Ground, scenery, roads and the base only change with the map, the open routes or the scale,
+    // so they are drawn into an offscreen canvas once and copied every frame.
+    drawStatic(open) {
+      const key = `${this.map.id}|${open}|${this.canvas.width}x${this.canvas.height}`;
+      if (key !== this.layerKey || !this.layer) {
+        const layer = this.layer || document.createElement('canvas');
+        layer.width = this.canvas.width;
+        layer.height = this.canvas.height;
+        const main = this.ctx;
+        this.ctx = layer.getContext('2d');
+        this.ctx.setTransform(this.scale, 0, 0, this.scale, 0, 0);
+        this.drawGround();
+        this.drawDeco();
+        this.drawPaths(open);
+        this.drawBase();
+        this.ctx = main;
+        this.layer = layer;
+        this.layerKey = key;
+      }
+      this.ctx.save();
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      this.ctx.drawImage(this.layer, 0, 0);
+      this.ctx.restore();
+    }
+
     drawGround() {
       const { ctx, map } = this;
       const T = map.tile;
@@ -72,22 +96,21 @@
           ctx.fillRect(c * T, r * T, T, T);
         }
       }
+      const seed = [...map.id].reduce((n, ch) => n + ch.charCodeAt(0), 0);
+      const rand = k => { const h = Math.sin(k * 12.9898 + seed * 78.233) * 43758.5453; return h - Math.floor(h); };
+      const light = Renderer.mix(a, '#ffffff', 0.12), dark = TD.shade(a, 0.18);
+      for (let i = 0; i < map.cols * map.rows * 3; i++) {
+        const x = Math.floor(rand(i * 3) * map.cols * T / 4) * 4;
+        const y = Math.floor(rand(i * 3 + 1) * map.rows * T / 4) * 4;
+        ctx.fillStyle = rand(i * 3 + 2) < 0.5 ? light : dark;
+        ctx.fillRect(x, y, 4, 4);
+      }
     }
 
     drawDeco() {
-      const { ctx } = this;
       const { deco: color, shape } = this.map.theme;
-      ctx.fillStyle = color;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      for (const { x, y } of this.deco) {
-        if (shape === 'cactus' || shape === 'reed') { ctx.fillRect(x - 2, y - 7, 4, 14); if (shape === 'cactus') ctx.fillRect(x - 6, y - 3, 12, 3); }
-        else if (shape === 'flake' || shape === 'star') { const s = shape === 'flake' ? 5 : 2.5; ctx.beginPath(); ctx.moveTo(x - s, y); ctx.lineTo(x + s, y); ctx.moveTo(x, y - s); ctx.lineTo(x, y + s); ctx.stroke(); }
-        else if (shape === 'crystal') { ctx.beginPath(); ctx.moveTo(x, y - 8); ctx.lineTo(x + 4, y); ctx.lineTo(x, y + 5); ctx.lineTo(x - 4, y); ctx.closePath(); ctx.fill(); }
-        else if (shape === 'rubble') { ctx.fillRect(x - 4, y - 3, 8, 6); ctx.fillRect(x + 3, y + 2, 4, 4); }
-        else if (shape === 'leaf') { ctx.beginPath(); ctx.ellipse(x, y, 5, 3, 0.6, 0, Math.PI * 2); ctx.fill(); }
-        else { this.circle(x, y, shape === 'ember' ? 2.5 : shape === 'shell' ? 3.5 : 6); ctx.fill(); }
-      }
+      const extra = { a: color, b: TD.shade(color, 0.3) };
+      for (const { x, y } of this.deco) TD.drawSprite(this.ctx, `deco:${shape}`, x, y, 16, { extra });
     }
 
     // Closed routes are drawn faded under the open ones, so players can see what is coming.
@@ -104,8 +127,8 @@
       const passes = [
         [closedOrder, Renderer.mix(edge, ground, 0.55), map.tile],
         [openOrder, edge, map.tile],
-        [closedOrder, Renderer.mix(fill, ground, 0.55), map.tile - 8],
-        [openOrder, fill, map.tile - 8],
+        [closedOrder, this.cobbles(Renderer.mix(fill, ground, 0.55)), map.tile - 8],
+        [openOrder, this.cobbles(fill), map.tile - 8],
       ];
       for (const [ids, color, width] of passes) {
         ctx.strokeStyle = color;
@@ -118,6 +141,20 @@
           ctx.stroke();
         }
       }
+    }
+
+    // A 16px tile of cobbles in shades of `color`, used as a repeating road texture.
+    cobbles(color) {
+      const c = document.createElement('canvas');
+      c.width = c.height = 16;
+      const g = c.getContext('2d');
+      g.fillStyle = color;
+      g.fillRect(0, 0, 16, 16);
+      g.fillStyle = TD.shade(color, 0.12);
+      for (const [x, y] of [[0, 0], [8, 4], [4, 8], [12, 12], [0, 12]]) g.fillRect(x, y, 4, 4);
+      g.fillStyle = Renderer.mix(color, '#ffffff', 0.15);
+      for (const [x, y] of [[4, 0], [12, 4], [8, 12]]) g.fillRect(x, y, 4, 4);
+      return this.ctx.createPattern(c, 'repeat');
     }
 
     // Blends hex color a toward hex color b by t (0..1).
@@ -185,20 +222,13 @@
     }
 
     drawBase() {
-      const { ctx, map } = this;
-      const T = map.tile;
-      const x = map.baseTile[0] * T, y = map.baseTile[1] * T;
-      ctx.fillStyle = '#5b6370';
-      ctx.fillRect(x + 4, y + 10, T - 8, T - 12);
-      ctx.fillStyle = '#727b89';
-      for (let i = 0; i < 3; i++) ctx.fillRect(x + 4 + i * 12, y + 4, 8, 8);
-      ctx.fillStyle = '#3a2f25';
-      ctx.fillRect(x + 15, y + 22, 10, 16);
-      ctx.strokeStyle = '#ddd';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(x + 20, y + 4); ctx.lineTo(x + 20, y - 12); ctx.stroke();
-      ctx.fillStyle = '#e5484d';
-      ctx.fillRect(x + 20, y - 12, 12, 7);
+      const { map } = this;
+      // A little bigger than a tile, so it is kept inside the board when the base sits on an edge.
+      const size = map.tile * 1.15, half = size / 2;
+      const clamp = (v, max) => Math.min(max - half, Math.max(half, v));
+      const x = clamp((map.baseTile[0] + 0.5) * map.tile, this.width);
+      const y = clamp((map.baseTile[1] + 0.5) * map.tile - 4, this.height);
+      TD.drawSprite(this.ctx, `base:${map.id}`, x, y, size);
     }
 
     drawGrid() {
@@ -219,62 +249,31 @@
 
     drawTower(t, isSelected = false) {
       const { ctx } = this;
-      const def = TD.TOWER_DEFS[t.type];
-      ctx.fillStyle = '#2a2e36';
-      ctx.fillRect(t.x - 16, t.y - 16, 32, 32);
-      ctx.fillStyle = def.color;
-      this.circle(t.x, t.y, 11); ctx.fill();
-      ctx.save();
-      ctx.translate(t.x, t.y);
-      ctx.rotate(t.angle);
-      ctx.fillStyle = '#1b1e24';
-      const len = t.type === 'sniper' ? 20 : t.type === 'cannon' ? 14 : 16;
-      const wid = t.type === 'cannon' ? 9 : t.type === 'sniper' ? 4 : 5;
-      ctx.fillRect(0, -wid / 2, len, wid);
-      ctx.restore();
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+      ctx.beginPath(); ctx.ellipse(t.x, t.y + 14, 14, 4, 0, 0, Math.PI * 2); ctx.fill();
+      TD.drawSprite(ctx, `tower:${t.type}`, t.x, t.y - 2, 36);
       ctx.fillStyle = '#f5c542';
-      for (let i = 0; i < t.level; i++) ctx.fillRect(t.x - 14 + i * 8, t.y + 12, 5, 3);
+      ctx.strokeStyle = '#1b1b1f';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < t.level; i++) { ctx.fillRect(t.x - 14 + i * 8, t.y + 15, 5, 3); ctx.strokeRect(t.x - 14 + i * 8, t.y + 15, 5, 3); }
       if (isSelected) {
         ctx.strokeStyle = '#f5c542';
         ctx.lineWidth = 2;
-        ctx.strokeRect(t.x - 17, t.y - 17, 34, 34);
+        ctx.strokeRect(t.x - 19, t.y - 19, 38, 38);
       }
     }
 
-    // Flyers float above a shadow with flapping wings; map-unique units get a white ring.
+    // Enemies face the way they walk; flyers bob above a shadow.
     drawEnemy(e, time) {
       const { ctx } = this;
       ctx.save();
       if (e.flying) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
         ctx.beginPath(); ctx.ellipse(e.x, e.y + 6, e.radius, e.radius * 0.45, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.translate(0, -10);
-        const flap = 0.6 + 0.4 * Math.sin(time * 18);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-        for (const side of [-1, 1]) {
-          ctx.beginPath(); ctx.ellipse(e.x + side * e.radius, e.y - 2, e.radius * 0.8, e.radius * 0.45 * flap, side * 0.5, 0, Math.PI * 2); ctx.fill();
-        }
+        ctx.translate(0, -10 + 2 * Math.sin(time * 6 + e.distance * 0.05));
       }
-      ctx.fillStyle = e.color;
-      ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-      ctx.lineWidth = 2;
-      if (e.type === 'tank') {
-        ctx.fillRect(e.x - e.radius, e.y - e.radius, e.radius * 2, e.radius * 2);
-        ctx.strokeRect(e.x - e.radius, e.y - e.radius, e.radius * 2, e.radius * 2);
-      } else {
-        this.circle(e.x, e.y, e.radius); ctx.fill(); ctx.stroke();
-      }
-      if (e.type === 'boss') {
-        ctx.fillStyle = '#f5c542';
-        ctx.font = 'bold 14px system-ui';
-        ctx.textAlign = 'center';
-        ctx.fillText('♛', e.x, e.y + 5);
-      }
-      if (e.unique) {
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.lineWidth = 1.5;
-        this.circle(e.x, e.y, e.radius + 1.5); ctx.stroke();
-      }
+      const ahead = e.path.positionAt(e.distance + 4);
+      TD.drawSprite(ctx, `enemy:${e.type}`, e.x, e.y, e.radius * 2.6, { flip: ahead.x < e.x - 0.01 });
       if (e.isSlowed(time)) {
         ctx.strokeStyle = '#8be3ff';
         ctx.lineWidth = 2;
