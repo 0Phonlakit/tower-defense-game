@@ -14,7 +14,7 @@ After picking a slot you get the main menu, which shows the current slot and a "
 
 - **เริ่มเกม (Start)**: starts a run right away on a random map.
 - **อัพเกรด (Upgrade)**: spend Coins on permanent upgrades, split into tabs: Attack (damage, fire rate, range, crit), Economy (starting gold, gold per kill) and Tower unlocks. The reset-save button here clears only the current slot.
-- **ตั้งค่า (Settings)**: resolution (Auto fits the window, or a fixed 800×520 / 1200×780 / 1600×1040 board, drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
+- **ตั้งค่า (Settings)**: resolution (Auto fits the window, or a fixed 960×640 / 1200×800 / 1440×960 board, drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
 - **คู่มือ (Guide)**: three tabs: towers (each tower's level-1 stats, cost and unlock price), enemies (common enemies plus every map's special units, with flying and resistances) and elemental reactions.
 - **ออกจากเกม (Exit)**: tries to close the tab. Browsers only let a page close a tab that a script opened, so if that is blocked you get a goodbye screen; close the tab yourself.
 
@@ -39,8 +39,8 @@ The right-hand panel has x1/x2/x3 speed buttons.
 
 ## Rules
 
-- **Maps**: each run picks 1 of 10 maps at random ("Play again" also rolls a new one; the map's 2 special units are listed in the Guide from the pause screen). Every map has its own background and 5 routes from separate spawners to one base. Routes never cross: where two routes meet they join and share the rest of the road to the base. 2 routes are open at the start, and 1 more opens at waves 10, 20 and 30. Routes that are not open yet are drawn in muted colors with no spawner, and you can't build on them. Where roads meet they are drawn as one connected road.
-- **Route tracking**: before wave 1 and during each countdown, red arrows run along the open routes the next wave will use, with one arrow stream per road (routes sharing a road share its arrows). A box in a bottom corner of the board always shows base HP and the current wave, plus how many enemies the next wave has in total while it is previewed. Routes that haven't opened yet show no arrows, even right before they open; from the wave they open on, they are tracked like the others. Each enemy's route is picked at random from the open routes.
+- **Maps**: each run picks 1 of 10 maps at random ("Play again" also rolls a new one; the map's 2 special units are listed in the Guide from the pause screen). Every map has its own background and 5 routes from separate spawners to one base. Routes never cross: where two routes meet they join and share the rest of the road to the base. Roads that are not joined keep at least 2 free tiles between them, so there is always room for 2 towers side by side. The board is 24×16 tiles. 2 routes are open at the start, and 1 more opens at waves 10, 20 and 30. Routes that are not open yet are drawn in muted colors with no spawner, and you can't build on them. Where roads meet they are drawn as one connected road.
+- **Route tracking**: before wave 1 and during each countdown, red arrows run along the open routes the next wave will use, with one arrow stream per road (routes sharing a road share its arrows). A bar under the board always shows base HP and the current wave, plus how many enemies the next wave has in total while it is previewed. Routes that haven't opened yet show no arrows, even right before they open; from the wave they open on, they are tracked like the others. Each enemy's route is picked at random from the open routes.
 - **Base**: has 20 HP. Each enemy that reaches it removes HP depending on its type. 0 HP = Game Over.
 - **Gold** (per run): earned by killing enemies and from end-of-wave bonuses. Spend it to build and upgrade towers (max Lv.4). Selling a tower refunds 70%.
 - **Wave countdown**: once the last enemy of a wave has spawned, a 30-second countdown starts. Press Skip (or `Space`) to start the next wave early and get bonus gold: the full clear bonus with 30s left, scaling down to 0 as the timer runs out. When it reaches 0 the next wave starts automatically with no bonus. Waves can overlap; each wave still pays its clear bonus when all of its own enemies are gone.
@@ -166,7 +166,7 @@ Requires Node.js 20 or later. No `npm install` needed.
 npm test
 ```
 
-Tests cover `src/core/` only (save slots, perk stacking, path, maps and route opening, map units, ground twins, resistances, anti-air, routes never crossing, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
+Tests cover `src/core/` only (road spacing, save slots, perk stacking, path, maps and route opening, map units, ground twins, resistances, anti-air, routes never crossing, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
 
 ## Balancing
 

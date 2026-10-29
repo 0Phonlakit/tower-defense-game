@@ -92,3 +92,51 @@ test('Game: waves only use open routes, and wave 10 opens a third route', () => 
     if (game.phase === 'perk') game.choosePerk(0);
   }
 });
+
+test('Maps: roads that are not joined keep at least 2 free tiles between them (room for 2 towers)', () => {
+  const { COLS, ROWS } = require('../src/core/config.js');
+  const steps = wp => {
+    const out = [];
+    for (let i = 0; i < wp.length - 1; i++) {
+      let [c, r] = wp[i];
+      const [c2, r2] = wp[i + 1];
+      const dc = Math.sign(c2 - c), dr = Math.sign(r2 - r);
+      for (;;) {
+        const key = `${c},${r}`;
+        if (c >= 0 && c < COLS && r >= 0 && r < ROWS && out.at(-1) !== key) out.push(key);
+        if (c === c2 && r === r2) break;
+        c += dc; r += dr;
+      }
+    }
+    return out;
+  };
+  for (const def of MAP_DEFS) {
+    // Road network: tiles linked to the next tile along each route.
+    const links = new Map();
+    const link = (a, b) => { for (const [x, y] of [[a, b], [b, a]]) { if (!links.has(x)) links.set(x, new Set()); links.get(x).add(y); } };
+    for (const s of def.routes.map(steps)) for (let k = 1; k < s.length; k++) link(s[k - 1], s[k]);
+    const tiles = [...links.keys()];
+    for (const p of tiles) {
+      const dist = new Map([[p, 0]]);
+      const queue = [p];
+      while (queue.length) {
+        const x = queue.shift();
+        for (const y of links.get(x)) if (!dist.has(y)) { dist.set(y, dist.get(x) + 1); queue.push(y); }
+      }
+      const [pc, pr] = p.split(',').map(Number);
+      for (const q of tiles) {
+        const [qc, qr] = q.split(',').map(Number);
+        if (q === p || Math.max(Math.abs(pc - qc), Math.abs(pr - qr)) > 2) continue;
+        // Two road tiles this close must be joined right there: walking the road between them is
+        // no longer than the straight-line grid distance (a bend or a junction, never a road that
+        // went away and came back alongside).
+        assert.equal(dist.get(q), Math.abs(pc - qc) + Math.abs(pr - qr), `${def.id}: road tiles ${p} and ${q} are too close`);
+      }
+    }
+  }
+});
+
+test('Maps: the board is 24x16 tiles', () => {
+  const map = new GameMap();
+  assert.deepEqual([map.cols, map.rows], [24, 16]);
+});

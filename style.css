@@ -112,6 +112,8 @@ h3 small { color: var(--muted); font-weight: normal; }
 .pause-perks { text-align: left; background: var(--panel-2); border-radius: 8px; padding: 10px 12px; margin: 8px 0 16px; }
 .pause-perks h3 { margin: 0 0 6px; }
 #board { position: relative; }
+.info-bar { max-width: 100%; margin-top: 8px; padding: 6px 12px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; text-align: center; font-weight: bold; min-height: 32px; }
+.info-bar:empty { visibility: hidden; }
 .tower-pop { position: absolute; z-index: 5; transform: translate(-50%, -100%); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px; box-shadow: 0 4px 14px rgba(0,0,0,0.45); white-space: nowrap; }
 .tower-pop.below { transform: translate(-50%, 0); }
 .tower-pop .pop-name { font-weight: bold; font-size: 13px; margin-bottom: 4px; text-align: center; }
