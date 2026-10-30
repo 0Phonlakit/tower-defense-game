@@ -167,7 +167,7 @@ Requires Node.js 20 or later. No `npm install` needed.
 npm test
 ```
 
-Tests cover `src/core/` and the sprite data (road spacing, save slots, perk stacking, path, maps and route opening, map units, ground twins, resistances, anti-air, routes never crossing, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
+Tests cover `src/core/` and the sprite data, including the 4 looks per tower (road spacing, save slots, perk stacking, path, maps and route opening, map units, ground twins, resistances, anti-air, routes never crossing, next-wave route plans, enemies, towers, projectiles, waves, perks, saving, settings, upgrade tabs, elemental reactions, burn/poison, Tesla chains, sound events, quitting a run, and the `Game` flow, e.g. a normal enemy reaching the base removes 1 HP, and 0 HP triggers Game Over and pays out Coins). `src/ui/` has no unit tests.
 
 ## Balancing
 
@@ -191,5 +191,7 @@ After changing any formula, run `npm test` and update the expected values in the
 Everything is pixel art drawn in code (`src/ui/sprites.js`), with no image files:
 
 - **Enemies** use 12 hand-drawn 12×12 body shapes (goblin, knight, beast, dragon, bird, insect, bat, golem, spirit, crab, serpent, plant), each unit with its own colors. They face the way they walk; flyers bob above a shadow.
-- **Towers** (16×16) and **bases** (16×16, a different one per map: stone castle, sandstone fort, ice palace, obsidian keep, witch hut, lighthouse, moon tower, tree house, crystal citadel, ancient temple) and **scenery** (8×8) are built from rectangles, triangles and lines, with the outline added automatically.
+- **Towers** (16×16) change look at every level (1–4) instead of showing level bars: each level keeps the shape and adds parts such as gold trim, side turrets, banners, a bigger crystal or orb, sparks and a crown, and level 3–4 towers glow in their color.
+- **Bases** (16×16, a different one per map: stone castle, sandstone fort, ice palace, obsidian keep, witch hut, lighthouse, moon tower, tree house, crystal citadel, ancient temple) and **scenery** (8×8) are built from rectangles, triangles and lines, with the outline added automatically.
+- **Shots** look different per tower and point the way they fly: arrows, tumbling boulders, ice shards with a sparkle trail, fireballs with embers, water orbs, spinning poison flasks; the ballista leaves a bolt streak and the storm crystal a jagged lightning bolt. Each hit has its own effect too: sparks, dust and debris, frost shards, a fire burst, a water splash, a poison cloud.
 - Ground and roads get a pixel texture in each map's colors. Ground, scenery, roads and the base are drawn once into a cached layer and only redrawn when the map, the open routes or the resolution change.
