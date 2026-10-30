@@ -4,9 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Rogue Tower Defense</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;600&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Menu background: a demo game that plays itself behind the menu screens -->
+  <canvas id="menu-bg" class="menu-bg" aria-hidden="true"></canvas>
+
+  <!-- Splash shown on every launch; click or any key skips it -->
+  <div id="ov-splash" class="splash" role="presentation">
+    <div class="splash-inner">
+      <div class="splash-by">Made By</div>
+      <div class="splash-name">0Phonlakit</div>
+    </div>
+  </div>
+
   <div id="app">
     <main id="board">
       <canvas id="game" width="960" height="640"></canvas>
@@ -47,18 +60,18 @@
   </div>
 
   <!-- Save slots (first screen) -->
-  <div id="ov-slots" class="overlay">
+  <div id="ov-slots" class="overlay menu-screen">
     <div class="modal menu">
-      <h1>Rogue Tower Defense</h1>
+      <h1 class="game-title">Rogue Tower<span>Defense</span></h1>
       <p class="muted">เลือกช่องเซฟ · แต่ละช่องเก็บ Coin อัพเกรด และป้อมที่ปลดล็อกแยกกัน</p>
       <div id="slot-list" class="slot-list"></div>
     </div>
   </div>
 
   <!-- Main menu -->
-  <div id="ov-menu" class="overlay" hidden>
+  <div id="ov-menu" class="overlay menu-screen" hidden>
     <div class="modal menu">
-      <h1>Rogue Tower Defense</h1>
+      <h1 class="game-title">Rogue Tower<span>Defense</span></h1>
       <p class="muted">ป้องกันฐานจากศัตรูบนแผนที่สุ่ม · จบแต่ละรอบได้ Coin เอาไปอัพเกรดถาวร</p>
       <div class="menu-slot"><span>ช่องเซฟ <b id="menu-slot">1</b></span> <button id="btn-change-slot" class="btn small-btn">เปลี่ยนช่องเซฟ</button></div>
       <div class="menu-stats">🪙 <b id="menu-coins">0</b> Coin · Wave สูงสุด <b id="menu-best">0</b> · เล่นไปแล้ว <b id="menu-runs">0</b> รอบ</div>
@@ -73,7 +86,7 @@
   </div>
 
   <!-- Upgrades (tabs) -->
-  <div id="ov-upgrade" class="overlay" hidden>
+  <div id="ov-upgrade" class="overlay menu-screen" hidden>
     <div class="modal wide">
       <div class="modal-head">
         <h2>อัพเกรด</h2>
@@ -90,7 +103,7 @@
   </div>
 
   <!-- Settings -->
-  <div id="ov-settings" class="overlay" hidden>
+  <div id="ov-settings" class="overlay menu-screen" hidden>
     <div class="modal">
       <h2>ตั้งค่า</h2>
       <div class="settings">
@@ -131,7 +144,7 @@
   </div>
 
   <!-- Guide: enemies and elemental reactions -->
-  <div id="ov-guide" class="overlay" hidden>
+  <div id="ov-guide" class="overlay menu-screen" hidden>
     <div class="modal wide">
       <h2>คู่มือ</h2>
       <div id="guide-tabs" class="tabs" role="tablist"></div>
@@ -143,7 +156,7 @@
   </div>
 
   <!-- Exit (shown when the browser won't let the page close its tab) -->
-  <div id="ov-exit" class="overlay" hidden>
+  <div id="ov-exit" class="overlay menu-screen" hidden>
     <div class="modal menu">
       <h2>ขอบคุณที่เล่น!</h2>
       <p class="muted">เบราว์เซอร์ไม่อนุญาตให้หน้าเว็บปิดแท็บเอง ปิดแท็บนี้ได้เลย</p>
@@ -189,6 +202,7 @@
   <script src="src/core/game.js"></script>
   <script src="src/ui/sprites.js"></script>
   <script src="src/ui/renderer.js"></script>
+  <script src="src/ui/demo.js"></script>
   <script src="src/ui/audio.js"></script>
   <script src="src/ui/app.js"></script>
   <script src="src/main.js"></script>

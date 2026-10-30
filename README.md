@@ -8,6 +8,8 @@ A fantasy tower defense drawn in pixel art: archer towers, catapults and mages a
 
 Open `index.html` in a browser (double-click it, or drag it into a browser window).
 
+Every launch starts with a short "Made By 0Phonlakit" splash that fades into the save-slot screen (click or press any key to skip it). Behind the menu screens a silent demo game plays itself on a random map, using its own throwaway progress, so it never touches your save. Menus use a parchment-and-wood look with wooden buttons, and each screen fades in. Titles use the Mitr font from Google Fonts when online and fall back to a system Thai font offline.
+
 The game opens on the save slot screen. There are 3 slots; each keeps its own Coins, permanent upgrades, unlocked towers, best wave and run count. Each card shows that summary (or "empty"), with Play/New and Delete. The last slot played is highlighted. Progress saved before slots existed is moved into slot 1 the first time (the old data is kept as a backup). Settings are shared by all slots.
 
 After picking a slot you get the main menu, which shows the current slot and a "change slot" button:
@@ -140,6 +142,7 @@ tower-defense/
 │   │   ├── sprites.js    Pixel-art sprites (enemies, towers, bases, scenery) drawn in code
 │   │   ├── renderer.js   class Renderer    Draws to the canvas (read-only)
 │   │   ├── audio.js      class SoundSystem Generated effects, music and UI sounds (Web Audio)
+│   │   ├── demo.js       class MenuDemo    Self-playing demo game behind the menus
 │   │   └── app.js        class App         Menus, DOM, input, overlays, game loop
 │   └── main.js           Entry point
 └── tests/                Unit tests (node:test)

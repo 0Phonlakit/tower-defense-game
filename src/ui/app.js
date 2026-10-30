@@ -16,6 +16,7 @@
       this.map = null;
       this.canvas = this.$('game');
       this.renderer = new TD.Renderer(this.canvas);
+      this.demo = new TD.MenuDemo(this.$('menu-bg'));
       this.settings = new TD.Settings(safeStorage());
       this.sound = new TD.SoundSystem(this.settings);
       this.game = null;
@@ -49,13 +50,33 @@
     start() {
       this.bindInput();
       this.applyResolution();
-      this.openSlots();
+      this.demo.resize();
+      this.showSplash();
       this.lastFrame = performance.now();
       requestAnimationFrame(t => this.frame(t));
       return this;
     }
 
     // ---------- Flow ----------
+    // "Made By 0Phonlakit" fades in and out (CSS animation), then the save-slot screen fades in.
+    // A click or key press skips it.
+    showSplash() {
+      const splash = this.$('ov-splash');
+      this.showOverlay(null);
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        splash.classList.add('leaving');
+        setTimeout(() => { splash.hidden = true; }, 400);
+        this.doc.removeEventListener('keydown', finish);
+        this.openSlots();
+      };
+      splash.addEventListener('click', finish);
+      this.doc.addEventListener('keydown', finish);
+      splash.addEventListener('animationend', ev => { if (ev.animationName === 'splash-out') finish(); });
+    }
+
     // Start goes straight into a run on a freshly rolled random map.
     startRun() {
       this.rollMap();
@@ -83,7 +104,6 @@
     openMenu() {
       this.game = null;
       this.paused = false;
-      this.rollMap();
       this.$('menu-slot').textContent = this.slot;
       this.$('menu-coins').textContent = this.meta.coins;
       this.$('menu-best').textContent = this.meta.best;
@@ -95,7 +115,6 @@
     // First screen: pick one of the 3 save slots. Each card shows coins, best wave and runs, or empty.
     openSlots() {
       this.game = null;
-      this.rollMap();
       this.renderSlots();
       this.showOverlay('ov-slots');
     }
@@ -204,6 +223,9 @@
     frame(now) {
       const dt = Math.min(0.05, (now - this.lastFrame) / 1000);
       this.lastFrame = now;
+      // Outside a run the menu background demo plays instead.
+      this.$('menu-bg').hidden = !!this.game;
+      if (!this.game) this.demo.step(dt);
       if (this.game && !this.paused) {
         for (let i = 0; i < this.speed && this.game.canBuild; i++) this.game.update(dt);
       }
@@ -230,7 +252,10 @@
       this.doc.addEventListener('pointerdown', () => this.sound.unlock());
       this.doc.addEventListener('keydown', () => this.sound.unlock());
       this.doc.addEventListener('click', ev => { if (ev.target.closest('button')) this.sound.play('click'); }, true);
-      root.addEventListener('resize', () => { if (this.settings.resolution === 'auto') this.applyResolution(); });
+      root.addEventListener('resize', () => {
+        this.demo.resize();
+        if (this.settings.resolution === 'auto') this.applyResolution();
+      });
 
       this.$('btn-wave').onclick = () => this.nextWave();
       this.$('btn-upgrade').onclick = () => this.upgradeSelected();
