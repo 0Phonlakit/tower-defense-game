@@ -37,15 +37,15 @@
 
     <aside id="sidebar">
       <section class="stats">
-        <div class="stat"><span class="label">พลังชีวิตฐาน</span><span id="hud-hp" class="value hp">20</span></div>
-        <div class="stat"><span class="label">Gold</span><span id="hud-gold" class="value gold">0</span></div>
-        <div class="stat"><span class="label">Wave</span><span id="hud-wave" class="value">0</span></div>
-        <div class="stat"><span class="label">ศัตรูที่เหลือ</span><span id="hud-left" class="value">0</span></div>
+        <div class="stat"><span class="label" data-i18n="hud.hp">พลังชีวิตฐาน</span><span id="hud-hp" class="value hp">20</span></div>
+        <div class="stat"><span class="label" data-i18n="hud.gold">Gold</span><span id="hud-gold" class="value gold">0</span></div>
+        <div class="stat"><span class="label" data-i18n="hud.wave">Wave</span><span id="hud-wave" class="value">0</span></div>
+        <div class="stat"><span class="label" data-i18n="hud.left">ศัตรูที่เหลือ</span><span id="hud-left" class="value">0</span></div>
         <div id="hud-map" class="map-name"></div>
       </section>
 
       <section>
-        <h3>สร้างป้อม <small>(กด 1-8)</small></h3>
+        <h3><span data-i18n="hud.build">สร้างป้อม</span> <small data-i18n="hud.buildKeys">(กด 1-8)</small></h3>
         <div id="tower-buttons" class="tower-buttons"></div>
       </section>
 
@@ -53,7 +53,7 @@
         <button id="btn-wave" class="btn primary big">เริ่ม Wave (Space)</button>
         <div class="row">
           <button id="btn-speed" class="btn">ความเร็ว x1</button>
-          <button id="btn-pause" class="btn">⏸ พัก (Esc)</button>
+          <button id="btn-pause" class="btn" data-i18n="hud.pause">⏸ พัก (Esc)</button>
         </div>
       </section>
     </aside>
@@ -63,7 +63,7 @@
   <div id="ov-slots" class="overlay menu-screen">
     <div class="modal menu">
       <h1 class="game-title">Rogue Tower<span>Defense</span></h1>
-      <p class="muted">เลือกช่องเซฟ · แต่ละช่องเก็บ Coin อัพเกรด และป้อมที่ปลดล็อกแยกกัน</p>
+      <p class="muted" data-i18n="slots.intro">เลือกช่องเซฟ · แต่ละช่องเก็บ Coin อัพเกรด และป้อมที่ปลดล็อกแยกกัน</p>
       <div id="slot-list" class="slot-list"></div>
     </div>
   </div>
@@ -72,15 +72,15 @@
   <div id="ov-menu" class="overlay menu-screen" hidden>
     <div class="modal menu">
       <h1 class="game-title">Rogue Tower<span>Defense</span></h1>
-      <p class="muted">ป้องกันฐานจากศัตรูบนแผนที่สุ่ม · จบแต่ละรอบได้ Coin เอาไปอัพเกรดถาวร</p>
-      <div class="menu-slot"><span>ช่องเซฟ <b id="menu-slot">1</b></span> <button id="btn-change-slot" class="btn small-btn">เปลี่ยนช่องเซฟ</button></div>
-      <div class="menu-stats">🪙 <b id="menu-coins">0</b> Coin · Wave สูงสุด <b id="menu-best">0</b> · เล่นไปแล้ว <b id="menu-runs">0</b> รอบ</div>
+      <p class="muted" data-i18n="menu.intro">ป้องกันฐานจากศัตรูบนแผนที่สุ่ม · จบแต่ละรอบได้ Coin เอาไปอัพเกรดถาวร</p>
+      <div class="menu-slot"><span><span data-i18n="menu.slot">ช่องเซฟ</span> <b id="menu-slot">1</b></span> <button id="btn-change-slot" class="btn small-btn" data-i18n="menu.changeSlot">เปลี่ยนช่องเซฟ</button></div>
+      <div id="menu-stats" class="menu-stats"></div>
       <div class="menu-buttons">
-        <button id="btn-start" class="btn primary big">เริ่มเกม</button>
-        <button id="btn-open-upgrade" class="btn big">อัพเกรด</button>
-        <button id="btn-open-settings" class="btn big">ตั้งค่า</button>
-        <button id="btn-open-guide" class="btn big">คู่มือ</button>
-        <button id="btn-exit" class="btn big">ออกจากเกม</button>
+        <button id="btn-start" class="btn primary big" data-i18n="menu.start">เริ่มเกม</button>
+        <button id="btn-open-upgrade" class="btn big" data-i18n="menu.upgrade">อัพเกรด</button>
+        <button id="btn-open-settings" class="btn big" data-i18n="menu.settings">ตั้งค่า</button>
+        <button id="btn-open-guide" class="btn big" data-i18n="menu.guide">คู่มือ</button>
+        <button id="btn-exit" class="btn big" data-i18n="menu.exit">ออกจากเกม</button>
       </div>
     </div>
   </div>
@@ -89,15 +89,15 @@
   <div id="ov-upgrade" class="overlay menu-screen" hidden>
     <div class="modal wide">
       <div class="modal-head">
-        <h2>อัพเกรด</h2>
+        <h2 data-i18n="up.title">อัพเกรด</h2>
         <div class="coin-box">🪙 <span id="up-coins">0</span> Coin</div>
       </div>
       <div id="up-tabs" class="tabs" role="tablist"></div>
       <div id="up-list" class="shop-grid"></div>
-      <p class="muted small">Coin ที่ได้ต่อรอบ = wave ที่ผ่าน × 5 + (wave ที่ผ่าน)² ÷ 3 — ยิ่งไปได้ไกล ยิ่งได้เยอะ</p>
+      <p class="muted small" data-i18n="up.formula">Coin ที่ได้ต่อรอบ = wave ที่ผ่าน × 5 + (wave ที่ผ่าน)² ÷ 3 — ยิ่งไปได้ไกล ยิ่งได้เยอะ</p>
       <div class="row center">
-        <button id="btn-upgrade-back" class="btn primary big">กลับ</button>
-        <button id="btn-reset" class="btn danger small-btn">ล้างเซฟ</button>
+        <button id="btn-upgrade-back" class="btn primary big" data-i18n="common.back">กลับ</button>
+        <button id="btn-reset" class="btn danger small-btn" data-i18n="up.reset">ล้างเซฟ</button>
       </div>
     </div>
   </div>
@@ -105,23 +105,26 @@
   <!-- Settings -->
   <div id="ov-settings" class="overlay menu-screen" hidden>
     <div class="modal">
-      <h2>ตั้งค่า</h2>
+      <h2 data-i18n="set.title">ตั้งค่า</h2>
       <div class="settings">
-        <label>ความละเอียด
+        <label><span data-i18n="set.language">ภาษา / Language</span>
+          <select id="set-language"></select>
+        </label>
+        <label><span data-i18n="set.resolution">ความละเอียด</span>
           <select id="set-resolution"></select>
         </label>
-        <label>เสียงเอฟเฟกต์ <span id="set-sfx-val" class="muted"></span>
+        <label><span><span data-i18n="set.sfx">เสียงเอฟเฟกต์</span> <span id="set-sfx-val" class="muted"></span></span>
           <input type="range" id="set-sfx" min="0" max="100" step="5">
         </label>
-        <label>เพลงพื้นหลัง <span id="set-music-val" class="muted"></span>
+        <label><span><span data-i18n="set.music">เพลงพื้นหลัง</span> <span id="set-music-val" class="muted"></span></span>
           <input type="range" id="set-music" min="0" max="100" step="5">
         </label>
-        <label>เสียงอื่น ๆ (ปุ่ม, แจ้งเตือน) <span id="set-ui-val" class="muted"></span>
+        <label><span><span data-i18n="set.ui">เสียงอื่น ๆ (ปุ่ม, แจ้งเตือน)</span> <span id="set-ui-val" class="muted"></span></span>
           <input type="range" id="set-ui" min="0" max="100" step="5">
         </label>
       </div>
       <div class="row center">
-        <button id="btn-settings-back" class="btn primary big">กลับ</button>
+        <button id="btn-settings-back" class="btn primary big" data-i18n="common.back">กลับ</button>
       </div>
     </div>
   </div>
@@ -129,16 +132,16 @@
   <!-- Pause -->
   <div id="ov-pause" class="overlay" hidden>
     <div class="modal menu">
-      <h2>พักเกม</h2>
+      <h2 data-i18n="pause.title">พักเกม</h2>
       <div class="pause-perks">
-        <h3>Perk ที่ได้รอบนี้</h3>
+        <h3 data-i18n="pause.perks">Perk ที่ได้รอบนี้</h3>
         <ul id="perk-list" class="perk-list"><li class="muted">ยังไม่มี</li></ul>
       </div>
       <div class="menu-buttons">
-        <button id="btn-resume" class="btn primary big">เล่นต่อ</button>
-        <button id="btn-pause-settings" class="btn big">ตั้งค่า</button>
-        <button id="btn-pause-guide" class="btn big">คู่มือ</button>
-        <button id="btn-quit-run" class="btn danger big">ออกไปเมนู (จบรอบนี้)</button>
+        <button id="btn-resume" class="btn primary big" data-i18n="pause.resume">เล่นต่อ</button>
+        <button id="btn-pause-settings" class="btn big" data-i18n="menu.settings">ตั้งค่า</button>
+        <button id="btn-pause-guide" class="btn big" data-i18n="menu.guide">คู่มือ</button>
+        <button id="btn-quit-run" class="btn danger big" data-i18n="pause.quit">ออกไปเมนู (จบรอบนี้)</button>
       </div>
     </div>
   </div>
@@ -146,11 +149,11 @@
   <!-- Guide: enemies and elemental reactions -->
   <div id="ov-guide" class="overlay menu-screen" hidden>
     <div class="modal wide">
-      <h2>คู่มือ</h2>
+      <h2 data-i18n="guide.title">คู่มือ</h2>
       <div id="guide-tabs" class="tabs" role="tablist"></div>
       <div id="guide-body" class="guide-body"></div>
       <div class="row center">
-        <button id="btn-guide-back" class="btn primary big">กลับ</button>
+        <button id="btn-guide-back" class="btn primary big" data-i18n="common.back">กลับ</button>
       </div>
     </div>
   </div>
@@ -158,10 +161,10 @@
   <!-- Exit (shown when the browser won't let the page close its tab) -->
   <div id="ov-exit" class="overlay menu-screen" hidden>
     <div class="modal menu">
-      <h2>ขอบคุณที่เล่น!</h2>
-      <p class="muted">เบราว์เซอร์ไม่อนุญาตให้หน้าเว็บปิดแท็บเอง ปิดแท็บนี้ได้เลย</p>
+      <h2 data-i18n="exit.title">ขอบคุณที่เล่น!</h2>
+      <p class="muted" data-i18n="exit.msg">เบราว์เซอร์ไม่อนุญาตให้หน้าเว็บปิดแท็บเอง ปิดแท็บนี้ได้เลย</p>
       <div class="menu-buttons">
-        <button id="btn-exit-back" class="btn big">กลับเมนู</button>
+        <button id="btn-exit-back" class="btn big" data-i18n="exit.back">กลับเมนู</button>
       </div>
     </div>
   </div>
@@ -181,13 +184,17 @@
       <h1 id="over-title" class="danger-text">GAME OVER</h1>
       <div id="over-summary" class="summary"></div>
       <div class="row center">
-        <button id="btn-to-menu" class="btn primary big">กลับเมนู</button>
-        <button id="btn-retry" class="btn big">เล่นอีกครั้ง</button>
+        <button id="btn-to-menu" class="btn primary big" data-i18n="over.menu">กลับเมนู</button>
+        <button id="btn-retry" class="btn big" data-i18n="over.retry">เล่นอีกครั้ง</button>
       </div>
     </div>
   </div>
 
   <script src="src/core/config.js"></script>
+  <script src="src/core/lang-ko.js"></script>
+  <script src="src/core/lang-ja.js"></script>
+  <script src="src/core/lang-fr.js"></script>
+  <script src="src/core/i18n.js"></script>
   <script src="src/core/utils.js"></script>
   <script src="src/core/path.js"></script>
   <script src="src/core/maps.js"></script>

@@ -3,6 +3,23 @@
   'use strict';
   const TD = root.TD;
 
+  const t = (key, params) => TD.t(key, params);
+
+  // Names and descriptions of game data in the current language (Thai comes from the data itself).
+  const L = {
+    tower: (type, field = 'name') => TD.loc('tower', type, field, TD.TOWER_DEFS[type][field]),
+    enemy: type => TD.loc('enemy', type, 'name', TD.ENEMY_DEFS[type].name),
+    map: m => TD.loc('map', m.id, 'name', m.name),
+    upgrade: (key, field) => TD.loc('upgrade', key, field, TD.META_UPGRADES[key][field]),
+    perk: (p, field, game) => field === 'desc'
+      ? TD.loc('perk', p.id, 'desc', p.desc(game), TD.cashAmount(game))
+      : TD.loc('perk', p.id, 'name', p.name),
+    element: k => TD.loc('element', k, 'name', TD.ELEMENTS[k].name),
+    reaction: r => TD.loc('reaction', r.id, 'desc', r.desc),
+    dmgType: k => TD.loc('dmgType', k, 'name', TD.DAMAGE_TYPES[k]),
+    tab: id => TD.loc('tab', id, 'name', TD.UPGRADE_TABS[id]),
+  };
+
   function safeStorage() {
     try { return root.localStorage; } catch (e) { return null; }
   }
@@ -49,6 +66,7 @@
 
     start() {
       this.bindInput();
+      this.applyLanguage();
       this.applyResolution();
       this.demo.resize();
       this.showSplash();
@@ -105,9 +123,7 @@
       this.game = null;
       this.paused = false;
       this.$('menu-slot').textContent = this.slot;
-      this.$('menu-coins').textContent = this.meta.coins;
-      this.$('menu-best').textContent = this.meta.best;
-      this.$('menu-runs').textContent = this.meta.runs;
+      this.$('menu-stats').innerHTML = t('menu.stats', { coins: this.meta.coins, best: this.meta.best, runs: this.meta.runs });
       this.showOverlay('ov-menu');
     }
 
@@ -125,19 +141,19 @@
       for (const s of this.saves.summaries()) {
         const card = this.doc.createElement('div');
         card.className = 'slot-card' + (s.slot === this.slot ? ' current' : '') + (s.empty ? ' empty' : '');
-        card.innerHTML = `<div class="slot-info"><b>ช่อง ${s.slot}</b>${s.slot === this.slot ? ' <span class="muted small">(ล่าสุด)</span>' : ''}<div class="muted small">`
-          + (s.empty ? 'ว่าง — เริ่มใหม่' : `🪙 ${s.coins} · Wave สูงสุด ${s.best} · เล่นไปแล้ว ${s.runs} รอบ`) + '</div></div>';
+        card.innerHTML = `<div class="slot-info"><b>${t('slots.slot', { n: s.slot })}</b>${s.slot === this.slot ? ` <span class="muted small">${t('slots.last')}</span>` : ''}<div class="muted small">`
+          + (s.empty ? t('slots.empty') : t('slots.summary', s)) + '</div></div>';
         const actions = this.doc.createElement('div');
         actions.className = 'row';
         const play = this.doc.createElement('button');
         play.className = 'btn primary small-btn';
-        play.textContent = s.empty ? 'เริ่มใหม่' : 'เล่น';
+        play.textContent = s.empty ? t('slots.new') : t('slots.play');
         play.onclick = () => this.selectSlot(s.slot);
         actions.appendChild(play);
         if (!s.empty) {
           const del = this.doc.createElement('button');
           del.className = 'btn danger small-btn';
-          del.textContent = 'ลบ';
+          del.textContent = t('slots.delete');
           del.onclick = () => this.deleteSlot(s.slot);
           actions.appendChild(del);
         }
@@ -153,7 +169,7 @@
     }
 
     deleteSlot(n) {
-      if (!confirm(`ลบช่องเซฟ ${n}? (Coin, อัพเกรด และป้อมที่ปลดล็อกในช่องนี้จะหายทั้งหมด)`)) return;
+      if (!confirm(t('slots.confirmDelete', { n }))) return;
       this.saves.remove(n);
       if (n === this.slot) this.meta = this.saves.open(n);
       this.renderSlots();
@@ -199,7 +215,7 @@
 
     // Browsers only let a page close a tab that a script opened; otherwise show a goodbye screen.
     exitGame() {
-      if (!confirm('ออกจากเกม?')) return;
+      if (!confirm(t('menu.confirmExit'))) return;
       root.close();
       setTimeout(() => { if (!root.closed) this.showOverlay('ov-exit'); }, 300);
     }
@@ -262,7 +278,7 @@
       this.$('btn-sell').onclick = () => this.sellSelected();
       this.$('btn-speed').onclick = () => {
         this.speed = this.speed === 3 ? 1 : this.speed + 1;
-        this.$('btn-speed').textContent = `ความเร็ว x${this.speed}`;
+        this.$('btn-speed').textContent = t('hud.speed', { n: this.speed });
       };
       this.$('btn-pause').onclick = () => this.pause();
       this.$('btn-start').onclick = () => this.startRun();
@@ -282,7 +298,7 @@
       this.$('btn-retry').onclick = () => this.startRun();
       this.$('btn-to-menu').onclick = () => this.openMenu();
       this.$('btn-reset').onclick = () => {
-        if (!confirm(`ล้างเซฟช่อง ${this.slot} (Coin, อัพเกรด, ป้อมที่ปลดล็อก)?`)) return;
+        if (!confirm(t('up.confirmReset', { n: this.slot }))) return;
         this.meta.reset();
         this.renderUpgrades();
       };
@@ -341,16 +357,16 @@
     // ---------- Overlays ----------
     showPerkChoice({ wave, bonus, interest, choices }) {
       if (!choices.length) return;
-      this.$('perk-title').textContent = `ผ่าน Wave ${wave}!`;
-      this.$('perk-sub').textContent = `ได้รับ ${bonus} gold${interest ? ` + ดอกเบี้ย ${interest}` : ''} · เลือกพลังพิเศษ 1 อย่าง`;
+      this.$('perk-title').textContent = t('perk.title', { wave });
+      this.$('perk-sub').textContent = t('perk.sub', { bonus, interest: interest ? t('perk.interest', { n: interest }) : '' });
       const box = this.$('perk-cards');
       box.innerHTML = '';
       choices.forEach((p, i) => {
         const b = this.doc.createElement('button');
         b.className = 'perk-card';
         const have = this.game.perkStacks[p.id] || 0;
-        b.innerHTML = `<div class="p-name">${p.name}</div><div class="p-desc">${p.desc(this.game)}</div>`
-          + (have ? `<div class="p-stack">มีแล้ว x${have}/${TD.MAX_PERK_STACKS}</div>` : '');
+        b.innerHTML = `<div class="p-name">${L.perk(p, 'name')}</div><div class="p-desc">${L.perk(p, 'desc', this.game)}</div>`
+          + (have ? `<div class="p-stack">${t('perk.have', { n: have, max: TD.MAX_PERK_STACKS })}</div>` : '');
         b.onclick = () => this.choosePerk(i);
         box.appendChild(b);
       });
@@ -359,12 +375,12 @@
 
     showGameOver({ wavesCleared, coins, newBest, totalCoins, kills }) {
       this.placing = null;
-      this.$('over-title').textContent = this.quitting ? 'จบรอบ' : 'GAME OVER';
+      this.$('over-title').textContent = this.quitting ? t('over.quitTitle') : t('over.title');
       this.$('over-summary').innerHTML = `
-        <div>ผ่านไปได้ <b>${wavesCleared}</b> wave ${newBest ? '<b style="color:#4cd964">(สถิติใหม่!)</b>' : ''}</div>
-        <div>กำจัดศัตรู <b>${kills}</b> ตัว</div>
+        <div>${t('over.waves', { n: wavesCleared })} ${newBest ? `<b style="color:#4cd964">${t('over.best')}</b>` : ''}</div>
+        <div>${t('over.kills', { n: kills })}</div>
         <div class="muted small">Coin = ${wavesCleared} × 5 + ${wavesCleared}² ÷ 3</div>
-        <div class="coins">+${coins} Coin 🪙 (รวม ${totalCoins})</div>`;
+        <div class="coins">${t('over.coins', { coins, total: totalCoins })}</div>`;
       this.showOverlay('ov-over');
     }
 
@@ -377,9 +393,9 @@
         b.className = 'tower-btn';
         b.dataset.type = type;
         b.innerHTML = `
-          <div class="t-name"><span class="dot" style="background:${d.color}"></span>${d.key}. ${d.name}</div>
+          <div class="t-name"><span class="dot" style="background:${d.color}"></span>${d.key}. ${L.tower(type)}</div>
           <div class="t-cost"></div>
-          <div class="t-desc">${this.meta.isUnlocked(type) ? d.desc : '🔒 ปลดล็อกที่หน้าอัพเกรด'}</div>`;
+          <div class="t-desc">${this.meta.isUnlocked(type) ? L.tower(type, 'desc') : t('tower.locked')}</div>`;
         b.onclick = () => this.togglePlacing(type);
         box.appendChild(b);
       }
@@ -389,8 +405,8 @@
     renderSelection() {
       const t = this.selected;
       if (!t || !this.game) { this.show('tower-pop', false); return; }
-      this.$('pop-name').textContent = `${t.def.name} Lv.${t.level}`;
-      this.$('btn-sell').textContent = `ขาย (+${t.sellValue})`;
+      this.$('pop-name').textContent = `${L.tower(t.type)} Lv.${t.level}`;
+      this.$('btn-sell').textContent = TD.t('pop.sell', { v: t.sellValue });
       this.show('tower-pop', true);
     }
 
@@ -412,16 +428,16 @@
 
     // Stat lines for one tower's stats object (Guide tab).
     towerStatLines(s) {
-      const lines = [`ดาเมจ: ${s.dmg.toFixed(1)}`, `ยิง/วินาที: ${s.rate.toFixed(2)}`, `ระยะ: ${Math.round(s.range)}`];
-      if (s.splash) lines.push(`รัศมีระเบิด: ${Math.round(s.splash)}`);
-      if (s.slow) lines.push(`ชะลอ: ${Math.round(s.slow * 100)}% / ${s.slowDur}s`);
-      if (s.crit) lines.push(`คริติคอล: ${Math.round(s.crit * 100)}%`);
-      if (s.element) lines.push(`ธาตุ: ${TD.ELEMENTS[s.element].name}`);
-      if (s.burn) lines.push(`ติดไฟ: ${s.burn.toFixed(1)}/วิ นาน ${TD.BURN_DURATION} วิ`);
-      if (s.poison) lines.push(`พิษ: ${s.poison.toFixed(1)}/วิ ต่อชั้น (สูงสุด ${TD.POISON_MAX_STACKS} ชั้น)`);
-      if (s.chain) lines.push(`กระโดด: ${s.chain} ตัว`);
-      lines.push(`ชนิดดาเมจ: ${TD.DAMAGE_TYPES[s.dmgType]}`);
-      lines.push(s.air ? `ยิงอากาศได้ (อากาศ x${TD.AIR_BONUS} · พื้น x${TD.AA_GROUND_MULT})` : 'ยิงได้เฉพาะพื้นดิน');
+      const lines = [t('stat.dmg', { v: s.dmg.toFixed(1) }), t('stat.rate', { v: s.rate.toFixed(2) }), t('stat.range', { v: Math.round(s.range) })];
+      if (s.splash) lines.push(t('stat.splash', { v: Math.round(s.splash) }));
+      if (s.slow) lines.push(t('stat.slow', { v: Math.round(s.slow * 100), s: s.slowDur }));
+      if (s.crit) lines.push(t('stat.crit', { v: Math.round(s.crit * 100) }));
+      if (s.element) lines.push(t('stat.element', { v: L.element(s.element) }));
+      if (s.burn) lines.push(t('stat.burn', { v: s.burn.toFixed(1), s: TD.BURN_DURATION }));
+      if (s.poison) lines.push(t('stat.poison', { v: s.poison.toFixed(1), max: TD.POISON_MAX_STACKS }));
+      if (s.chain) lines.push(t('stat.chain', { v: s.chain }));
+      lines.push(t('stat.dmgType', { v: L.dmgType(s.dmgType) }));
+      lines.push(s.air ? t('stat.air', { a: TD.AIR_BONUS, g: TD.AA_GROUND_MULT }) : t('stat.groundOnly'));
       return lines;
     }
 
@@ -432,20 +448,20 @@
       this.$('perk-list').innerHTML = stacks.length
         ? stacks.map(([id, n]) => {
           const p = TD.PERKS.find(x => x.id === id);
-          const full = n >= TD.MAX_PERK_STACKS ? ' <b class="perk-full">(เต็ม)</b>' : '';
-          return `<li>${p.name} x${n}${full} — ${p.desc(g)}</li>`;
+          const full = n >= TD.MAX_PERK_STACKS ? ` <b class="perk-full">${t('perk.full')}</b>` : '';
+          return `<li>${L.perk(p, 'name')} x${n}${full} — ${L.perk(p, 'desc', g)}</li>`;
         }).join('')
-        : '<li class="muted">ยังไม่มี</li>';
+        : `<li class="muted">${t('pause.none')}</li>`;
     }
 
     // One enemy row for the legend, with flying and resistances for map-unique units.
     unitLine(type) {
       const d = TD.ENEMY_DEFS[type];
       const resist = Object.entries(d.resist || {}).map(([k, v]) =>
-        v === 0 ? `ไม่รับ${TD.DAMAGE_TYPES[k]}` : `${TD.DAMAGE_TYPES[k]}เข้าแค่ ${Math.round(v * 100)}%`);
-      const twin = d.groundTwin ? `ถ้ายังไม่มีป้อมยิงอากาศ จะมาเป็น${TD.ENEMY_DEFS[d.groundTwin].name}เดินดินแทน` : '';
-      const note = [d.flying ? '✈ บินได้ (ป้อมยิงอากาศเท่านั้น)' : '', twin, ...resist].filter(Boolean).join(' · ');
-      return `<div class="legend-item"><b><span class="dot" style="background:${d.color}"></span>${d.flying ? '✈ ' : ''}${d.name}</b><span>ฐาน -${d.dmg} HP</span></div>`
+        v === 0 ? t('unit.immune', { type: L.dmgType(k) }) : t('unit.resist', { type: L.dmgType(k), pct: Math.round(v * 100) }));
+      const twin = d.groundTwin ? t('unit.twin', { name: L.enemy(d.groundTwin) }) : '';
+      const note = [d.flying ? t('unit.flying') : '', twin, ...resist].filter(Boolean).join(' · ');
+      return `<div class="legend-item"><b><span class="dot" style="background:${d.color}"></span>${d.flying ? '✈ ' : ''}${L.enemy(type)}</b><span>${t('unit.base', { dmg: d.dmg })}</span></div>`
         + (note ? `<div class="legend-note">${note}</div>` : '');
     }
 
@@ -453,7 +469,7 @@
     renderGuide() {
       const tabs = this.$('guide-tabs');
       tabs.innerHTML = '';
-      for (const [id, label] of [['towers', 'ป้อม'], ['enemies', 'ศัตรู'], ['reactions', 'ปฏิกิริยาธาตุ']]) {
+      for (const [id, label] of [['towers', t('guide.tabTowers')], ['enemies', t('guide.tabEnemies')], ['reactions', t('guide.tabReactions')]]) {
         const b = this.doc.createElement('button');
         b.className = 'tab' + (id === this.guideTab ? ' active' : '');
         b.setAttribute('role', 'tab');
@@ -468,12 +484,12 @@
 
     // Level-1 base stats of every tower, before permanent upgrades and perks.
     guideTowers() {
-      return '<p class="muted small">ค่าพื้นฐานที่ Lv.1 ก่อนอัพเกรดถาวรและ Perk · กดที่ป้อมบนแผนที่เพื่ออัพเกรดหรือขาย</p><div class="shop-grid">'
+      return `<p class="muted small">${t('guide.towersNote')}</p><div class="shop-grid">`
         + Object.entries(TD.TOWER_DEFS).map(([type, d]) => {
           const lines = this.towerStatLines(new TD.Tower(type, 0, 0).stats());
-          const unlock = d.unlock ? `ปลดล็อก 🪙 ${d.unlock}` : 'มีตั้งแต่เริ่ม';
-          return `<div class="shop-item"><div class="s-name"><span class="dot" style="background:${d.color}"></span> ${d.key}. ${d.name}</div>`
-            + `<div class="s-desc">${d.desc}</div><div class="s-level">สร้าง ${d.cost} gold · ${unlock}</div>`
+          const unlock = d.unlock ? t('up.unlock', { cost: d.unlock }) : t('guide.startTower');
+          return `<div class="shop-item"><div class="s-name"><span class="dot" style="background:${d.color}"></span> ${d.key}. ${L.tower(type)}</div>`
+            + `<div class="s-desc">${L.tower(type, 'desc')}</div><div class="s-level">${t('up.build', { cost: d.cost })} · ${unlock}</div>`
             + `<div class="sel-stats">${lines.join('<br>')}</div></div>`;
         }).join('') + '</div>';
     }
@@ -483,20 +499,20 @@
       const common = Object.keys(TD.ENEMY_DEFS).filter(t => !TD.ENEMY_DEFS[t].unique);
       let html = `<div class="legend">${common.map(t => this.unitLine(t)).join('')}</div>`;
       const maps = this.game ? [this.game.map] : TD.MAP_DEFS;
-      html += '<h3>ศัตรูเฉพาะแผนที่ <small>(ตั้งแต่ wave 5)</small></h3>';
+      html += `<h3>${t('guide.mapUnits')} <small>${t('guide.fromWave')}</small></h3>`;
       for (const m of maps) {
-        html += `<div class="legend guide-map"><div class="guide-map-name">${m.name}</div>${m.uniques.map(t => this.unitLine(t)).join('')}</div>`;
+        html += `<div class="legend guide-map"><div class="guide-map-name">${L.map(m)}</div>${m.uniques.map(t => this.unitLine(t)).join('')}</div>`;
       }
       return html;
     }
 
     guideReactions() {
-      const el = k => `<span class="dot" style="background:${TD.ELEMENTS[k].color}"></span>${TD.ELEMENTS[k].name}`;
-      return '<p class="muted small">โจมตีด้วยธาตุหนึ่งจะติดสถานะธาตุนั้น 3 วินาที ถ้าโดนธาตุอื่นซ้ำจะเกิดปฏิกิริยา</p><div class="legend">'
+      const el = k => `<span class="dot" style="background:${TD.ELEMENTS[k].color}"></span>${L.element(k)}`;
+      return `<p class="muted small">${t('guide.reactionsNote')}</p><div class="legend">`
         + Object.entries(TD.REACTIONS).map(([pair, r]) => {
           const [a, b] = pair.split('+');
           return `<div class="legend-item"><b>${el(a)} + ${el(b)}</b><span>${r.name}</span></div>`
-            + `<div class="legend-note">${r.desc}</div>`;
+            + `<div class="legend-note">${L.reaction(r)}</div>`;
         }).join('') + '</div>';
     }
 
@@ -514,8 +530,8 @@
       this.setText('hud-wave', String(g.wave));
       this.setText('hud-left', String(g.enemiesRemaining));
       const plan = g.upcoming;
-      this.setText('info-bar', `❤ ${g.hp}/${TD.MAX_HP} · Wave ${g.wave}` + (plan ? ` · Wave ${plan.wave} ถัดไป: ${plan.queue.length} ตัว` : ''));
-      this.setText('hud-map', `แผนที่: ${g.map.name} · เส้นทาง ${g.map.routesOpen(Math.max(1, g.wave))}/${g.map.routes.length}`);
+      this.setText('info-bar', t('hud.info', { hp: g.hp, max: TD.MAX_HP, wave: g.wave }) + (plan ? t('hud.infoNext', { next: plan.wave, n: plan.queue.length }) : ''));
+      this.setText('hud-map', t('hud.map', { map: L.map(g.map), open: g.map.routesOpen(Math.max(1, g.wave)), total: g.map.routes.length }));
 
       for (const b of this.$('tower-buttons').children) {
         const type = b.dataset.type;
@@ -523,25 +539,25 @@
         const unlocked = this.meta.isUnlocked(type);
         b.disabled = !unlocked || !g.canBuild;
         b.classList.toggle('active', this.placing === type);
-        b.querySelector('.t-cost').textContent = unlocked ? `${cost} gold${g.gold < cost ? ' (ไม่พอ)' : ''}` : '';
+        b.querySelector('.t-cost').textContent = unlocked ? t('tower.cost', { cost }) + (g.gold < cost ? t('tower.notEnough') : '') : '';
       }
 
       const waveBtn = this.$('btn-wave');
       const canSkip = g.phase === 'wave' && g.countdown !== null;
       waveBtn.disabled = g.phase !== 'build' && !canSkip;
-      if (g.phase === 'build') waveBtn.textContent = `เริ่ม Wave ${g.wave + 1} (Space)`;
-      else if (canSkip) waveBtn.textContent = `ข้ามไป Wave ${g.wave + 1} (+${g.skipBonus} gold) · ${Math.ceil(g.countdown)}s`;
-      else waveBtn.textContent = `Wave ${g.wave} กำลังดำเนิน...`;
+      if (g.phase === 'build') waveBtn.textContent = t('wave.start', { n: g.wave + 1 });
+      else if (canSkip) waveBtn.textContent = t('wave.skip', { n: g.wave + 1, gold: g.skipBonus, s: Math.ceil(g.countdown) });
+      else waveBtn.textContent = t('wave.running', { n: g.wave });
 
       this.placeTowerPop();
       if (this.selected) {
         const up = this.$('btn-upgrade');
         if (this.selected.isMaxLevel) {
-          up.textContent = 'เลเวลสูงสุด';
+          up.textContent = t('pop.max');
           up.disabled = true;
         } else {
           const cost = g.upgradeCost(this.selected);
-          up.textContent = `อัพเกรด (${cost})`;
+          up.textContent = t('pop.upgrade', { cost });
           up.disabled = g.gold < cost || !g.canBuild;
         }
       }
@@ -553,7 +569,8 @@
       this.$('up-coins').textContent = m.coins;
       const tabs = this.$('up-tabs');
       tabs.innerHTML = '';
-      for (const [id, label] of Object.entries(TD.UPGRADE_TABS)) {
+      for (const id of Object.keys(TD.UPGRADE_TABS)) {
+        const label = L.tab(id);
         const b = this.doc.createElement('button');
         b.className = 'tab' + (id === this.upgradeTab ? ' active' : '');
         b.setAttribute('role', 'tab');
@@ -571,9 +588,9 @@
         const lvl = m.upgrades[key];
         const cost = m.upgradeCost(key);
         list.appendChild(this.shopItem(
-          `<div class="s-name">${u.name}</div><div class="s-desc">${u.desc}</div>
-           <div class="s-level">Lv ${lvl}/${u.max} · ตอนนี้ ${u.show(lvl)}</div>`,
-          m.isMaxed(key) ? 'สูงสุดแล้ว' : `อัพเกรด 🪙 ${cost}`,
+          `<div class="s-name">${L.upgrade(key, 'name')}</div><div class="s-desc">${L.upgrade(key, 'desc')}</div>
+           <div class="s-level">${t('up.level', { lvl, max: u.max, now: u.show(lvl) })}</div>`,
+          m.isMaxed(key) ? t('up.maxed') : t('up.buy', { cost }),
           m.isMaxed(key) || m.coins < cost,
           () => m.buyUpgrade(key)));
       }
@@ -585,9 +602,9 @@
         if (!d.unlock) continue;
         const owned = m.isUnlocked(type);
         const item = this.shopItem(
-          `<div class="s-name"><span class="dot" style="background:${d.color}"></span> ${d.name}</div>
-           <div class="s-desc">${d.desc} · สร้าง ${d.cost} gold</div>`,
-          owned ? 'ปลดล็อกแล้ว ✓' : `ปลดล็อก 🪙 ${d.unlock}`,
+          `<div class="s-name"><span class="dot" style="background:${d.color}"></span> ${L.tower(type)}</div>
+           <div class="s-desc">${L.tower(type, 'desc')} · ${t('up.build', { cost: d.cost })}</div>`,
+          owned ? t('up.unlocked') : t('up.unlock', { cost: d.unlock }),
           owned || m.coins < d.unlock,
           () => m.unlockTower(type));
         if (owned) item.classList.add('owned');
@@ -598,8 +615,10 @@
     // ---------- Settings ----------
     bindSettings() {
       const sel = this.$('set-resolution');
-      sel.innerHTML = Object.entries(TD.RESOLUTIONS).map(([id, r]) => `<option value="${id}">${r.label}</option>`).join('');
       sel.onchange = () => { this.settings.setResolution(sel.value); this.applyResolution(); };
+      const lang = this.$('set-language');
+      lang.innerHTML = Object.entries(TD.LANGUAGES).map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+      lang.onchange = () => { this.settings.setLanguage(lang.value); this.applyLanguage(); };
       const preview = { sfx: 'cannon', ui: 'perk' };
       for (const ch of ['sfx', 'music', 'ui']) {
         const input = this.$(`set-${ch}`);
@@ -613,11 +632,35 @@
     }
 
     renderSettings() {
-      this.$('set-resolution').value = this.settings.resolution;
+      const sel = this.$('set-resolution');
+      sel.innerHTML = Object.entries(TD.RESOLUTIONS).map(([id, r]) => `<option value="${id}">${r.label || t(r.labelKey)}</option>`).join('');
+      sel.value = this.settings.resolution;
+      this.$('set-language').value = this.settings.language;
       for (const ch of ['sfx', 'music', 'ui']) {
         const pct = Math.round(this.settings[ch] * 100);
         this.$(`set-${ch}`).value = pct;
         this.$(`set-${ch}-val`).textContent = `${pct}%`;
+      }
+    }
+
+    // Switches all text to the saved language: tagged page text, then whatever screen is open.
+    applyLanguage() {
+      TD.setLang(this.settings.language);
+      this.doc.documentElement.lang = TD.getLang();
+      for (const el of this.doc.querySelectorAll('[data-i18n]')) el.textContent = t(el.dataset.i18n);
+      this.$('btn-speed').textContent = t('hud.speed', { n: this.speed });
+      this.hudCache = {};
+      const open = id => !this.$(id).hidden;
+      if (open('ov-slots')) this.renderSlots();
+      // The menu sits under the settings screen, so its stats line is refreshed even when hidden.
+      this.$('menu-stats').innerHTML = t('menu.stats', { coins: this.meta.coins, best: this.meta.best, runs: this.meta.runs });
+      if (open('ov-upgrade')) this.renderUpgrades();
+      if (open('ov-settings')) this.renderSettings();
+      if (open('ov-guide')) this.renderGuide();
+      if (this.game) {
+        this.buildTowerButtons();
+        this.renderPerkList();
+        this.renderSelection();
       }
     }
 
