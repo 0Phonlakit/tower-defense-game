@@ -16,11 +16,13 @@ After picking a slot you get the main menu, which shows the current slot and a "
 
 - **เริ่มเกม (Start)**: starts a run right away on a random map.
 - **อัพเกรด (Upgrade)**: spend Coins on permanent upgrades, split into tabs: Attack (damage, fire rate, range, crit), Economy (starting gold, gold per kill) and Tower unlocks. The reset-save button here clears only the current slot.
-- **ตั้งค่า (Settings)**: language (ไทย / English / 한국어 / 日本語 / Français — every screen, name and in-game message switches right away, and the choice is saved), resolution (Auto fits the window, or a fixed 960×640 / 1200×800 / 1440×960 board, drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
+- **ตั้งค่า (Settings)**: language (ไทย / English / 한국어 / 日本語 / Français — every screen, name and in-game message switches right away, and the choice is saved), resolution (Auto fits the window, or a fixed 960×640 / 1200×800 / 1440×960 board that shrinks if the window is smaller; drawn sharp on high-DPI screens) and three volume sliders: effects, background music, and other sounds (buttons and notifications).
 - **คู่มือ (Guide)**: three tabs: towers (each tower's level-1 stats, cost and unlock price), enemies (common enemies plus every map's special units, with flying and resistances) and elemental reactions.
 - **ออกจากเกม (Exit)**: tries to close the tab. Browsers only let a page close a tab that a script opened, so if that is blocked you get a goodbye screen; close the tab yourself.
 
 All sounds and the music are generated with the Web Audio API (no sound files). They start after your first click or key press, because browsers block audio before that.
+
+The whole game fits on one screen without scrolling on desktop and laptop windows (checked from 1024×640 to 1920×1080): the board is sized so it and the HP/wave bar under it fit the window, a fixed resolution shrinks if the window is smaller, and on short screens the sidebar gets tighter and tower descriptions move to a hover tooltip (they are also in the Guide). Only on narrow screens under 760px wide (phones) does the sidebar go under the board and the page scroll.
 
 During a run the sidebar shows only three blocks: status (HP, gold, wave, enemies left, map), tower building, and the wave controls. Clicking a built tower opens a small popup next to it with its level and the Upgrade (cost) and Sell (refund) buttons. `Esc` or the ⏸ button pauses the game; the pause screen lists the perks taken this run (4 lines, scroll for more) and has resume, settings, guide (showing this map's special units) and quit to menu. Quitting ends the run like a Game Over, so you still get Coins for the waves you cleared.
 
