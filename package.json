@@ -1,6 +1,6 @@
 {
   "name": "rogue-tower-defense",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": true,
   "description": "Roguelike tower defense game: play in the browser or install on Windows",
   "author": "0Phonlakit",
