@@ -71,7 +71,7 @@
         const type = b.dataset.type;
         const cost = g.towerCost(type);
         const unlocked = this.meta.isUnlocked(type);
-        b.disabled = !unlocked || !g.canBuild;
+        b.disabled = !unlocked || !g.canBuild || g.gold < cost;
         b.classList.toggle('active', this.placing === type);
         b.querySelector('.t-cost').textContent = unlocked ? t('tower.cost', { cost }) + (g.gold < cost ? t('tower.notEnough') : '') : '';
       }
