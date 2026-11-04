@@ -71,10 +71,13 @@
       return true;
     }
 
-    // Board size in CSS pixels. Keeps the board's aspect ratio; 'auto' fits inside the space given.
+    // Board size in CSS pixels, keeping the board's aspect ratio. 'auto' fills the space given; a fixed
+    // size is used as is when it fits and shrinks to fit when the space is smaller, so the whole game
+    // always stays on one screen.
     displaySize(availWidth = BOARD_W, availHeight = BOARD_H) {
+      const fit = Math.max(320, Math.min(availWidth, availHeight * BOARD_W / BOARD_H));
       const fixed = RESOLUTIONS[this.resolution].width;
-      const width = fixed || Math.max(320, Math.min(availWidth, availHeight * BOARD_W / BOARD_H));
+      const width = fixed ? Math.min(fixed, fit) : fit;
       return { width: Math.round(width), height: Math.round(width * BOARD_H / BOARD_W) };
     }
   }

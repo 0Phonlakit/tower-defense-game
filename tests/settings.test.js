@@ -47,7 +47,7 @@ test('Settings.displaySize: fixed sizes keep the 3:2 board, auto fits the space 
   for (const [id, r] of Object.entries(RESOLUTIONS)) {
     if (!r.width) continue;
     s.setResolution(id);
-    assert.deepEqual(s.displaySize(300, 300), { width: r.width, height: r.width * BOARD_H / BOARD_W });
+    assert.deepEqual(s.displaySize(5000, 5000), { width: r.width, height: r.width * BOARD_H / BOARD_W }, `${id} when it fits`);
   }
   s.setResolution('auto');
   assert.deepEqual(Object.keys(RESOLUTIONS), ['auto', '960x640', '1200x800', '1440x960']);
@@ -92,4 +92,13 @@ test('Game: emits sound events for shots, kills, base hits, skips and new routes
   assert.equal(seen.skip, 1);
   while (game.wave < 10) { game.spawnQueue = []; game.countdown = 0.01; game.update(0.02); if (game.phase === 'perk') game.choosePerk(0); game.hp = 20; }
   assert.equal(seen.routeopen, 1);
+});
+
+test('Settings.displaySize: a fixed size bigger than the space shrinks to fit, so nothing scrolls', () => {
+  const s = new Settings();
+  s.setResolution('1440x960');
+  assert.deepEqual(s.displaySize(1200, 700), { width: 1050, height: 700 }, 'limited by height');
+  assert.deepEqual(s.displaySize(900, 2000), { width: 900, height: 600 }, 'limited by width');
+  s.setResolution('960x640');
+  assert.deepEqual(s.displaySize(2000, 2000), { width: 960, height: 640 }, 'never grows past the chosen size');
 });
