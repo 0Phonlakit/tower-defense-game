@@ -2,7 +2,7 @@
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) {
     module.exports = factory(Object.assign({},
-      require('./config.js'), require('./i18n.js'), require('./maps.js'), require('./enemy.js'), require('./tower.js'),
+      require('./config.js'), require('./i18n.js'), require('./map.js'), require('./enemy.js'), require('./tower.js'),
       require('./projectile.js'), require('./wave.js'), require('./perks.js')));
   } else {
     root.TD = Object.assign(root.TD || {}, factory(root.TD));

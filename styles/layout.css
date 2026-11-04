@@ -1,0 +1,56 @@
+/* Page layout: board beside the sidebar, sized to fit one screen; narrow and short screens.
+   Part 2 of 6; the files are loaded in this order (see index.html). */
+#app {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  justify-content: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+#board canvas {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  cursor: crosshair;
+}
+
+#sidebar {
+  width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* Never taller than the window: on short screens the sidebar scrolls, not the page. */
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+/* Narrow screens (phones): the sidebar goes under the board and the page scrolls. Matches the
+   760px breakpoint used to size the board in App.applyResolution. */
+@media (max-width: 759px) {
+  #sidebar { width: 100%; max-width: 800px; max-height: none; overflow: visible; }
+}
+/* Short screens: tighter sidebar, tower descriptions only as a tooltip (and in the Guide). */
+@media (max-height: 820px) and (min-width: 760px) {
+  #app { padding: 12px; gap: 12px; }
+  #sidebar { gap: 8px; max-height: calc(100vh - 24px); }
+  #sidebar section { padding: 8px 10px; }
+  #sidebar h3 { margin: 0 0 6px; }
+  .stats { gap: 6px; }
+  .stat { padding: 4px 8px; }
+  .stat .value { font-size: 17px; }
+  .tower-buttons { gap: 6px; }
+  .tower-btn { padding: 6px 8px; }
+  .tower-btn .t-desc { display: none; }
+  .btn.big { padding: 8px 14px; }
+  .controls .btn.big { margin-bottom: 6px; }
+}
+
+#sidebar section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}

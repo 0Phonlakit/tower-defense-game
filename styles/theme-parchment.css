@@ -1,0 +1,108 @@
+/* Fantasy look for every overlay screen (parchment and wood), menu background, screen transitions.
+   Part 5 of 6; the files are loaded in this order (see index.html). */
+/* =====================================================================
+   Fantasy menus: parchment panels, wooden buttons, ink text.
+   Applies to every overlay screen; the in-game sidebar keeps its dark look.
+   ===================================================================== */
+:root {
+  --parch: #ecd9a8;
+  --parch-dark: #dcc38a;
+  --parch-edge: #b8955a;
+  --ink: #3a2410;
+  --ink-soft: #6b4a2b;
+  --wood: #8b5a2b;
+  --wood-light: #a8743d;
+  --wood-dark: #5a3a1a;
+  --wood-edge: #2b1a0d;
+  --leaf: #4f7a2f;
+  --leaf-light: #6f9a3f;
+  --blood: #a8331f;
+  --title-font: "Mitr", "Sarabun", "Noto Sans Thai", system-ui, sans-serif;
+}
+
+/* Menu background demo and splash sit behind / above everything. */
+.menu-bg { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 5; display: block; }
+.menu-bg[hidden] { display: none; }
+.overlay { z-index: 10; }
+.overlay.menu-screen { background: radial-gradient(ellipse at center, rgba(20, 12, 4, 0.15), rgba(20, 12, 4, 0.65)); }
+
+/* Parchment panel */
+.overlay .modal {
+  background: var(--parch);
+  background-image:
+    radial-gradient(ellipse at 20% 10%, rgba(255, 248, 225, 0.6), transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(150, 105, 45, 0.25), transparent 60%);
+  color: var(--ink);
+  border: 4px solid var(--wood-dark);
+  border-radius: 10px;
+  box-shadow: 0 0 0 3px var(--wood-edge), inset 0 0 30px rgba(120, 80, 30, 0.35), 0 18px 50px rgba(0, 0, 0, 0.55);
+  animation: panel-in 0.35s ease-out;
+}
+.overlay .modal h1, .overlay .modal h2, .overlay .modal h3 { color: #5a2d0c; font-family: var(--title-font); }
+.overlay .modal h3 small, .overlay .modal .muted, .overlay .modal .small { color: var(--ink-soft); }
+.overlay .modal b { color: var(--ink); }
+
+.game-title {
+  font-family: var(--title-font);
+  font-size: 34px;
+  line-height: 1;
+  margin: 4px 0 6px;
+  color: #5a2d0c;
+  text-shadow: 2px 2px 0 #f7e8c2, 3px 3px 0 rgba(90, 45, 12, 0.35);
+  letter-spacing: 0.5px;
+}
+.game-title span { display: block; font-size: 15px; letter-spacing: 6px; color: var(--wood); margin-top: 6px; text-transform: uppercase; }
+
+/* Wooden buttons */
+.overlay .modal .btn {
+  background: linear-gradient(var(--wood-light), var(--wood));
+  color: #fff3d6;
+  border: 2px solid var(--wood-edge);
+  border-radius: 6px;
+  box-shadow: inset 0 -3px 0 var(--wood-dark), 0 2px 0 rgba(0, 0, 0, 0.25);
+  font-family: var(--title-font);
+  font-weight: 600;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.35);
+  transition: transform 0.08s, filter 0.15s;
+}
+.overlay .modal .btn:hover:not(:disabled) { filter: brightness(1.1); transform: translateY(-1px); }
+.overlay .modal .btn:active:not(:disabled) { transform: translateY(1px); box-shadow: inset 0 -1px 0 var(--wood-dark); }
+.overlay .modal .btn:disabled { background: #cdb88c; color: #6e5a3c; border-color: #9c8357; box-shadow: none; text-shadow: none; }
+.overlay .modal .btn.primary { background: linear-gradient(var(--leaf-light), var(--leaf)); box-shadow: inset 0 -3px 0 #34521e, 0 2px 0 rgba(0, 0, 0, 0.25); }
+.overlay .modal .btn.danger { background: linear-gradient(#c24a33, var(--blood)); color: #fff3d6; box-shadow: inset 0 -3px 0 #6e1f12, 0 2px 0 rgba(0, 0, 0, 0.25); }
+.overlay .modal .btn:focus-visible { outline: 3px solid #f5c542; outline-offset: 2px; }
+
+/* Cards, tabs and lists on parchment */
+.overlay .modal .shop-item,
+.overlay .modal .slot-card,
+.overlay .modal .pause-perks,
+.overlay .modal .perk-card {
+  background: var(--parch-dark);
+  border: 2px solid var(--parch-edge);
+  color: var(--ink);
+}
+.overlay .modal .slot-card.current { border-color: var(--leaf); box-shadow: 0 0 0 2px rgba(79, 122, 47, 0.35); }
+.overlay .modal .slot-card.empty { border-style: dashed; }
+.overlay .modal .shop-item .s-desc, .overlay .modal .sel-stats, .overlay .modal .legend-item, .overlay .modal .legend-note, .overlay .modal .perk-list { color: var(--ink-soft); }
+.overlay .modal .legend-item b, .overlay .modal .guide-map-name { color: var(--ink); }
+.overlay .modal .perk-card .p-name { color: #5a2d0c; }
+.overlay .modal .perk-card .p-desc { color: var(--ink-soft); }
+.overlay .modal .perk-card:hover { border-color: var(--wood); filter: brightness(1.04); }
+.overlay .modal .p-stack, .overlay .modal .perk-full { color: #8a5a00; }
+.overlay .modal .coin-box { color: #8a5a00; text-shadow: 1px 1px 0 #f7e8c2; }
+.overlay .modal .tabs { border-bottom: 2px solid var(--parch-edge); }
+.overlay .modal .tab { color: var(--ink-soft); font-family: var(--title-font); }
+.overlay .modal .tab:hover { color: var(--ink); }
+.overlay .modal .tab.active { color: #5a2d0c; border-bottom-color: var(--wood); }
+.overlay .modal .settings select { background: #f7ead0; color: var(--ink); border: 2px solid var(--parch-edge); }
+.overlay .modal input[type=range] { accent-color: var(--wood); }
+.overlay .modal .menu-stats, .overlay .modal .menu-slot { color: var(--ink-soft); }
+.overlay .modal .danger-text { color: var(--blood); }
+
+/* Screen transitions */
+@keyframes panel-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+.overlay:not([hidden]) { animation: fade-in 0.3s ease-out; }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }

@@ -1,16 +1,9 @@
-// The 10 maps: themes plus 5 routes each. All routes of a map end at the same base.
-// Routes open in order: 2 at the start, then 1 more every ROUTE_STEP waves.
+// The 10 maps: name, theme, the 2 map-only units and 5 routes each (all ending at the same base).
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) {
-    module.exports = factory(Object.assign({}, require('./config.js'), require('./path.js')));
-  } else {
-    root.TD = Object.assign(root.TD || {}, factory(root.TD));
-  }
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('../core/config.js'));
+  else root.TD = Object.assign(root.TD || {}, factory(root.TD));
 })(typeof self !== 'undefined' ? self : this, function (TD) {
   'use strict';
-
-  const START_ROUTES = 2;
-  const ROUTE_STEP = 10;
 
   // Hand-made layouts (tile col,row). A route starts one tile off the map edge and ends at the base.
   // Routes never cross: where two routes meet they merge and share the rest of the road to the base.
@@ -75,46 +68,5 @@
       theme: { ground: ['#5d5a4f', '#646155'], path: ['#3f3c34', '#8c8778'], deco: '#85806f', shape: 'rubble' } },
   ];
 
-  class GameMap {
-    static random(rng = Math.random, defs = MAP_DEFS) {
-      return new GameMap(defs[Math.floor(rng() * defs.length)]);
-    }
-
-    constructor(def = MAP_DEFS[0], { tile = TD.TILE, cols = TD.COLS, rows = TD.ROWS } = {}) {
-      this.id = def.id;
-      this.name = def.name;
-      this.theme = def.theme;
-      this.uniques = def.uniques || [];
-      this.tile = tile;
-      this.cols = cols;
-      this.rows = rows;
-      this.routes = def.routes.map(wp => new TD.Path(wp, { tile, cols, rows }));
-      this.tiles = new Set(this.routes.flatMap(p => [...p.tiles]));
-      this.baseTile = this.routes[0].baseTile;
-    }
-
-    // Routes open at the start, plus one every ROUTE_STEP waves, up to all of them.
-    routesOpen(wave) {
-      return Math.min(this.routes.length, START_ROUTES + Math.floor(wave / ROUTE_STEP));
-    }
-
-    // Wave on which route i opens (routes 0 and 1 are open from wave 1).
-    routeOpensAt(i) {
-      return i < START_ROUTES ? 1 : (i - START_ROUTES + 1) * ROUTE_STEP;
-    }
-
-    inBounds(c, r) {
-      return c >= 0 && c < this.cols && r >= 0 && r < this.rows;
-    }
-
-    isPathTile(c, r) {
-      return this.tiles.has(`${c},${r}`);
-    }
-
-    get basePosition() {
-      return this.routes[0].basePosition;
-    }
-  }
-
-  return { MAP_DEFS, GameMap, START_ROUTES, ROUTE_STEP };
+  return { MAP_DEFS, LAYOUTS };
 });

@@ -1,7 +1,7 @@
 'use strict';
 const { MetaProgress } = require('../src/core/meta.js');
 const { Game } = require('../src/core/game.js');
-const { GameMap } = require('../src/core/maps.js');
+const { GameMap } = require('../src/core/map.js');
 const { createRng } = require('../src/core/utils.js');
 
 // In-memory stand-in for localStorage.

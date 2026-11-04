@@ -1,7 +1,8 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { MAP_DEFS, GameMap } = require('../src/core/maps.js');
+const { MAP_DEFS } = require('../src/data/maps.js');
+const { GameMap } = require('../src/core/map.js');
 const { COLS, ROWS, TILE } = require('../src/core/config.js');
 const { createRng } = require('../src/core/utils.js');
 const { makeGame, runUntil } = require('./helpers.js');
