@@ -68,7 +68,8 @@
       b.className = 'btn';
       b.textContent = label;
       b.disabled = disabled;
-      b.onclick = () => { if (onBuy()) this.renderHub(); };
+      // Redraw right away: Coins, the bought item and every button that is now too expensive.
+      b.onclick = () => { if (onBuy()) this.renderUpgrades(); };
       div.appendChild(b);
       return div;
     },
