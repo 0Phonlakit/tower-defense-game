@@ -88,6 +88,7 @@
 
     togglePlacing(type) {
       if (!this.game || !this.game.canBuild || !this.meta.isUnlocked(type)) return;
+      if (this.placing !== type && this.game.gold < this.game.towerCost(type)) return;
       this.placing = this.placing === type ? null : type;
       this.selected = null;
       this.renderSelection();
